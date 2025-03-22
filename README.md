@@ -56,7 +56,7 @@ A production-ready NestJS template with best practices, TypeScript, MongoDB, Aut
 
 ```bash
 # 1. Create from template
-git clone https://github.com/yourusername/nestjs-template.git my-project
+git clone https://github.com/yourusername/B-App-backend.git my-project
 cd my-project
 
 # 2. Install dependencies
@@ -97,7 +97,7 @@ npm run start:dev
 # Use this template from GitHub
 Click "Use this template" button on GitHub
 # OR clone and reinitialize
-git clone https://github.com/yourusername/nestjs-template.git my-project
+git clone https://github.com/B-startup/B-App-backend.git
 cd my-project
 rm -rf .git
 git init
