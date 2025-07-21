@@ -144,13 +144,25 @@ export class AuthService {
     }
 
     async resendOtp(email: string) {
-        const user = await this.prisma.user.findUnique({ where: { email } });
-        if (!user) throw new UnauthorizedException('User not found');
+        if (!email) {
+            throw new UnauthorizedException('Email is required');
+        }
+
+        // Check if user exists and not verified
+        const user = await this.prisma.user.findUnique({
+            where: { email }
+        });
+
+        if (!user) {
+            throw new UnauthorizedException('User not found');
+        }
 
         const otp = generateOTP();
 
-        await sendOtpToEmail(this.mailerService, email, otp);
+        // Send the OTP email first
+        await sendOtpToEmail(this.mailerService, user.email, otp);
 
+        // Then update the user record
         return this.prisma.user.update({
             where: { email },
             data: {

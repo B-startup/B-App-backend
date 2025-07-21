@@ -4,6 +4,7 @@ import { FileUploadService } from '../file-upload/file-upload.service';
 import { AuthService } from './auth.service';
 import { ForgetPasswordDto } from './dto/forget-password.dto';
 import { LoginDto } from './dto/login.dto';
+import { ResendOtpDto } from './dto/resend-otp.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
 
@@ -34,8 +35,10 @@ export class AuthController {
     @Post('resend-otp')
     @ApiOperation({ summary: 'Resend OTP code' })
     @ApiResponse({ status: 200, description: 'OTP sent successfully' })
-    async resendOtp(@Body('email') email: string) {
-        return this.authService.resendOtp(email);
+    @ApiResponse({ status: 400, description: 'Invalid email' })
+    @ApiResponse({ status: 404, description: 'User not found' })
+    async resendOtp(@Body() resendOtpDto: ResendOtpDto) {
+        return this.authService.resendOtp(resendOtpDto.email);
     }
 
     @Post('refresh-token')
