@@ -3,17 +3,38 @@ generator client {
 }
 
 datasource db {
-  provider = "mongodb"
+  provider = "postgres"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id               String    @id @default(auto()) @map("_id") @db.ObjectId
-  email            String    @unique
+  id               String    @id @default(uuid()) // UUID primary key
   name             String
+  email            String    @unique
   password         String
-  image            String?
-  isVerified       Boolean   @default(false)
-  otpCode          String?
-  otpCodeExpiresAt DateTime?
+  otpCode         String?   // nullable, for OTP verification
+  otpCodeExpiresAt DateTime? // nullable, for OTP expiration
+  isEmailVerified  Boolean   @default(false)
+  isCompleteProfile Boolean  @default(false)
+  isPhoneVerified  Boolean   @default(false)
+  description      String?
+  country          String?
+  city             String?
+  birthdate        DateTime?
+  phone            String?    // phone as string to include + and leading zeros
+  profilePicture   String?   // optional, nullable
+  webSite          String?
+  nbConnects       Int @default(0)
+  nbFollowers      Int @default(0)
+  nbFollowing      Int @default(0)
+  timeSpent        Int @default(0)       // store time in seconds or milliseconds
+  nbVisits         Int @default(0)       // number of visits
+  nbProjects       Int @default(0)
+  nbInvestments    Int @default(0)
+  CIN              String?   // nullable
+  passport         String?   // nullable
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@map("users")
 }

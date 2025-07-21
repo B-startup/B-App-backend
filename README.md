@@ -1,6 +1,6 @@
 # NestJS Template
 
-A production-ready NestJS template with best practices, TypeScript, MongoDB, Authentication, Testing, and CI/CD setup.
+A production-ready NestJS template with best practices, TypeScript, PostgreSql, Authentication, Testing, and CI/CD setup.
 
 ## 🚨 Initial Setup
 
@@ -37,6 +37,7 @@ A production-ready NestJS template with best practices, TypeScript, MongoDB, Aut
    ```bash
    npx prisma generate
    npx prisma db push
+   npx prisma studio
    ```
 
 4. **Start Development**
@@ -48,7 +49,7 @@ A production-ready NestJS template with best practices, TypeScript, MongoDB, Aut
 ## 🎯 Prerequisites
 
 - Node.js (v22+)
-- MongoDB (v4.4+)
+- Postgresql(v17)
 - npm or yarn
 - PM2 (for production)
 
@@ -74,7 +75,7 @@ npm run start:dev
 - 🏗️ Production-Ready Architecture
 - 🔐 JWT Authentication & Authorization
 - 📚 Swagger API Documentation
-- 🗄️ MongoDB with Prisma ORM
+- 🗄️ PostgreSql with Prisma ORM
 - ✅ Comprehensive Testing Setup
 - 🔄 CI/CD with GitHub Actions
 - 📊 Monitoring & Logging
@@ -85,8 +86,8 @@ npm run start:dev
 
 - **Framework**: NestJS
 - **Language**: TypeScript
-- **Database**: MongoDB
-- **Authentication**: JWT
+- **Database**: Postgresql
+- **Authentication**: SuperTokens
 - **Testing**: Jest
 - **Documentation**: Swagger/OpenAPI
 
@@ -119,19 +120,22 @@ cp .env.example .env
 
 ## Prisma & Schema Updates
 
-Note: Prisma Migrate is not supported for MongoDB. Ensure you have a MongoDB instance running and the DATABASE_URL environment variable set in your .env file. Then, synchronize your Prisma schema with:
+Note: Prisma Migrate is not supported for PostgreSql. Ensure you have a PostgreSql instance running and the DATABASE_URL environment variable set in your .env file. Then, synchronize your Prisma schema with:
 ```bash
 npx prisma db push
 ```
-This command updates your MongoDB collections to match the Prisma schema. After pushing changes, update the Prisma Client with:
+This command updates your PostgreSql collections to match the Prisma schema. After pushing changes, update the Prisma Client with:
 ```bash
 npx prisma generate
 ```
-Ensure you have a backup of your MongoDB data before modifying the schema.
+This command opens Prisma Studio, a visual database browser that allows you to view and edit your database data. After pushing changes, you can explore your data with:
+```bash
+npx prisma studio
+```
 
 ## API Documentation
 
-API documentation is available at `/api/docs` when running the server.
+API documentation is available at `8050/api/docs` when running the server.
 
 ## Project Structure
 
@@ -256,13 +260,13 @@ npm run format      # Format code with Prettier
 ```
 
 ### API Documentation
-- Swagger UI: `/api/docs`
+- Swagger UI: `8050/api/docs`
 
 ## Docker Support
 
 ```bash
 # Build the container
-docker build -t personal-template-nestjs-api .
+docker build -t b-backend-api .
 
 # Run with Docker Compose
 docker-compose up -d
@@ -385,12 +389,6 @@ npm update
 # Update major versions
 npx npm-check-updates -u
 ```
-
-### Contributing to Template
-1. Fork the template repository
-2. Create feature branch
-3. Commit changes
-4. Create Pull Request
 
 ## Support & Updates
 

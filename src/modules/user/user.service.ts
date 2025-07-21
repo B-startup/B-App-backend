@@ -20,7 +20,7 @@ export class UserService extends BaseService<
             data: {
                 ...createDto,
                 password: await cryptPassword(createDto.password),
-                isVerified: false
+                isEmailVerified: true
             }
         });
     }
