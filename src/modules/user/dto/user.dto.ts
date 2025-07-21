@@ -30,7 +30,7 @@ export class CreateUserDto {
     @IsString()
     @MinLength(8, { message: 'Password must be at least 8 characters long' })
     @MaxLength(32, { message: 'Password cannot exceed 32 characters' })
-    @Matches(/((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {
+    @Matches(/^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[!@#$%^&*])/, {
         message: 'Password is too weak'
     })
     password: string;

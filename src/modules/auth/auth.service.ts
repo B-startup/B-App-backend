@@ -2,15 +2,22 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../../core/services/prisma.service';
-import { comparePassword, cryptPassword } from '../../core/utils/auth';
+import {
+    comparePassword,
+    cryptPassword,
+    generateOTP,
+    sendOtpToEmail
+} from '../../core/utils/auth';
 import { LoginDto } from './dto/login.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
+import { UserService } from '../user/user.service';
 
 @Injectable()
 export class AuthService {
     constructor(
         private readonly prisma: PrismaService,
         private readonly jwtService: JwtService,
+        private readonly UserService: UserService,
         private readonly mailerService: MailerService
     ) {}
 
@@ -24,7 +31,7 @@ export class AuthService {
         if (!isPasswordValid)
             throw new UnauthorizedException('Invalid credentials');
 
-        if (!user.isVerified)
+        if (!user.isEmailVerified)
             throw new UnauthorizedException('User Not Verified');
 
         const token = this.jwtService.sign(
@@ -32,7 +39,7 @@ export class AuthService {
                 id: user.id,
                 name: user.name,
                 email: user.email,
-                image: user.image
+                image: user.profilePicture
             },
             {
                 expiresIn: '1d'
@@ -44,7 +51,7 @@ export class AuthService {
                 id: user.id,
                 name: user.name,
                 email: user.email,
-                image: user.image
+                image: user.profilePicture
             },
             {
                 expiresIn: '7d'
@@ -63,7 +70,7 @@ export class AuthService {
             id: user.id,
             name: user.name,
             email: user.email,
-            image: user.image
+            image: user.profilePicture
         });
         return { token, refreshToken };
     }
@@ -72,7 +79,7 @@ export class AuthService {
         const user = await this.prisma.user.findUnique({ where: { email } });
         if (!user) throw new UnauthorizedException('User not found');
 
-        const code = Math.floor(1000 + Math.random() * 9000).toString();
+        const code = generateOTP();
         const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
 
         await this.prisma.user.update({
@@ -83,14 +90,13 @@ export class AuthService {
             }
         });
 
-        await this.mailerService.sendMail({
-            to: user.email,
-            subject: 'Reset password',
-            template: 'reset-password',
-            context: {
-                code
-            }
-        });
+        await sendOtpToEmail(
+            this.mailerService,
+            user.email,
+            code,
+            'Reset password',
+            'reset-password'
+        );
     }
 
     async resetPassword(email: string, newPassword: string): Promise<void> {
@@ -105,42 +111,52 @@ export class AuthService {
         const user = await this.prisma.user.findFirst({
             where: {
                 email: otpDto.email,
-                otpCode: otpDto.otpCode
+                otpCode: otpDto.otpCode,
+                isEmailVerified: false // Only verify unverified users
             }
         });
-        if (!user) throw new UnauthorizedException('Invalid OTP');
 
-        return this.prisma.user.update({
+        if (!user) {
+            throw new UnauthorizedException('Invalid OTP');
+        }
+
+        // Check if OTP has expired
+        if (user.otpCodeExpiresAt && user.otpCodeExpiresAt < new Date()) {
+            throw new UnauthorizedException(
+                'OTP has expired. Please request a new one.'
+            );
+        }
+
+        // Update user as verified and clear OTP
+        await this.prisma.user.update({
             where: { email: otpDto.email },
             data: {
                 otpCode: null,
                 otpCodeExpiresAt: null,
-                isVerified: true
+                isEmailVerified: true
             }
         });
+
+        // Return success message (no need to generate tokens here)
+        return {
+            message: 'Email verified successfully'
+        };
     }
 
     async resendOtp(email: string) {
         const user = await this.prisma.user.findUnique({ where: { email } });
         if (!user) throw new UnauthorizedException('User not found');
 
-        const otp = Math.floor(1000 + Math.random() * 9000).toString();
+        const otp = generateOTP();
 
-        await this.mailerService.sendMail({
-            to: email,
-            subject: 'Verify your email',
-            template: 'verify-account',
-            context: {
-                otp
-            }
-        });
+        await sendOtpToEmail(this.mailerService, email, otp);
 
         return this.prisma.user.update({
             where: { email },
             data: {
                 otpCode: otp,
                 otpCodeExpiresAt: new Date(Date.now() + 15 * 60 * 1000),
-                isVerified: false
+                isEmailVerified: false
             }
         });
     }
