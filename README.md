@@ -1,6 +1,4 @@
-# NestJS Template
-
-A production-ready NestJS template with best practices, TypeScript, PostgreSql, Authentication, Testing, and CI/CD setup.
+# Business Opportunity Match backend
 
 ## 🚨 Initial Setup
 
