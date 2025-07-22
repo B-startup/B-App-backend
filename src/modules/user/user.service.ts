@@ -3,12 +3,12 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { User } from '@prisma/client';
 import { BaseService } from '../../core/services/base.service';
 import { PrismaService } from '../../core/services/prisma.service';
-import {
-    cryptPassword,
-    handleOtpOperation
-} from '../../core/utils/auth';
+import { cryptPassword, handleOtpOperation } from '../../core/utils/auth';
 import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
-import { EmailSubject, EmailTemplate } from 'src/core/constants/email.constants';
+import {
+    EmailSubject,
+    EmailTemplate
+} from 'src/core/constants/email.constants';
 
 @Injectable()
 export class UserService extends BaseService<
@@ -45,7 +45,7 @@ export class UserService extends BaseService<
         await handleOtpOperation(
             this.prisma,
             this.mailerService,
-            createDto.email,    
+            createDto.email,
             {
                 template: EmailTemplate.VERIFY_ACCOUNT,
                 subject: EmailSubject.VERIFY_ACCOUNT

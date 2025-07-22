@@ -2,7 +2,6 @@ import { Injectable, LoggerService } from '@nestjs/common';
 
 @Injectable()
 export class CustomLogger implements LoggerService {
-
     /**
      * Logs a message. The message will be written to the console
      * prefixed with `[LOG]`.
