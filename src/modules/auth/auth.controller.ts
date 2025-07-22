@@ -38,7 +38,10 @@ export class AuthController {
     @ApiResponse({ status: 400, description: 'Invalid email' })
     @ApiResponse({ status: 404, description: 'User not found' })
     async resendOtp(@Body() resendOtpDto: ResendOtpDto) {
-        return this.authService.resendOtp(resendOtpDto.email);
+        return this.authService.resendOtp(
+            resendOtpDto.email,
+            resendOtpDto.type
+        );
     }
 
     @Post('refresh-token')

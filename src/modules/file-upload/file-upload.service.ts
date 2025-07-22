@@ -31,10 +31,6 @@ export class FileUploadService {
             throw new BadRequestException('no file uploaded');
         }
 
-        // if (!ALLOWED_MIME_TYPES.includes(file.mimetype)) {
-        //   throw new BadRequestException('invalid file type');
-        // }
-
         if (file.size > MAX_SIZE) {
             throw new BadRequestException('file is too large!');
         }
