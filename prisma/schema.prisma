@@ -1,3 +1,6 @@
+//////////////////////////////////////
+//  Prisma Client & Datasource
+//////////////////////////////////////
 generator client {
   provider = "prisma-client-js"
 }
@@ -7,34 +10,688 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+////////////////////////////////////////////////////////////
+//  USER SECTION
+////////////////////////////////////////////////////////////
+/// Application user (founder / investor / visitor)
 model User {
-  id               String    @id @default(uuid()) // UUID primary key
-  name             String
-  email            String    @unique
-  password         String
-  otpCode         String?   // nullable, for OTP verification
-  otpCodeExpiresAt DateTime? // nullable, for OTP expiration
-  isEmailVerified  Boolean   @default(false)
-  isCompleteProfile Boolean  @default(false)
-  isPhoneVerified  Boolean   @default(false)
-  description      String?
-  country          String?
-  city             String?
-  birthdate        DateTime?
-  phone            String?    // phone as string to include + and leading zeros
-  profilePicture   String?   // optional, nullable
-  webSite          String?
-  nbConnects       Int @default(0)
-  nbFollowers      Int @default(0)
-  nbFollowing      Int @default(0)
-  timeSpent        Int @default(0)       // store time in seconds or milliseconds
-  nbVisits         Int @default(0)       // number of visits
-  nbProjects       Int @default(0)
-  nbInvestments    Int @default(0)
-  CIN              String?   // nullable
-  passport         String?   // nullable
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  /// Primary identifier (UUID)
+  id String @id @default(uuid())
 
+  // --------------------- Profile fields ------------------
+  name              String
+  email             String    @unique
+  password          String
+  otpCode           String? // one‑time‑password
+  otpCodeExpiresAt  DateTime?
+  isEmailVerified   Boolean   @default(false)
+  isCompleteProfile Boolean   @default(false)
+  isPhoneVerified   Boolean   @default(false)
+  description       String?
+  country           String?
+  city              String?
+  birthdate         DateTime?
+  phone             String?
+  profilePicture    String?
+  webSite           String?
+  CIN               String?
+  passport          String?
+
+  // ----------------------- Stats -------------------------
+  nbConnects    Int @default(0)
+  nbFollowers   Int @default(0)
+  nbFollowing   Int @default(0)
+  timeSpent     Int @default(0)
+  nbVisits      Int @default(0)
+  nbProjects    Int @default(0)
+  nbInvestments Int @default(0)
+
+  // -------------------- Timestamps -----------------------
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // ---------------------- Relations ----------------------
+  projects             Project[]              @relation("UserProjects")
+  teamUsers            TeamUsers[]
+  offers               Offer[]
+  likes                Like[]
+  comments             Comment[]
+  views                View[]
+  videos               Video[]
+  sentDiscussions      Discussion[]           @relation("SentDiscussions")
+  receivedDiscussions  Discussion[]           @relation("ReceivedDiscussions")
+  connects             Connect[]
+  follows              Follow[]
+  blockers             Block[]                @relation("Blocker")
+  blockedBy            Block[]                @relation("Blocked")
+  attemptLogs          Attempt_log[]
+  profileVisits        VisitorProfile[]
+  projectVisits        VisitorProject[]
+  interests            Interests[]
+  experiencesEducation Experience_Education[]
+  socialMedia          SocialMedia[]
+  notifications        Notification[]
+  posts                Post[]
+  postShares           PostShared[]
+  Message              Message[]
+
+  @@index([id]) // requested explicit index
   @@map("users")
+}
+
+////////////////////////////////////////////////////////////
+//  PROJECT SECTION
+////////////////////////////////////////////////////////////
+enum Status {
+  DRAFT
+  PUBLIC
+  PRIVATE
+}
+
+enum ProjectStage {
+  PRE_SEED
+  SEED
+  SERIE_A
+  SERIE_B
+}
+
+/// Fund‑raising project posted by a user
+model Project {
+  id                  String       @id @default(uuid())
+  creatorId           String
+  title               String
+  logoImage           String
+  description         String
+  problem             String
+  solution            String
+  projectLocation     String
+  teamSize            Int
+  teamId              String?
+  customersNumber     Int
+  financialGoal       Float
+  monthlyRevenue      Float
+  minPercentage       Int
+  maxPercentage       Int
+  percentageUnitPrice Float
+  sectorId            String
+  status              Status       @default(DRAFT)
+  runway              DateTime
+  marketPlan          String
+  businessPlan        String
+  successProbability  Float
+  projectStage        ProjectStage
+  netProfit           Float // %
+  nbLikes             Int          @default(0)
+  nbComments          Int          @default(0)
+  nbViews             Int          @default(0)
+  nbConnects          Int          @default(0)
+  verifiedProject     Boolean      @default(false)
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+
+  // ---------------------- Relations ----------------------
+  creator      User             @relation("UserProjects", fields: [creatorId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  team         Team?            @relation(fields: [teamId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  sector       Sector           @relation(fields: [sectorId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  files        File[]
+  useOfFunds   UseOfFunds[]
+  partnerships Partnership[]
+  projectTags  ProjectTag[]
+  offers       Offer[]
+  videos       Video[]
+  likes        Like[]
+  comments     Comment[]
+  views        View[]
+  connects     Connect[]
+  follows      Follow[]
+  visitorLogs  VisitorProject[]
+  Discussion   Discussion[]
+
+  @@index([creatorId])
+  @@index([sectorId])
+  @@index([teamId])
+  @@map("projects")
+}
+
+////////////////////////////////////////////////////////////
+//  FILE SECTION
+////////////////////////////////////////////////////////////
+/// File (PDF, pitch deck, etc.) attached to a project
+model File {
+  id        String   @id @default(uuid())
+  projectId String
+  fileName  String
+  fileType  String
+  fileUrl   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relation
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([projectId])
+  @@map("files")
+}
+
+////////////////////////////////////////////////////////////
+//  USE OF FUNDS SECTION
+////////////////////////////////////////////////////////////
+/// Breakdown of how funds will be used
+model UseOfFunds {
+  id            String   @id @default(uuid())
+  projectId     String
+  title         String
+  description   String
+  usePercentage Float
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([projectId])
+  @@map("use_of_funds")
+}
+
+////////////////////////////////////////////////////////////
+//  PARTNERSHIP SECTION
+////////////////////////////////////////////////////////////
+model Partnership {
+  id        String   @id @default(uuid())
+  projectId String
+  name      String
+  webSite   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([projectId])
+  @@map("partnerships")
+}
+
+////////////////////////////////////////////////////////////
+//  TAG SECTION
+////////////////////////////////////////////////////////////
+model Tag {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  projectTags ProjectTag[]
+
+  @@map("tags")
+}
+
+model ProjectTag {
+  id        String   @id @default(uuid())
+  projectId String
+  tagId     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  tag     Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([projectId, tagId])
+  @@index([projectId])
+  @@index([tagId])
+  @@map("project_tags")
+}
+
+////////////////////////////////////////////////////////////
+//  TEAM SECTION
+////////////////////////////////////////////////////////////
+model Team {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  teamUsers TeamUsers[]
+  Project   Project[]
+
+  @@map("teams")
+}
+
+model TeamUsers {
+  id        String   @id @default(uuid())
+  teamId    String
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([teamId, userId])
+  @@index([teamId])
+  @@index([userId])
+  @@map("team_users")
+}
+
+////////////////////////////////////////////////////////////
+//  SECTOR SECTION
+////////////////////////////////////////////////////////////
+model Sector {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  projects  Project[]
+  interests Interests[]
+
+  @@map("sectors")
+}
+
+////////////////////////////////////////////////////////////
+//  OFFER SECTION
+////////////////////////////////////////////////////////////
+enum StatusOffer {
+  DRAFT
+  ACCEPTED
+  REJECTED
+  PENDING
+}
+
+model Offer {
+  id               String      @id @default(uuid())
+  projectId        String
+  userId           String
+  amount           Float
+  equity           Float
+  responseAt       DateTime?
+  status           StatusOffer @default(DRAFT)
+  offerDescription String?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([projectId])
+  @@index([userId])
+  @@map("offers")
+}
+
+////////////////////////////////////////////////////////////
+//  VIDEO SECTION
+////////////////////////////////////////////////////////////
+model Video {
+  id          String   @id @default(uuid())
+  userId      String?
+  projectId   String
+  videoUrl    String
+  title       String
+  description String?
+  nbComments  Int      @default(0)
+  nbLikes     Int      @default(0)
+  nbViews     Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user    User?   @relation(fields: [userId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([projectId])
+  @@index([userId])
+  @@map("videos")
+}
+
+////////////////////////////////////////////////////////////
+//  LIKE / COMMENT / VIEW (engagement)
+////////////////////////////////////////////////////////////
+model Like {
+  id        String   @id @default(uuid())
+  userId    String
+  projectId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([userId, projectId])
+  @@index([userId])
+  @@index([projectId])
+  @@map("likes")
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  userId    String
+  projectId String
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([userId])
+  @@index([projectId])
+  @@map("comments")
+}
+
+model View {
+  id        String   @id @default(uuid())
+  userId    String
+  projectId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([userId])
+  @@index([projectId])
+  @@map("views")
+}
+
+////////////////////////////////////////////////////////////
+//  DISCUSSION + MESSAGE (chat)
+////////////////////////////////////////////////////////////
+enum DiscussionType {
+  PRIVATE
+  PROJECT
+}
+
+model Discussion {
+  id         String         @id @default(uuid())
+  senderId   String
+  receiverId String
+  type       DiscussionType
+  projectId  String?
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  sender   User     @relation("SentDiscussions", fields: [senderId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  receiver User     @relation("ReceivedDiscussions", fields: [receiverId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  project  Project? @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  messages Message[]
+
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([projectId])
+  @@map("discussions")
+}
+
+model Message {
+  id           String   @id @default(uuid())
+  discussionId String
+  senderId     String
+  content      String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  discussion Discussion @relation(fields: [discussionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  sender     User       @relation(fields: [senderId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([discussionId])
+  @@index([senderId])
+  @@map("messages")
+}
+
+////////////////////////////////////////////////////////////
+//  CONNECT / FOLLOW
+////////////////////////////////////////////////////////////
+model Connect {
+  id        String   @id @default(uuid())
+  userId    String
+  projectId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([userId, projectId])
+  @@index([userId])
+  @@index([projectId])
+  @@map("connects")
+}
+
+model Follow {
+  id        String   @id @default(uuid())
+  userId    String
+  projectId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([userId, projectId])
+  @@index([userId])
+  @@index([projectId])
+  @@map("follows")
+}
+
+////////////////////////////////////////////////////////////
+//  BLOCK
+////////////////////////////////////////////////////////////
+model Block {
+  id            String   @id @default(uuid())
+  userId        String
+  blockedUserId String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user        User @relation("Blocker", fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  blockedUser User @relation("Blocked", fields: [blockedUserId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([userId, blockedUserId])
+  @@index([userId])
+  @@index([blockedUserId])
+  @@map("blocks")
+}
+
+////////////////////////////////////////////////////////////
+//  ATTEMPT LOG (OTP, login attempts…)
+////////////////////////////////////////////////////////////
+model Attempt_log {
+  id        String   @id @default(uuid())
+  userId    String
+  otpCode   String
+  ipAddress String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([userId])
+  @@map("attempt_logs")
+}
+
+////////////////////////////////////////////////////////////
+//  VISITOR LOGS
+////////////////////////////////////////////////////////////
+model VisitorProfile {
+  id        String   @id @default(uuid())
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([userId])
+  @@map("visitor_profiles")
+}
+
+model VisitorProject {
+  id        String   @id @default(uuid())
+  userId    String
+  projectId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([userId, projectId])
+  @@index([userId])
+  @@index([projectId])
+  @@map("visitor_projects")
+}
+
+////////////////////////////////////////////////////////////
+//  INTERESTS
+////////////////////////////////////////////////////////////
+model Interests {
+  id        String   @id @default(uuid())
+  userId    String
+  sectorId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  sector Sector @relation(fields: [sectorId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([userId, sectorId])
+  @@index([userId])
+  @@index([sectorId])
+  @@map("interests")
+}
+
+////////////////////////////////////////////////////////////
+//  EXPERIENCE / EDUCATION
+////////////////////////////////////////////////////////////
+enum TypeOfExperience {
+  EXPERIENCE
+  EDUCATION
+}
+
+model Experience_Education {
+  id               String           @id @default(uuid())
+  userId           String
+  title            String
+  organization     String
+  degree           String?
+  fieldOfStudy     String?
+  location         String?
+  website          String?
+  description      String?
+  startDate        DateTime
+  endDate          DateTime?
+  typeOfExperience TypeOfExperience
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([userId])
+  @@map("experience_education")
+}
+
+////////////////////////////////////////////////////////////
+//  SOCIAL MEDIA
+////////////////////////////////////////////////////////////
+enum SocialMediaPlatform {
+  LINKEDIN
+  TWITTER
+  FACEBOOK
+  INSTAGRAM
+  GITHUB
+  OTHER
+}
+
+model SocialMedia {
+  id        String              @id @default(uuid())
+  userId    String
+  platform  SocialMediaPlatform
+  url       String
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([userId, platform])
+  @@index([userId])
+  @@map("social_media")
+}
+
+////////////////////////////////////////////////////////////
+//  NOTIFICATIONS
+////////////////////////////////////////////////////////////
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  type      String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([userId])
+  @@map("notifications")
+}
+
+////////////////////////////////////////////////////////////
+//  POSTS
+////////////////////////////////////////////////////////////
+enum PostCategory {
+  GENERAL
+  PROJECT_UPDATE
+  INVESTMENT_OPPORTUNITY
+  TEAM_ANNOUNCEMENT
+  EVENT
+  OTHER
+}
+
+model Post {
+  id           String   @id @default(uuid())
+  userId       String
+  content      String
+  nbLikes      Int      @default(0)
+  nbComments   Int      @default(0)
+  nbShares     Int      @default(0)
+  nbViews      Int      @default(0)
+  isPublic     Boolean  @default(true)
+  mlPrediction String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user     User         @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  media    PostMedia[]
+  sharedBy PostShared[]
+
+  @@index([userId])
+  @@map("posts")
+}
+
+model PostMedia {
+  id        String   @id @default(uuid())
+  postId    String
+  mediaUrl  String
+  mediaType String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([postId])
+  @@map("post_media")
+}
+
+model PostShared {
+  id        String   @id @default(uuid())
+  postId    String
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([postId, userId])
+  @@index([postId])
+  @@index([userId])
+  @@map("post_shared")
 }
