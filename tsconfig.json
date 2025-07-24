@@ -21,6 +21,9 @@
   "include": [
     "src/**/*",
     "test/**/*",
-    "src/templates/**/*.hbs"
+    "src/templates/**/*.hbs",
+    "node_modules/@types/node/module.d.ts",
+    "node_modules/@types/node/module.d.ts",
+    "node_modules/@types/node/module.d.ts"
   ]
 }
