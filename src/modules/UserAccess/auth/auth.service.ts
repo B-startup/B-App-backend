@@ -3,20 +3,15 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import {
     EmailTemplate,
     EmailSubject
-} from '../../core/constants/email.constants';
+} from '../../../core/constants/email.constants';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../../../core/services/prisma.service';
 import {
     comparePassword,
     cryptPassword,
-<<<<<<< HEAD:src/modules/auth/auth.service.ts
     handleOtpOperation
-} from '../../core/utils/auth';
-=======
-    generateOTP,
-    sendOtpToEmail
 } from '../../../core/utils/auth';
->>>>>>> origin/SakerBranchDev:src/modules/UserAccess/auth/auth.service.ts
+   
 import { LoginDto } from './dto/login.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { UserService } from '../user/user.service';

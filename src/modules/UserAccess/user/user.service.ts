@@ -1,19 +1,11 @@
 import { Injectable, ConflictException } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
 import { User } from '@prisma/client';
-<<<<<<< HEAD:src/modules/user/user.service.ts
-import { BaseService } from '../../core/services/base.service';
-import { PrismaService } from '../../core/services/prisma.service';
-import { cryptPassword, handleOtpOperation } from '../../core/utils/auth';
-=======
+
 import { BaseService } from '../../../core/services/base.service';
 import { PrismaService } from '../../../core/services/prisma.service';
-import {
-    cryptPassword,
-    sendOtpToEmail,
-    generateOTP
-} from '../../../core/utils/auth';
->>>>>>> origin/SakerBranchDev:src/modules/UserAccess/user/user.service.ts
+import { cryptPassword, handleOtpOperation } from '../../../core/utils/auth';
+
 import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
 import {
     EmailSubject,
