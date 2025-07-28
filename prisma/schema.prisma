@@ -1,3 +1,39 @@
+////////////////////////////////////////////////////////////
+//  License Information
+//
+//  © 2025 BOM Team — Saker Hajji Amin, Amine Ben Jebli,
+//  Sofienne Mrabet, and Lina Moussa. All rights reserved.
+//
+//  This Prisma schema was designed and developed by the BOM Team.
+//  Permission is hereby granted, free of charge, to any person
+//  obtaining a copy of this schema and associated documentation
+//  files (the “Schema”), to use, copy, modify, merge, publish,
+//  distribute, sublicense, and/or sell copies of the Schema,
+//  subject to the following conditions:
+//
+//  1. The above copyright notice and this permission notice shall
+//     be included in all copies or substantial portions of the Schema.
+//  2. The names of the BOM Team and its members (Saker Hajji Amin,
+//     Amine Ben Jebli, Sofienne Mrabet, and Lina Moussa) may not be
+//     used to endorse or promote products derived from this Schema
+//     without specific prior written permission.
+//
+//  THE SCHEMA IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,
+//  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+//  OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+//  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+//  HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY,
+//  WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+//  FROM, OUT OF OR IN CONNECTION WITH THE SCHEMA OR THE USE OR
+//  OTHER DEALINGS IN THE SCHEMA.
+//
+//  Designed by: BOM Team — Saker Hajji Amin, Amine Ben Jebli,
+//               Sofienne Mrabet, Lina Moussa
+////////////////////////////////////////////////////////////
+
+//////////////////////////////////////
+//  Prisma Client & Datasource
+//////////////////////////////////////
 generator client {
   provider = "prisma-client-js"
 }
@@ -7,34 +43,1642 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id               String    @id @default(uuid()) // UUID primary key
-  name             String
-  email            String    @unique
-  password         String
-  otpCode         String?   // nullable, for OTP verification
-  otpCodeExpiresAt DateTime? // nullable, for OTP expiration
-  isEmailVerified  Boolean   @default(false)
-  isCompleteProfile Boolean  @default(false)
-  isPhoneVerified  Boolean   @default(false)
-  description      String?
-  country          String?
-  city             String?
-  birthdate        DateTime?
-  phone            String?    // phone as string to include + and leading zeros
-  profilePicture   String?   // optional, nullable
-  webSite          String?
-  nbConnects       Int @default(0)
-  nbFollowers      Int @default(0)
-  nbFollowing      Int @default(0)
-  timeSpent        Int @default(0)       // store time in seconds or milliseconds
-  nbVisits         Int @default(0)       // number of visits
-  nbProjects       Int @default(0)
-  nbInvestments    Int @default(0)
-  CIN              String?   // nullable
-  passport         String?   // nullable
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+////////////////////////////////////////////////////////////
+//  USER SECTION
+////////////////////////////////////////////////////////////
 
+/// Role of the user within the application.
+/// Determines the level of access and privileges.
+enum UserRole {
+  /// Administrator role with elevated permissions
+  ADMIN
+  /// Standard user (founder, investor, or visitor)
+  User
+}
+
+/// Application user (founder, investor, or visitor).
+model User {
+  /// Primary identifier (UUID) for the user
+  id String @id @default(uuid())
+
+  // --------------------- Profile fields ------------------
+
+  /// Full name of the user
+  name String
+
+  /// Email address (unique) used for login and communication
+  email String @unique
+
+  /// Hashed password for authentication
+  password String
+
+  /// One‑time password code used for verification purposes (optional)
+  otpCode String?
+
+  /// Expiration timestamp for the OTP code (optional)
+  otpCodeExpiresAt DateTime?
+
+  /// Indicates whether the user's email has been verified
+  isEmailVerified Boolean @default(false)
+
+  /// Indicates whether the user has completed all required profile details
+  isCompleteProfile Boolean @default(false)
+
+  /// Indicates whether the user's phone number has been verified
+  isPhoneVerified Boolean @default(false)
+
+  /// User-provided description or bio (optional)
+  description String?
+
+  /// Country of residence (optional)
+  country String?
+
+  /// City of residence (optional)
+  city String?
+
+  /// Birth date of the user (optional)
+  birthdate DateTime?
+
+  /// Phone number (optional)
+  phone String?
+
+  /// URL or path to the user's profile picture (optional)
+  profilePicture String?
+
+  /// Website URL provided by the user (optional)
+  webSite String?
+
+  /// National ID number (optional)
+  CIN String?
+
+  /// Passport number (optional)
+  passport String?
+
+  /// User score based on activity, engagement, or reputation
+  score Int @default(0)
+
+  /// Role assigned to the user, defaulting to a standard user
+  role UserRole @default(User)
+
+  // ----------------------- Stats -------------------------
+
+  /// Number of connection requests or follow requests by the user
+  nbConnects Int @default(0)
+
+  /// Total number of followers this user has
+  nbFollowers Int @default(0)
+
+  /// Total number of other users this user follows
+  nbFollowing Int @default(0)
+
+  /// Total time spent in the application (e.g., in minutes or seconds)
+  timeSpent Int @default(0)
+
+  /// Number of profile visits this user has received
+  nbVisits Int @default(0)
+
+  /// Number of projects created by this user
+  nbProjects Int @default(0)
+
+  /// Number of offers made by this user
+  nbOffer Int @default(0)
+
+  // -------------------- Timestamps -----------------------
+
+  /// Timestamp when the user was created
+  createdAt DateTime @default(now())
+
+  /// Timestamp when the user record was last updated
+  updatedAt DateTime @updatedAt
+
+  // ---------------------- Relations ----------------------
+
+  /// Projects created by the user (founders)
+  projects Project[] @relation("UserProjects")
+
+  /// Connection to team members via TeamUsers
+  teamUsers TeamUsers[]
+
+  /// Offers made by the user (as investor or founder)
+  offers Offer[]
+
+  /// Likes given by the user to projects or other items
+  likes Like[]
+
+  /// Comments posted by the user
+  comments Comment[]
+
+  /// Views of the user (e.g., profile views or content viewed)
+  views View[]
+
+  /// Connections initiated by or to the user (social feature)
+  connects Connect[]
+
+  /// Users this user has blocked
+  blockers Block[] @relation("Blocker")
+
+  /// Users who have blocked this user
+  blockedBy Block[] @relation("Blocked")
+
+  /// Logs of login attempts or security-related actions
+  attemptLogs Attempt_log[]
+
+  /// Records of profiles this user visited
+  profileVisits VisitorProfileProject[] @relation("VisitorProfile")
+
+  /// Interests or sectors associated with the user
+  interests Interests[]
+
+  /// Educational and professional experiences of the user
+  experiencesEducation Experience_Education[]
+
+  /// User’s social media profiles (e.g., LinkedIn, Twitter)
+  socialMedia SocialMedia[]
+
+  /// Notifications received by the user
+  notifications Notification[]
+
+  /// Posts made by the user in the social aspect of the platform
+  posts Post[]
+
+  /// Posts shared by the user (reposts)
+  postShares PostShared[]
+
+  /// Messages sent or received by the user in conversations
+  Message Message[]
+
+  /// Discussions initiated by the user
+  sentDiscussions Discussion[] @relation("SentDiscussions")
+
+  /// Discussions where the user is the recipient
+  receivedDiscussions Discussion[] @relation("ReceivedDiscussions")
+
+  /// Users that this user is following
+  following Follow[] @relation("UserFollows")
+
+  /// Users who are following this user
+  followers Follow[] @relation("UserFollowed")
+
+  // Create an index on id for faster queries (explicit index)
+  @@index([id])
+  // Map to table name "users" in the database
   @@map("users")
+}
+
+////////////////////////////////////////////////////////////
+//  PROJECT SECTION
+////////////////////////////////////////////////////////////
+enum Status {
+  /// Project is still in draft state and not yet visible to the public
+  DRAFT
+  /// Project has been published and is publicly visible
+  PUBLIC
+}
+
+enum ProjectStage {
+  /// Pre-seed stage: early concept, typically pre-revenue
+  PRE_SEED
+  /// Seed stage: initial funding raised to validate product/market fit
+  SEED
+  /// Series A stage: more advanced funding round for growth
+  SERIE_A
+  /// Series B stage: later funding round for scaling up
+  SERIE_B
+}
+
+/// Fund‑raising project posted by a user.
+/// Represents a startup or business venture seeking investment.
+model Project {
+  /// Unique identifier for the project (UUID)
+  id String @id @default(uuid())
+
+  /// The user ID of the project creator
+  creatorId String
+
+  /// Title of the project, displayed as the primary name
+  title String
+
+  /// URL or path to the project logo or image
+  logoImage String
+
+  /// A high-level summary of what the project is about
+  description String
+
+  /// Description of the problem that the project aims to solve
+  problem String
+
+  /// Description of the project's proposed solution
+  solution String
+
+  /// Geographic location where the project is based or operating
+  projectLocation String
+
+  /// Number of team members in the project
+  teamSize Int
+
+  /// ID of the team (if any) associated with this project
+  teamId String?
+
+  /// Number of customers currently served by the project
+  customersNumber Int
+
+  /// Total amount of funding the project aims to raise (in currency units)
+  financialGoal Float
+
+  /// Current monthly revenue generated by the project
+  monthlyRevenue Float
+
+  /// Minimum percentage of equity offered to investors
+  minPercentage Int
+
+  /// Maximum percentage of equity offered to investors
+  maxPercentage Int
+
+  /// Price for each percentage point of equity (unit price)
+  percentageUnitPrice Float
+
+  /// ID of the sector this project belongs to (e.g., technology, healthcare)
+  sectorId String
+
+  /// Current status of the project (e.g., draft or public)
+  status Status @default(DRAFT)
+
+  /// Project’s runway date (expected date to run out of existing funds)
+  runway DateTime
+
+  /// Link or reference to the project’s marketing plan document
+  marketPlan String
+
+  /// Link or reference to the project’s business plan document
+  businessPlan String
+
+  /// Probability (0–1) that the project will succeed, based on internal assessment
+  successProbability Float?
+
+  /// Stage of funding or development of the project (e.g., pre-seed, seed)
+  projectStage ProjectStage
+
+  /// Net profit percentage expected or achieved by the project
+  netProfit Float // %
+
+  /// Number of likes the project has received from users
+  nbLikes Int @default(0)
+
+  /// Number of comments posted on the project
+  nbComments Int @default(0)
+
+  /// Number of times the project page has been viewed
+  nbViews Int @default(0)
+
+  /// Number of times users have connected with the project
+  nbConnects Int @default(0)
+
+  /// Indicates if the project has been verified by an admin or moderator
+  verifiedProject Boolean @default(false)
+
+  /// Timestamp when the project was created
+  createdAt DateTime @default(now())
+
+  /// Timestamp when the project was last updated
+  updatedAt DateTime @updatedAt
+
+  // ---------------------- Relations ----------------------
+
+  /// Reference to the user who created this project
+  creator User @relation("UserProjects", fields: [creatorId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  /// Optional reference to a team associated with this project
+  team Team? @relation(fields: [teamId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  /// Reference to the sector category of this project
+  sector Sector @relation(fields: [sectorId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  /// Files associated with the project (e.g., supporting documents)
+  files File[]
+
+  /// Breakdown of how raised funds will be used
+  useOfFunds UseOfFunds[]
+
+  /// Partnerships linked to this project (e.g., investors or collaborators)
+  partnerships Partnership[]
+
+  /// Tags that categorize the project (e.g., “Fintech”, “AI”)
+  projectTags ProjectTag[]
+
+  /// Investment offers made on the project
+  offers Offer[]
+
+  /// Video links or uploads associated with the project
+  videos Video[]
+
+  /// Likes received from users, as separate entities
+  likes Like[]
+
+  /// Comments left by users on the project
+  comments Comment[]
+
+  /// User connections to this project (e.g., expressions of interest)
+  connects Connect[]
+
+  /// Logs of profile visits from visitors
+  visitorLogs VisitorProfileProject[] @relation("VisitorProject")
+
+  /// Discussions related to the project (e.g., chat threads)
+  Discussion Discussion[]
+
+  // Indexes to optimize queries on foreign keys
+  @@index([creatorId])
+  @@index([sectorId])
+  @@index([teamId])
+  // Map to table name "projects" in the database
+  @@map("projects")
+}
+
+////////////////////////////////////////////////////////////
+//  FILE SECTION
+////////////////////////////////////////////////////////////
+
+/// Types of files that can be attached to a project.
+/// Enumerates allowed file formats (e.g., PDF, PNG).
+enum FileType {
+  /// PDF document (e.g., business plan, reports)
+  PDF
+  /// PNG image (e.g., graphics or diagrams)
+  PNG
+  /// JPG image (e.g., photos or compressed images)
+  JPG
+  /// PowerPoint presentation file (e.g., pitch decks)
+  PPT
+}
+
+/// File (e.g., PDF, pitch deck, or image) attached to a project.
+model File {
+  /// Unique identifier for the file (UUID)
+  id String @id @default(uuid())
+
+  /// ID of the project this file is associated with
+  projectId String
+
+  /// Name of the file, including its base name and extension
+  fileName String
+
+  /// Type of the file (limited to values defined in FileType)
+  fileType FileType
+
+  /// URL or path where the file is stored
+  fileUrl String
+
+  /// Timestamp when the file record was created
+  createdAt DateTime @default(now())
+
+  /// Timestamp when the file record was last updated
+  updatedAt DateTime @updatedAt
+
+  // ------------- Relation Definitions -------------
+
+  /// Project to which this file belongs
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  // Index to optimize lookups by project ID
+  @@index([projectId])
+  // Map to table name "files" in the database
+  @@map("files")
+}
+
+////////////////////////////////////////////////////////////
+//  USE OF FUNDS SECTION
+////////////////////////////////////////////////////////////
+
+/// Breakdown of how funds will be allocated in a project.
+/// Each entry indicates a specific portion and purpose for the raised capital.
+model UseOfFunds {
+  /// Unique identifier for the use-of-funds entry (UUID)
+  id String @id @default(uuid())
+
+  /// ID of the project this entry belongs to
+  projectId String
+
+  /// Title or brief label describing the purpose (e.g., “R&D”, “Marketing”)
+  title String
+
+  /// Detailed description of how the funds will be used
+  description String
+
+  /// Percentage of the total funds allocated to this purpose (0–100)
+  usePercentage Float
+
+  /// Timestamp when this entry was created
+  createdAt DateTime @default(now())
+
+  /// Timestamp when this entry was last updated
+  updatedAt DateTime @updatedAt
+
+  // ------------- Relation Definitions -------------
+
+  /// Reference to the related project
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  // Index to optimize lookups by project ID
+  @@index([projectId])
+  // Map to table name "use_of_funds" in the database
+  @@map("use_of_funds")
+}
+
+////////////////////////////////////////////////////////////
+//  PARTNERSHIP SECTION
+////////////////////////////////////////////////////////////
+
+/// Represents a partnership or collaboration linked to a specific project.
+/// Used to store information about organizations or individuals partnering with a project.
+model Partnership {
+  /// Unique identifier for the partnership record (UUID)
+  id String @id @default(uuid())
+
+  /// ID of the project this partnership is associated with
+  projectId String
+
+  /// Name of the partner organization or individual
+  name String
+
+  /// Website URL of the partner (e.g., company site or portfolio)
+  webSite String
+
+  /// Timestamp when the partnership record was created
+  createdAt DateTime @default(now())
+
+  /// Timestamp when the partnership record was last updated
+  updatedAt DateTime @updatedAt
+
+  // ------------- Relation Definitions -------------
+
+  /// Reference to the related project
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  // Index to optimize lookups by project ID
+  @@index([projectId])
+  // Map to table name "partnerships" in the database
+  @@map("partnerships")
+}
+
+////////////////////////////////////////////////////////////
+//  TAG SECTION
+////////////////////////////////////////////////////////////
+
+/// General tag used to categorize projects and posts.
+/// Allows users to search and filter based on topics or themes.
+model Tag {
+  /// Unique identifier for the tag (UUID)
+  id String @id @default(uuid())
+
+  /// Name of the tag (e.g., “Fintech”, “AI”), must be unique
+  name String @unique
+
+  /// Optional description explaining the context or usage of the tag
+  description String?
+
+  /// Timestamp when the tag was created
+  createdAt DateTime @default(now())
+
+  /// Timestamp when the tag was last updated
+  updatedAt DateTime @updatedAt
+
+  // ------------- Relation Definitions -------------
+
+  /// Associations linking tags to projects
+  projectTags ProjectTag[]
+
+  /// Associations linking tags to posts
+  PostTag PostTag[]
+
+  // Map to table name "tags" in the database
+  @@map("tags")
+}
+
+/// Linking table between Project and Tag to support a many-to-many relationship.
+/// Associates a tag with a specific project.
+model ProjectTag {
+  /// Unique identifier for the project-tag link (UUID)
+  id String @id @default(uuid())
+
+  /// ID of the project to which the tag is attached
+  projectId String
+
+  /// ID of the tag assigned to the project
+  tagId String
+
+  /// Timestamp when this association was created
+  createdAt DateTime @default(now())
+
+  /// Timestamp when this association was last updated
+  updatedAt DateTime @updatedAt
+
+  // ------------- Relation Definitions -------------
+
+  /// Reference to the associated project
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  /// Reference to the associated tag
+  tag Tag @relation(fields: [tagId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  // Enforce uniqueness of each project–tag pair (no duplicates)
+  @@unique([projectId, tagId])
+  // Indexes to optimize queries by project or tag
+  @@index([projectId])
+  @@index([tagId])
+  // Map to table name "project_tags" in the database
+  @@map("project_tags")
+}
+
+////////////////////////////////////////////////////////////
+//  TEAM SECTION
+////////////////////////////////////////////////////////////
+
+/// Represents a team within the application.
+/// A team can be linked to one or more projects and is made up of multiple users.
+model Team {
+  /// Unique identifier for the team (UUID)
+  id String @id @default(uuid())
+
+  /// Name of the team (e.g., “Growth Team”, “Engineering Team”)
+  name String
+
+  /// Optional description of the team’s function or focus
+  description String?
+
+  /// Timestamp when the team record was created
+  createdAt DateTime @default(now())
+
+  /// Timestamp when the team record was last updated
+  updatedAt DateTime @updatedAt
+
+  // ------------- Relation Definitions -------------
+
+  /// Users who belong to this team via the TeamUsers junction table
+  teamUsers TeamUsers[]
+
+  /// Projects associated with this team (a team can own multiple projects)
+  Project Project[]
+
+  // Explicit index on id (for fast lookups)
+  @@index([id])
+  // Map to table name "teams" in the database
+  @@map("teams")
+}
+
+/// Linking table between Team and User to support a many-to-many relationship.
+/// This model defines team membership for users.
+model TeamUsers {
+  /// Unique identifier for the team-user record (UUID)
+  id String @id @default(uuid())
+
+  /// ID of the team this user belongs to
+  teamId String
+
+  /// ID of the user belonging to this team
+  userId String
+
+  /// Timestamp when the team-user record was created
+  createdAt DateTime @default(now())
+
+  /// Timestamp when the team-user record was last updated
+  updatedAt DateTime @updatedAt
+
+  // ------------- Relation Definitions -------------
+
+  /// Reference to the team entity
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  /// Reference to the user entity
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  // Enforce uniqueness so that the same user cannot join the same team more than once
+  @@unique([teamId, userId])
+  // Indexes to optimize queries by teamId or userId
+  @@index([teamId])
+  @@index([userId])
+  // Map to table name "team_users" in the database
+  @@map("team_users")
+}
+
+////////////////////////////////////////////////////////////
+//  SECTOR SECTION
+////////////////////////////////////////////////////////////
+
+/// Represents a high-level category or industry sector (e.g., Fintech, Health Tech).
+/// Used to classify projects, interests, and posts.
+model Sector {
+  /// Unique identifier for the sector (UUID)
+  id String @id @default(uuid())
+
+  /// Name of the sector (must be unique)
+  name String @unique
+
+  /// Optional description providing context for the sector
+  description String?
+
+  /// Timestamp when the sector record was created
+  createdAt DateTime @default(now())
+
+  /// Timestamp when the sector record was last updated
+  updatedAt DateTime @updatedAt
+
+  // ------------- Relation Definitions -------------
+
+  /// Projects belonging to this sector
+  projects Project[]
+
+  /// User interests associated with this sector
+  interests Interests[]
+
+  /// Posts tagged with this sector
+  PostSector PostSector[]
+
+  // Map to table name "sectors" in the database
+  @@map("sectors")
+}
+
+////////////////////////////////////////////////////////////
+//  OFFER SECTION
+////////////////////////////////////////////////////////////
+
+/// Status of an investment offer submitted by a user.
+/// Indicates whether the offer has been accepted, rejected, or is still pending.
+enum StatusOffer {
+  /// The offer has been accepted by the project owner
+  ACCEPTED
+  /// The offer has been rejected by the project owner
+  REJECTED
+  /// The offer is awaiting a decision
+  PENDING
+}
+
+/// Represents an investment offer made by a user on a project.
+model Offer {
+  /// Unique identifier for the offer (UUID)
+  id String @id @default(uuid())
+
+  /// ID of the project this offer is made on
+  projectId String
+
+  /// ID of the user who made the offer
+  userId String
+
+  /// Amount of money offered (e.g., in local currency units)
+  amount Float
+
+  /// Percentage of equity requested in exchange for the investment
+  equity Float
+
+  /// Timestamp when the offer was responded to (if any)
+  responseAt DateTime?
+
+  /// Status of the offer (accepted, rejected, or pending)
+  status StatusOffer @default(PENDING)
+
+  /// Optional message or description provided by the investor
+  offerDescription String?
+
+  /// Timestamp when the offer was created
+  createdAt DateTime @default(now())
+
+  /// Timestamp when the offer was last updated
+  updatedAt DateTime @updatedAt
+
+  // ------------- Relation Definitions -------------
+
+  /// Reference to the project being invested in
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  /// Reference to the user who made the offer
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  // Indexes to optimize lookups by project or user
+  @@index([projectId])
+  @@index([userId])
+  // Map to table name "offers" in the database
+  @@map("offers")
+}
+
+////////////////////////////////////////////////////////////
+//  VIDEO SECTION
+////////////////////////////////////////////////////////////
+
+/// Video uploaded to a project by a user.
+/// Used for pitch videos, demos, or promotional content.
+model Video {
+  /// Unique identifier for the video record (UUID)
+  id String @id @default(uuid())
+
+  /// ID of the user who uploaded the video
+  userId String
+
+  /// ID of the project this video is associated with
+  projectId String
+
+  /// URL or path to the video file
+  videoUrl String
+
+  /// Title of the video (descriptive label)
+  title String
+
+  /// Optional description providing context or details about the video
+  description String?
+
+  /// Number of times this video has been viewed
+  nbViews Int @default(0)
+
+  /// Timestamp when the video record was created
+  createdAt DateTime @default(now())
+
+  /// Timestamp when the video record was last updated
+  updatedAt DateTime @updatedAt
+
+  // ------------- Relation Definitions -------------
+
+  /// Reference to the associated project
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  /// Views logged on this video
+  View View[]
+
+  // Indexes to optimize queries by project and user
+  @@index([projectId])
+  @@index([userId])
+  // Map to table name "videos" in the database
+  @@map("videos")
+}
+
+////////////////////////////////////////////////////////////
+//  LIKE / COMMENT / VIEW (engagement)
+////////////////////////////////////////////////////////////
+
+/// Represents a 'like' given by a user to a project, post, or comment.
+/// Supports engagement tracking across multiple entity types.
+model Like {
+  /// Unique identifier for the like record (UUID)
+  id String @id @default(uuid())
+
+  /// ID of the user who liked the item
+  userId String
+
+  /// ID of the project liked (optional if liking a post or comment)
+  projectId String?
+
+  /// Timestamp when the like was created
+  createdAt DateTime @default(now())
+
+  /// Timestamp when the like was last updated
+  updatedAt DateTime @updatedAt
+
+  /// ID of the post liked (optional)
+  postId String?
+
+  /// ID of the comment liked (optional)
+  commentId String?
+
+  // ------------- Relation Definitions -------------
+
+  /// Reference to the user who liked the item
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  /// Reference to the liked project (optional)
+  project Project? @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  /// Reference to the liked post (optional)
+  post Post? @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  /// Reference to the liked comment (optional)
+  comment Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  // User can like a project only once (enforced via composite unique index)
+  @@unique([userId, projectId])
+  // Indexes to optimize queries by user or project
+  @@index([userId])
+  @@index([projectId])
+  // Map to table name "likes" in the database
+  @@map("likes")
+}
+
+/// Represents a comment made by a user on a project or post.
+/// Supports hierarchical (parent-child) structure for replies.
+model Comment {
+  /// Unique identifier for the comment (UUID)
+  id String @id @default(uuid())
+
+  /// ID of the user who wrote the comment
+  userId String
+
+  /// ID of the project associated with the comment (optional)
+  projectId String?
+
+  /// ID of the post associated with the comment (optional)
+  postId String?
+
+  /// Parent comment ID; null if this is a top-level comment
+  parentId String?
+
+  /// Content of the comment
+  content String
+
+  /// Number of likes the comment has received
+  nbLikes Int @default(0)
+
+  /// Timestamp when the comment was created
+  createdAt DateTime @default(now())
+
+  /// Timestamp when the comment was last updated
+  updatedAt DateTime @updatedAt
+
+  // ── Relations ────────────────────────────────────────────
+
+  /// Reference to the authoring user
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// Reference to the project (optional, if comment belongs to a project rather than a post)
+  project Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  /// Reference to the post (optional, if comment belongs to a post rather than a project)
+  post Post? @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  /// Self-referential relationship: parent comment (null for top-level)
+  parent Comment? @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+
+  /// Replies to this comment (reverse relation for convenience)
+  replies Comment[] @relation("CommentReplies")
+
+  /// Likes on this comment
+  likes Like[]
+
+  // ── Indexes / constraints ───────────────────────────────
+  @@index([userId])
+  @@index([projectId])
+  @@index([parentId])
+  // Map to table name "comments" in the database
+  @@map("comments")
+}
+
+/// Represents a view of a video by a user.
+/// Tracks how many times and for how long a user watched a video.
+model View {
+  /// Unique identifier for the view record (UUID)
+  id String @id @default(uuid())
+
+  /// ID of the user who viewed the video
+  userId String
+
+  /// ID of the video that was viewed
+  videoId String
+
+  /// Timestamp when the view was recorded
+  createdAt DateTime @default(now())
+
+  /// Timestamp when the view record was last updated
+  updatedAt DateTime @updatedAt
+
+  /// Time spent watching the video in seconds
+  timespent Int @default(0)
+
+  // ------------- Relation Definitions -------------
+
+  /// Reference to the viewing user
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  /// Reference to the viewed video
+  video Video @relation(fields: [videoId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  // Indexes to optimize queries by user or video
+  @@index([userId])
+  @@index([videoId])
+  // Map to table name "views" in the database
+  @@map("views")
+}
+
+////////////////////////////////////////////////////////////
+//  DISCUSSION + MESSAGE (chat)
+////////////////////////////////////////////////////////////
+
+/// Type of discussion.
+/// Can be a private chat between two users or a project-related discussion.
+enum DiscussionType {
+  /// One-on-one private conversation
+  PRIVATE
+  /// Discussion related to a specific project
+  PROJECT
+}
+
+/// Represents a chat or discussion between two users, optionally related to a project.
+model Discussion {
+  /// Unique identifier for the discussion (UUID)
+  id String @id @default(uuid())
+
+  /// ID of the user who initiated the discussion
+  senderId String
+
+  /// ID of the user who received the discussion
+  receiverId String
+
+  /// Type of discussion (private or project)
+  type DiscussionType
+
+  /// ID of the project, if the discussion pertains to a project
+  projectId String?
+
+  /// Timestamp when the discussion was created
+  createdAt DateTime @default(now())
+
+  /// Timestamp when the discussion was last updated
+  updatedAt DateTime @updatedAt
+
+  // ------------- Relation Definitions -------------
+
+  /// Reference to the sender user
+  sender User @relation("SentDiscussions", fields: [senderId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  /// Reference to the receiver user
+  receiver User @relation("ReceivedDiscussions", fields: [receiverId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  /// Reference to the associated project (optional)
+  project Project? @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  /// Messages belonging to this discussion
+  messages Message[]
+
+  // Indexes to optimize queries by sender, receiver, or project
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([projectId])
+  // Map to table name "discussions" in the database
+  @@map("discussions")
+}
+
+/// Represents an individual message sent within a discussion.
+model Message {
+  /// Unique identifier for the message (UUID)
+  id String @id @default(uuid())
+
+  /// ID of the discussion this message belongs to
+  discussionId String
+
+  /// ID of the user who sent the message
+  senderId String
+
+  /// Content of the message
+  content String
+
+  /// Timestamp when the message was created
+  createdAt DateTime @default(now())
+
+  /// Timestamp when the message was last updated
+  updatedAt DateTime @updatedAt
+
+  // ------------- Relation Definitions -------------
+
+  /// Reference back to the discussion
+  discussion Discussion @relation(fields: [discussionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  /// Reference to the sender user
+  sender User @relation(fields: [senderId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  // Indexes to optimize queries by discussion or sender
+  @@index([discussionId])
+  @@index([senderId])
+  // Map to table name "messages" in the database
+  @@map("messages")
+}
+
+////////////////////////////////////////////////////////////
+//  CONNECT / FOLLOW
+////////////////////////////////////////////////////////////
+
+/// Possible states of a connection request between a user and a project.
+enum ConnectStatus {
+  /// The connection request has been sent but not yet acted upon
+  PENDING
+  /// The connection request has been accepted
+  ACCEPTED
+  /// The connection request has been rejected
+  REJECTED
+}
+
+/// Represents a request by a user to connect with a project (e.g., express interest).
+model Connect {
+  /// Unique identifier for the connect record (UUID)
+  id String @id @default(uuid())
+
+  /// ID of the user initiating the connection
+  userId String
+
+  /// ID of the project the user wants to connect to
+  projectId String
+
+  /// Timestamp when the connection was requested
+  createdAt DateTime @default(now())
+
+  /// Timestamp when the connection record was last updated
+  updatedAt DateTime @updatedAt
+
+  /// Status of the connection request (pending, accepted, or rejected)
+  connectSatus ConnectStatus @default(PENDING)
+
+  // ------------- Relation Definitions -------------
+
+  /// Reference to the user initiating the connection
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  /// Reference to the project to which the user wants to connect
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  // A user can connect to a specific project only once
+  @@unique([userId, projectId])
+  // Indexes to optimize queries by user or project
+  @@index([userId])
+  @@index([projectId])
+  // Map to table name "connects" in the database
+  @@map("connects")
+}
+
+/// Represents a following relationship between two users.
+model Follow {
+  /// Surrogate key – helpful for logs or UI representation
+  id String @id @default(uuid())
+
+  /// ID of the follower (user initiating the follow)
+  followerId String
+
+  /// ID of the user being followed
+  followingId String
+
+  /// Timestamp when the follow was created
+  createdAt DateTime @default(now())
+
+  /// Timestamp when the follow was last updated
+  updatedAt DateTime @updatedAt
+
+  // ------------- Relation Definitions -------------
+
+  /// Reference to the follower
+  follower User @relation("UserFollows", fields: [followerId], references: [id], onDelete: Cascade)
+
+  /// Reference to the user being followed
+  following User @relation("UserFollowed", fields: [followingId], references: [id], onDelete: Cascade)
+
+  // Enforce that a user can follow another user only once
+  @@unique([followerId, followingId])
+  // Indexes to optimize queries by follower or following
+  @@index([followerId])
+  @@index([followingId])
+  // Map to table name "follows" in the database
+  @@map("follows")
+}
+
+////////////////////////////////////////////////////////////
+//  BLOCK
+////////////////////////////////////////////////////////////
+
+/// Represents a blocking relationship between two users.
+/// Used to prevent interaction between the blocker and the blocked user.
+model Block {
+  /// Unique identifier for the block record (UUID)
+  id String @id @default(uuid())
+
+  /// ID of the user who blocks another user
+  userId String
+
+  /// ID of the user being blocked
+  blockedUserId String
+
+  /// Timestamp when the block was created
+  createdAt DateTime @default(now())
+
+  /// Timestamp when the block record was last updated
+  updatedAt DateTime @updatedAt
+
+  // ------------- Relation Definitions -------------
+
+  /// Reference to the user performing the block
+  user User @relation("Blocker", fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  /// Reference to the user being blocked
+  blockedUser User @relation("Blocked", fields: [blockedUserId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  // A user can block another user only once
+  @@unique([userId, blockedUserId])
+  // Indexes to optimize queries by user or blocked user
+  @@index([userId])
+  @@index([blockedUserId])
+  // Map to table name "blocks" in the database
+  @@map("blocks")
+}
+
+////////////////////////////////////////////////////////////
+//  ATTEMPT LOG (OTP, login attempts…)
+////////////////////////////////////////////////////////////
+
+/// Records user attempts such as login attempts or OTP requests.
+/// Useful for security auditing and rate-limiting.
+model Attempt_log {
+  /// Unique identifier for the log entry (UUID)
+  id String @id @default(uuid())
+
+  /// ID of the user associated with the attempt
+  userId String
+
+  /// IP address from which the attempt originated (optional)
+  ipAddress String?
+
+  /// Timestamp when the attempt was logged
+  createdAt DateTime @default(now())
+
+  /// Timestamp when the attempt record was last updated
+  updatedAt DateTime @updatedAt
+
+  /// Indicates whether the attempt was successful (e.g., login succeeded)
+  sucssess Boolean @default(false)
+
+  /// Reason or description of the attempt outcome (optional)
+  reason String?
+
+  // ------------- Relation Definitions -------------
+
+  /// Reference to the user associated with the attempt
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  // Index to optimize queries by user
+  @@index([userId])
+  // Map to table name "attempt_logs" in the database
+  @@map("attempt_logs")
+}
+
+////////////////////////////////////////////////////////////
+//  VISITOR LOGS
+////////////////////////////////////////////////////////////
+
+/// Logs profile visits between users and projects.
+/// Tracks which users viewed which profiles and projects.
+model VisitorProfileProject {
+  /// Unique identifier for the visit record (UUID)
+  id String @id @default(uuid())
+
+  /// ID of the profile being visited (optional)
+  userId String?
+
+  /// ID of the user who is visiting the profile
+  userVisitorId String
+
+  /// ID of the project being visited (optional)
+  projectId String?
+
+  /// Timestamp when the visit occurred
+  createdAt DateTime @default(now())
+
+  /// Timestamp when the visit record was last updated
+  updatedAt DateTime @updatedAt
+
+  // ------------- Relation Definitions -------------
+
+  /// Reference to the profile owner (visited user)
+  user User? @relation("VisitorProfile", fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  /// Reference to the visited project
+  project Project? @relation("VisitorProject", fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  // Indexes to optimize queries by user or project
+  @@index([userId])
+  @@index([projectId])
+  // Map to table name "visitor_profiles" in the database
+  @@map("visitor_profiles")
+}
+
+////////////////////////////////////////////////////////////
+//  INTERESTS
+////////////////////////////////////////////////////////////
+
+/// Represents a link between a user and a sector to capture user interests.
+/// Allows users to specify which sectors they are interested in.
+model Interests {
+  /// Unique identifier for the interest record (UUID)
+  id String @id @default(uuid())
+
+  /// ID of the user who has the interest
+  userId String
+
+  /// ID of the sector the user is interested in
+  sectorId String
+
+  /// Timestamp when the interest was created
+  createdAt DateTime @default(now())
+
+  /// Timestamp when the interest was last updated
+  updatedAt DateTime @updatedAt
+
+  // ------------- Relation Definitions -------------
+
+  /// Reference to the user
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  /// Reference to the sector
+  sector Sector @relation(fields: [sectorId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  // Enforce uniqueness: a user can express interest in a sector only once
+  @@unique([userId, sectorId])
+  // Indexes to optimize queries by user or sector
+  @@index([userId])
+  @@index([sectorId])
+  // Map to table name "interests" in the database
+  @@map("interests")
+}
+
+////////////////////////////////////////////////////////////
+//  EXPERIENCE / EDUCATION
+////////////////////////////////////////////////////////////
+
+/// Indicates whether the entry describes professional experience or educational history.
+enum TypeOfExperience {
+  /// Professional work experience
+  EXPERIENCE
+  /// Educational experience, such as university or courses
+  EDUCATION
+}
+
+/// Represents a record of professional experience or educational background for a user.
+model Experience_Education {
+  /// Unique identifier for the record (UUID)
+  id String @id @default(uuid())
+
+  /// ID of the user to whom this experience or education belongs
+  userId String
+
+  /// Title or position held (e.g., “Software Engineer” or “Bachelor of Science”)
+  title String
+
+  /// Name of the organization or institution
+  organization String
+
+  /// Degree earned (optional, primarily for education entries)
+  degree String?
+
+  /// Field of study (optional)
+  fieldOfStudy String?
+
+  /// Location of the experience or education (optional)
+  location String?
+
+  /// Website of the organization or institution (optional)
+  website String?
+
+  /// Description or summary of duties or coursework (optional)
+  description String?
+
+  /// Start date of the experience or education
+  startDate DateTime
+
+  /// End date (optional; null if ongoing)
+  endDate DateTime?
+
+  /// Type of entry: experience or education
+  typeOfExperience TypeOfExperience
+
+  /// Timestamp when the record was created
+  createdAt DateTime @default(now())
+
+  /// Timestamp when the record was last updated
+  updatedAt DateTime @updatedAt
+
+  // ------------- Relation Definitions -------------
+
+  /// Reference to the user
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  // Index to optimize queries by user
+  @@index([userId])
+  // Map to table name "experience_education" in the database
+  @@map("experience_education")
+}
+
+////////////////////////////////////////////////////////////
+//  SOCIAL MEDIA
+////////////////////////////////////////////////////////////
+
+/// Supported social media platforms for linking user accounts.
+enum SocialMediaPlatform {
+  /// LinkedIn profile
+  LINKEDIN
+  /// Twitter profile
+  TWITTER
+  /// Facebook profile
+  FACEBOOK
+  /// Instagram profile
+  INSTAGRAM
+  /// GitHub profile (e.g., for developers)
+  GITHUB
+  /// Other platforms not specifically listed
+  OTHER
+}
+
+/// Represents a user’s social media link.
+model SocialMedia {
+  /// Unique identifier for the social media record (UUID)
+  id String @id @default(uuid())
+
+  /// ID of the user
+  userId String
+
+  /// Platform of the social media link (LinkedIn, Twitter, etc.)
+  platform SocialMediaPlatform
+
+  /// URL of the social media profile
+  url String
+
+  /// Timestamp when the record was created
+  createdAt DateTime @default(now())
+
+  /// Timestamp when the record was last updated
+  updatedAt DateTime @updatedAt
+
+  // ------------- Relation Definitions -------------
+
+  /// Reference to the user who owns this social media link
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  // Each user can have only one link per platform
+  @@unique([userId, platform])
+  // Index to optimize queries by user
+  @@index([userId])
+  // Map to table name "social_media" in the database
+  @@map("social_media")
+}
+
+////////////////////////////////////////////////////////////
+//  NOTIFICATIONS
+////////////////////////////////////////////////////////////
+
+/// Types of notifications delivered to users.
+enum NotificationType {
+  NEW_LIKE
+  NEW_COMMENT
+  NEW_FOLLOWER
+  NEW_MESSAGE
+  PROJECT_UPDATE
+  OFFER_RECEIVED
+  CONNECT_REQUEST
+  CONNECT_ACCEPTED
+  CONNECT_REJECTED
+  PROJECT_VERIFIED
+  OFFER_INVESTOR
+  OFFER_ACCEPTED
+  OFFER_REJECTED
+  NEW_POST
+  NEW_POST_COMMENT
+  NEW_POST_LIKE
+  NEW_POST_SHARE
+  OTHER
+}
+
+/// Represents a notification sent to a user.
+model Notification {
+  /// Unique identifier for the notification (UUID)
+  id String @id @default(uuid())
+
+  /// ID of the user receiving the notification
+  userId String
+
+  /// Type of notification (e.g., new like, new comment)
+  type NotificationType
+
+  /// Optional title or heading for the notification
+  Title String?
+
+  /// Body of the notification message
+  message String
+
+  /// Indicates whether the notification has been read
+  isRead Boolean @default(false)
+
+  /// Timestamp when the notification was created
+  createdAt DateTime @default(now())
+
+  /// Timestamp when the notification was last updated
+  updatedAt DateTime @updatedAt
+
+  // ------------- Relation Definitions -------------
+
+  /// Reference to the user who is receiving the notification
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  // Index to optimize queries by user
+  @@index([userId])
+  // Map to table name "notifications" in the database
+  @@map("notifications")
+}
+
+////////////////////////////////////////////////////////////
+//  POSTS
+////////////////////////////////////////////////////////////
+
+/// Association between a post and a sector (many-to-many).
+model PostSector {
+  /// Unique identifier for the post-sector link (UUID)
+  id String @id @default(uuid())
+
+  /// ID of the post
+  postId String
+
+  /// ID of the sector
+  sectorId String
+
+  /// Timestamp when the link was created
+  createdAt DateTime @default(now())
+
+  /// Timestamp when the link was last updated
+  updatedAt DateTime @updatedAt
+
+  // ------------- Relation Definitions -------------
+
+  /// Reference to the post
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  /// Reference to the sector
+  sector Sector @relation(fields: [sectorId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  // Enforce uniqueness: a post can only be linked to a sector once
+  @@unique([postId, sectorId])
+  // Indexes to optimize queries by post or sector
+  @@index([postId])
+  @@index([sectorId])
+  // Map to table name "post_sectors" in the database
+  @@map("post_sectors")
+}
+
+/// Association between a post and a tag (many-to-many).
+model PostTag {
+  /// Unique identifier for the post-tag link (UUID)
+  id String @id @default(uuid())
+
+  /// ID of the post
+  postId String
+
+  /// ID of the tag
+  tagId String
+
+  /// Timestamp when the link was created
+  createdAt DateTime @default(now())
+
+  /// Timestamp when the link was last updated
+  updatedAt DateTime @updatedAt
+
+  // ------------- Relation Definitions -------------
+
+  /// Reference to the post
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  /// Reference to the tag
+  tag Tag @relation(fields: [tagId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  // Enforce uniqueness: a post can only be linked to a tag once
+  @@unique([postId, tagId])
+  // Indexes to optimize queries by post or tag
+  @@index([postId])
+  @@index([tagId])
+  // Map to table name "post_tags" in the database
+  @@map("post_tags")
+}
+
+/// Represents a user-generated post (similar to a social media post).
+model Post {
+  /// Unique identifier for the post (UUID)
+  id String @id @default(uuid())
+
+  /// ID of the user who created the post
+  userId String
+
+  /// Main textual content of the post
+  content String
+
+  /// Number of likes the post has received
+  nbLikes Int @default(0)
+
+  /// Number of comments on the post
+  nbComments Int @default(0)
+
+  /// Number of times the post has been shared by other users
+  nbShares Int @default(0)
+
+  /// Number of times the post has been viewed
+  nbViews Int @default(0)
+
+  /// Visibility of the post: true if public, false if private
+  isPublic Boolean @default(true)
+
+  /// Optional machine learning prediction or label associated with the post (for moderation or categorization)
+  mlPrediction String?
+
+  /// Timestamp when the post was created
+  createdAt DateTime @default(now())
+
+  /// Timestamp when the post was last updated
+  updatedAt DateTime @updatedAt
+
+  // ------------- Relation Definitions -------------
+
+  /// Reference to the user who created the post
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  /// Media files (images, videos) attached to the post
+  media PostMedia[]
+
+  /// Records of users who have shared this post
+  sharedBy PostShared[]
+
+  /// Likes on the post
+  Like Like[]
+
+  /// Comments on the post
+  Comment Comment[]
+
+  /// Sectors associated with the post
+  PostSector PostSector[]
+
+  /// Tags associated with the post
+  PostTag PostTag[]
+
+  // Index to optimize queries by user
+  @@index([userId])
+  // Map to table name "posts" in the database
+  @@map("posts")
+}
+
+/// Media type for a post attachment.
+enum PostMediaType {
+  /// Image media (e.g., PNG, JPG)
+  IMAGE
+  /// Video media (e.g., MP4)
+  VIDEO
+}
+
+/// Represents a media file attached to a post (image or video).
+model PostMedia {
+  /// Unique identifier for the post media record (UUID)
+  id String @id @default(uuid())
+
+  /// ID of the associated post
+  postId String
+
+  /// URL or path to the media file
+  mediaUrl String
+
+  /// Type of the media (image or video)
+  mediaType PostMediaType
+
+  /// Timestamp when the media record was created
+  createdAt DateTime @default(now())
+
+  /// Timestamp when the media record was last updated
+  updatedAt DateTime @updatedAt
+
+  // ------------- Relation Definitions -------------
+
+  /// Reference to the associated post
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  // Index to optimize queries by post
+  @@index([postId])
+  // Map to table name "post_media" in the database
+  @@map("post_media")
+}
+
+/// Represents a share action where a user reshared a post.
+model PostShared {
+  /// Unique identifier for the post shared record (UUID)
+  id String @id @default(uuid())
+
+  /// ID of the post that was shared
+  postId String
+
+  /// ID of the user who shared the post
+  userId String
+
+  /// Timestamp when the share occurred
+  createdAt DateTime @default(now())
+
+  /// Timestamp when the share record was last updated
+  updatedAt DateTime @updatedAt
+
+  /// Optional description or message added by the user when sharing
+  description String?
+
+  // ------------- Relation Definitions -------------
+
+  /// Reference to the post being shared
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  /// Reference to the user who shared the post
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  // Enforce uniqueness: a user can only share a specific post once
+  @@unique([postId, userId])
+  // Indexes to optimize queries by post or user
+  @@index([postId])
+  @@index([userId])
+  // Map to table name "post_shared" in the database
+  @@map("post_shared")
 }
