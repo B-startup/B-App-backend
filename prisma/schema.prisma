@@ -1681,4 +1681,5 @@ model PostShared {
   @@index([userId])
   // Map to table name "post_shared" in the database
   @@map("post_shared")
+
 }
