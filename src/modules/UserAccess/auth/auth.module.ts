@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { PrismaService } from '../../../core/services/prisma.service';
-import { FileUploadService } from '../file-upload/file-upload.service';
+import { FileUploadService } from 'src/modules/ProjectManagement/file-upload/file-upload.service';
 import { UserModule } from '../user/user.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';

@@ -4,23 +4,23 @@ import { UpdateBlockDto } from './dto/update-block.dto';
 
 @Injectable()
 export class BlockService {
-  create(createBlockDto: CreateBlockDto) {
-    return 'This action adds a new block';
-  }
+    create(createBlockDto: CreateBlockDto) {
+        return 'This action adds a new block';
+    }
 
-  findAll() {
-    return `This action returns all block`;
-  }
+    findAll() {
+        return `This action returns all block`;
+    }
 
-  findOne(id: number) {
-    return `This action returns a #${id} block`;
-  }
+    findOne(id: number) {
+        return `This action returns a #${id} block`;
+    }
 
-  update(id: number, updateBlockDto: UpdateBlockDto) {
-    return `This action updates a #${id} block`;
-  }
+    update(id: number, updateBlockDto: UpdateBlockDto) {
+        return `This action updates a #${id} block`;
+    }
 
-  remove(id: number) {
-    return `This action removes a #${id} block`;
-  }
+    remove(id: number) {
+        return `This action removes a #${id} block`;
+    }
 }

@@ -10,7 +10,8 @@ import {
 import { SectorService } from './sector.service';
 import { CreateSectorDto } from './dto/create-sector.dto';
 import { UpdateSectorDto } from './dto/update-sector.dto';
-
+import { ApiTags } from '@nestjs/swagger';
+@ApiTags('sector')
 @Controller('sector')
 export class SectorController {
     constructor(private readonly sectorService: SectorService) {}
@@ -27,16 +28,16 @@ export class SectorController {
 
     @Get(':id')
     findOne(@Param('id') id: string) {
-        return this.sectorService.findOne(+id);
+        return this.sectorService.findOne(id);
     }
 
     @Patch(':id')
     update(@Param('id') id: string, @Body() updateSectorDto: UpdateSectorDto) {
-        return this.sectorService.update(+id, updateSectorDto);
+        return this.sectorService.update(id, updateSectorDto);
     }
 
     @Delete(':id')
     remove(@Param('id') id: string) {
-        return this.sectorService.remove(+id);
+        return this.sectorService.remove(id);
     }
 }

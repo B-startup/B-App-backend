@@ -1,6 +1,6 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { FileUploadService } from '../file-upload/file-upload.service';
+import { FileUploadService } from 'src/modules/ProjectManagement/file-upload/file-upload.service';
 import { AuthService } from './auth.service';
 import { ForgetPasswordDto } from './dto/forget-password.dto';
 import { LoginDto } from './dto/login.dto';
