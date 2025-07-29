@@ -68,7 +68,7 @@ import { BlockModule } from './modules/UserAccess/block/block.module';
                 transport: {
                     host: config.get<string>('EMAIL_HOST'),
                     port: config.get<number>('EMAIL_PORT'),
-                    secure: false, // Set to true if using SSL (port 465)
+                    secure: true, // Set to true if using SSL (port 465)
                     auth: {
                         user: config.get<string>('EMAIL_USER'),
                         pass: config.get<string>('EMAIL_PASSWORD')
@@ -84,7 +84,6 @@ import { BlockModule } from './modules/UserAccess/block/block.module';
             })
         }),
 
-        FileUploadModule,
         AuthModule,
         UserModule,
         SectorModule,

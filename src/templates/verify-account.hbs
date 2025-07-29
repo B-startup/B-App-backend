@@ -1,35 +1,70 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <title>Verify Account</title>
-  <style>
-    /* Add any custom styling here */
-    body {
-      font-family: Arial, sans-serif;
-      color: #333;
-    }
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 20px;
-      border: 1px solid #ddd;
-      border-radius: 10px;
-    }
-    .otp-code {
-      font-size: 24px;
-      font-weight: bold;
-      color: #007bff;
-    }
-  </style>
-</head>
-<body>
-<div class="container">
-  <h2>Account Verification</h2>
-  <p>Hello,</p>
-  <p>Thank you for registering. Please use the following OTP code to verify your account. This code will expire in 15 minutes.</p>
-  <p class="otp-code">{{otp}}</p>
-  <p>If you didn’t request this, please ignore this email.</p>
-  <p>Thank you,<br>Personal Template Nestjs</p>
-</div>
-</body>
+<html lang='en'>
+    <head>
+        <meta charset='UTF-8' />
+        <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+        <title>Verify Your Account</title>
+        <style>
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6; color: #2d3748; margin: 0; padding: 0;
+            background-color: #f7fafc; } .container { max-width: 600px; margin:
+            40px auto; padding: 30px; background-color: #ffffff; border-radius:
+            12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); } .header {
+            text-align: center; margin-bottom: 30px; } .logo { max-width: 150px;
+            margin-bottom: 20px; } h1 { color: #1a365d; font-size: 24px; margin:
+            0; padding-bottom: 15px; border-bottom: 2px solid #e2e8f0; }
+            .content { padding: 20px 0; } .otp-container { text-align: center;
+            margin: 30px 0; padding: 20px; background-color: #f8fafc;
+            border-radius: 8px; } .otp-code { font-size: 32px; font-weight: 600;
+            letter-spacing: 4px; color: #2b6cb0; padding: 10px 20px;
+            background-color: #ebf8ff; border-radius: 6px; border: 2px solid
+            #bee3f8; } .expires-text { color: #718096; font-size: 14px;
+            margin-top: 10px; } .footer { margin-top: 30px; padding-top: 20px;
+            border-top: 2px solid #e2e8f0; text-align: center; font-size: 14px;
+            color: #718096; } .warning { margin-top: 20px; padding: 15px;
+            background-color: #fff5f5; border-left: 4px solid #fc8181; color:
+            #c53030; font-size: 14px; border-radius: 4px; }
+        </style>
+    </head>
+    <body>
+        <div class='container'>
+            <div class='header'>
+                <img
+                    src='http://localhost:5555/assets/images/Logo.png'
+                    alt='BOM-Startup'
+                    class='logo'
+                />
+                <h1>Verify Your Account</h1>
+            </div>
+
+            <div class='content'>
+                <p>Hello!</p>
+                <p>Thank you for creating your account. To ensure the security
+                    of your account, please verify your email address using the
+                    verification code below:</p>
+
+                <div class='otp-container'>
+                    <div class='otp-code'>{{otp}}</div>
+                    <p class='expires-text'>This code will expire in 15 minutes</p>
+                </div>
+
+                <p>If you're having trouble, you can try:</p>
+                <ul>
+                    <li>Making sure you enter the code exactly as shown above</li>
+                    <li>Checking that the code hasn't expired</li>
+                    <li>Requesting a new code if needed</li>
+                </ul>
+
+                <div class='warning'>
+                    If you didn't create an account or request this
+                    verification, please ignore this email or contact our
+                    support team if you have concerns.
+                </div>
+            </div>
+
+            <div class='footer'>
+                <p>© 2025 BOM-Startup. All rights reserved.</p>
+                <p>Questions? Contact our support team</p>
+            </div>
+        </div>
+    </body>
 </html>
