@@ -14,6 +14,12 @@ export class PostResponseDto {
     userId: string;
 
     @ApiProperty({
+        description: 'Title or headline of the post',
+        example: 'My Amazing Post Title'
+    })
+    title: string;
+
+    @ApiProperty({
         description: 'Main textual content of the post',
         example: 'This is my post content...'
     })

@@ -190,52 +190,6 @@ const response = await fetch('/api/post-media/upload', {
 const medias = await fetch(`/api/post-media/post/${postId}?type=IMAGE`);
 ```
 
-## 🧪 Test de l'upload avec l'interface web
-
-Pour tester facilement l'upload de médias, une interface web de test est disponible en développement :
-
-### 🌐 Accéder à la page de test
-
-1. **Démarrer le serveur** :
-```bash
-npm run start:dev
-```
-
-2. **Ouvrir la page de test** :
-```
-http://localhost:8050/api/v1/test/upload-postmedia
-```
-
-### 📋 Comment utiliser la page de test
-
-1. **Post ID** : 
-   - Un ID est généré automatiquement
-   - Ou saisissez votre propre ID (ex: `post-123`)
-   - Si le post n'existe pas, il sera créé automatiquement
-
-2. **Sélection de fichier** :
-   - Cliquez sur la zone de drop pour choisir un fichier
-   - Ou glissez-déposez directement un fichier
-   - Formats supportés : Images (JPG, PNG, GIF, WebP) et Vidéos (MP4, AVI, MOV, WebM)
-
-3. **Upload automatique** :
-   - Le type de média (IMAGE/VIDEO) est détecté automatiquement
-   - Le fichier est copié dans le bon dossier (`uploads/postMedia/images/` ou `uploads/postMedia/videos/`)
-   - L'enregistrement est sauvegardé en base de données
-
-### 🔍 Fonctionnalités de la page de test
-
-- ✅ **Prévisualisation** : Images et vidéos sont prévisualisées
-- ✅ **Validation** : Vérification de taille et type en temps réel
-- ✅ **Drag & Drop** : Interface intuitive pour le glisser-déposer
-- ✅ **Création automatique** : Crée le post si il n'existe pas
-- ✅ **Feedback détaillé** : Affiche les détails de l'upload et les erreurs
-- ✅ **Sécurité** : Disponible uniquement en développement
-
-### 🚫 Sécurité
-
-La page de test n'est accessible qu'en mode développement. En production, elle retourne automatiquement une erreur 404.
-
 ## 🎯 Bonnes pratiques
 
 1. **Upload progressif** : Uploadez les médias après création du post

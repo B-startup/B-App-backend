@@ -41,6 +41,7 @@ describe('Post Integration Tests', () => {
         id: 'test-post-id',
         userId: 'test-user-id',
         content: 'Test post content',
+        title: 'Test post title',
         nbLikes: 0,
         nbComments: 0,
         nbShares: 0,
@@ -56,6 +57,7 @@ describe('Post Integration Tests', () => {
             const createPostDto: CreatePostDto = {
                 userId: 'test-user-id',
                 content: 'Test post content',
+                title: 'Test post title',
                 isPublic: true
             };
 

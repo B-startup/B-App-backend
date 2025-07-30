@@ -9,6 +9,7 @@ describe('Post DTOs', () => {
         it('should pass validation with valid data', async () => {
             const dto = plainToClass(CreatePostDto, {
                 userId: 'valid-user-id',
+                title: 'Valid Post Title',
                 content: 'This is a valid post content',
                 isPublic: true,
                 mlPrediction: 'some-prediction'
@@ -21,6 +22,7 @@ describe('Post DTOs', () => {
         it('should fail validation with empty userId', async () => {
             const dto = plainToClass(CreatePostDto, {
                 userId: '',
+                title: 'Valid title',
                 content: 'Valid content',
                 isPublic: true
             });
@@ -31,9 +33,39 @@ describe('Post DTOs', () => {
             expect(errors[0].constraints).toHaveProperty('isNotEmpty');
         });
 
+        it('should fail validation with empty title', async () => {
+            const dto = plainToClass(CreatePostDto, {
+                userId: 'valid-user-id',
+                title: '',
+                content: 'Valid content',
+                isPublic: true
+            });
+
+            const errors = await validate(dto);
+            expect(errors).toHaveLength(1);
+            expect(errors[0].property).toBe('title');
+            expect(errors[0].constraints).toHaveProperty('isNotEmpty');
+        });
+
+        it('should fail validation with title exceeding max length', async () => {
+            const longTitle = 'a'.repeat(201); // Exceeds 200 char limit
+            const dto = plainToClass(CreatePostDto, {
+                userId: 'valid-user-id',
+                title: longTitle,
+                content: 'Valid content',
+                isPublic: true
+            });
+
+            const errors = await validate(dto);
+            expect(errors).toHaveLength(1);
+            expect(errors[0].property).toBe('title');
+            expect(errors[0].constraints).toHaveProperty('maxLength');
+        });
+
         it('should fail validation with empty content', async () => {
             const dto = plainToClass(CreatePostDto, {
                 userId: 'valid-user-id',
+                title: 'Valid title',
                 content: '',
                 isPublic: true
             });
@@ -48,6 +80,7 @@ describe('Post DTOs', () => {
             const longContent = 'a'.repeat(5001); // Exceeds 5000 char limit
             const dto = plainToClass(CreatePostDto, {
                 userId: 'valid-user-id',
+                title: 'Valid title',
                 content: longContent,
                 isPublic: true
             });
@@ -61,6 +94,7 @@ describe('Post DTOs', () => {
         it('should use default value for isPublic', async () => {
             const dto = plainToClass(CreatePostDto, {
                 userId: 'valid-user-id',
+                title: 'Valid title',
                 content: 'Valid content'
                 // isPublic not provided
             });
@@ -74,6 +108,7 @@ describe('Post DTOs', () => {
         it('should accept optional mlPrediction', async () => {
             const dto = plainToClass(CreatePostDto, {
                 userId: 'valid-user-id',
+                title: 'Valid title',
                 content: 'Valid content',
                 isPublic: false
                 // mlPrediction not provided (optional)
@@ -87,6 +122,7 @@ describe('Post DTOs', () => {
     describe('UpdatePostDto', () => {
         it('should pass validation with valid partial data', async () => {
             const dto = plainToClass(UpdatePostDto, {
+                title: 'Updated title',
                 content: 'Updated content',
                 nbLikes: 10,
                 isPublic: false

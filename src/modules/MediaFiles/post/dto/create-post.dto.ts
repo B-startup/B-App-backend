@@ -11,6 +11,16 @@ export class CreatePostDto {
     userId: string;
 
     @ApiProperty({
+        description: 'Title or headline of the post',
+        example: 'My Amazing Post Title',
+        maxLength: 200
+    })
+    @IsString()
+    @IsNotEmpty()
+    @MaxLength(200)
+    title: string;
+
+    @ApiProperty({
         description: 'Main textual content of the post',
         example: 'This is my post content...',
         maxLength: 5000

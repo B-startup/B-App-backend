@@ -7,7 +7,6 @@ import { join } from 'path';
 import { LoggerMiddleware } from './core/common/middleware/logger.middleware';
 import { PrismaService } from './core/services/prisma.service';
 import { AuthModule } from './modules/UserAccess/auth/auth.module';
-import { FileUploadModule } from './modules/ProjectManagement/file-upload/file-upload.module';
 import { UserModule } from './modules/UserAccess/user/user.module';
 import { SectorModule } from './modules/ProjectManagement/sector/sector.module';
 import { TagModule } from './modules/TagsMetadata/tag/tag.module';
@@ -39,7 +38,6 @@ import { MessageModule } from './modules/InteractionSocial/message/message.modul
 import { VideoModule } from './modules/MediaFiles/video/video.module';
 import { OfferModule } from './modules/ProjectManagement/offer/offer.module';
 import { BlockModule } from './modules/UserAccess/block/block.module';
-import { TestModule } from './modules/test/test.module';
 
 @Module({
     imports: [
@@ -117,7 +115,6 @@ import { TestModule } from './modules/test/test.module';
         VideoModule,
         OfferModule,
         BlockModule,
-        TestModule
     ],
     controllers: [],
     providers: [PrismaService]

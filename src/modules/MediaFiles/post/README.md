@@ -77,6 +77,7 @@ Incrémenter le nombre de partages d'un post
 ```typescript
 {
   userId: string;         // ID de l'utilisateur créateur
+  title: string;          // Titre du post (max 200 chars)
   content: string;        // Contenu du post (max 5000 chars)
   isPublic?: boolean;     // Visibilité du post (défaut: true)
   mlPrediction?: string;  // Prédiction ML optionnelle
@@ -99,6 +100,7 @@ Hérite de `CreatePostDto` avec tous les champs optionnels, plus :
 {
   id: string;             // ID unique du post
   userId: string;         // ID de l'utilisateur créateur
+  title: string;          // Titre du post
   content: string;        // Contenu du post
   nbLikes: number;        // Nombre de likes
   nbComments: number;     // Nombre de commentaires

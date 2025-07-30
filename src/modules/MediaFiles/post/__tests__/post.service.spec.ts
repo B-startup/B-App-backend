@@ -12,6 +12,7 @@ describe('PostService', () => {
     const mockPost: Post = {
         id: 'test-post-id',
         userId: 'test-user-id',
+        title: 'Test post title',
         content: 'Test post content',
         nbLikes: 0,
         nbComments: 0,
@@ -60,6 +61,7 @@ describe('PostService', () => {
         it('should create a new post', async () => {
             const createPostDto: CreatePostDto = {
                 userId: 'test-user-id',
+                title: 'Test post title',
                 content: 'Test post content',
                 isPublic: true
             };

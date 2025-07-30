@@ -10,7 +10,7 @@ import {
     HttpStatus,
     HttpCode
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiBody } from '@nestjs/swagger';
 import { PostService } from './post.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
@@ -24,10 +24,38 @@ export class PostController {
 
     @Post()
     @ApiOperation({ summary: 'Create a new post' })
+    @ApiBody({
+        type: CreatePostDto,
+        schema: {
+            example: {
+                userId: "user-uuid-string",
+                title: "My Amazing Post Title",
+                content: "This is my post content...",
+                isPublic: true,
+                mlPrediction: "category-prediction"
+            }
+        }
+    })
     @ApiResponse({
         status: 201,
         description: 'Post created successfully',
-        type: PostResponseDto
+        type: PostResponseDto,
+        schema: {
+            example: {
+                id: "uuid-string",
+                userId: "user-uuid-string",
+                title: "My Amazing Post Title",
+                content: "This is my post content...",
+                nbLikes: 0,
+                nbComments: 0,
+                nbShares: 0,
+                nbViews: 0,
+                isPublic: true,
+                mlPrediction: "category-prediction",
+                createdAt: "2025-07-30T10:30:00.000Z",
+                updatedAt: "2025-07-30T10:30:00.000Z"
+            }
+        }
     })
     @ApiResponse({ status: 400, description: 'Bad Request' })
     async create(@Body() createPostDto: CreatePostDto): Promise<PostResponseDto> {
