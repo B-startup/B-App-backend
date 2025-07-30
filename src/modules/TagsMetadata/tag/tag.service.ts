@@ -1,4 +1,4 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import { Injectable, ConflictException } from '@nestjs/common';
 import { Tag } from '@prisma/client';
 import { PrismaService } from '../../../core/services/prisma.service';
 import { BaseService } from '../../../core/services/base.service';
