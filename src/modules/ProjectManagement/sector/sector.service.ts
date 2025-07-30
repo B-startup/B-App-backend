@@ -1,26 +1,18 @@
 import { Injectable } from '@nestjs/common';
+import { Sector, PrismaClient } from '@prisma/client';
+import { BaseCrudServiceImpl } from 'src/core/common/services/base-crud.service';
 import { CreateSectorDto } from './dto/create-sector.dto';
 import { UpdateSectorDto } from './dto/update-sector.dto';
 
 @Injectable()
-export class SectorService {
-    create(createSectorDto: CreateSectorDto) {
-        return 'This action adds a new sector';
-    }
+export class SectorService extends BaseCrudServiceImpl<
+    Sector,
+    CreateSectorDto,
+    UpdateSectorDto
+> {
+    protected model = this.prisma.sector;
 
-    findAll() {
-        return `This action returns all sector`;
-    }
-
-    findOne(id: number) {
-        return `This action returns a #${id} sector`;
-    }
-
-    update(id: number, updateSectorDto: UpdateSectorDto) {
-        return `This action updates a #${id} sector`;
-    }
-
-    remove(id: number) {
-        return `This action removes a #${id} sector`;
+    constructor(protected override prisma: PrismaClient) {
+        super(prisma);
     }
 }

@@ -3,7 +3,7 @@ import { BlockService } from './block.service';
 import { BlockController } from './block.controller';
 
 @Module({
-  controllers: [BlockController],
-  providers: [BlockService],
+    controllers: [BlockController],
+    providers: [BlockService]
 })
 export class BlockModule {}
