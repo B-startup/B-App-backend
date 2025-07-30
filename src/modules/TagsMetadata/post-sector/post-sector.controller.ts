@@ -197,7 +197,7 @@ export class PostSectorController {
         @Param('id') id: string,
         @Body() updatePostSectorDto: UpdatePostSectorDto
     ): Promise<PostSectorResponseDto> {
-        return await this.postSectorService.update(id, updatePostSectorDto);
+        return  this.postSectorService.update(id, updatePostSectorDto);
     }
 
     @Delete(':id')

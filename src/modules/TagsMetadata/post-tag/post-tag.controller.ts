@@ -96,7 +96,7 @@ export class PostTagController {
         type: [PostTagResponseDto]
     })
     async findAll(): Promise<PostTagResponseDto[]> {
-        return await this.postTagService.findAll();
+        return  this.postTagService.findAll();
     }
 
     @Get('popular-tags')
