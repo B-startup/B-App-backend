@@ -33,7 +33,7 @@ describe('Auth Endpoints (e2e)', () => {
         // Updated: use email instead of id
         await prisma.user.update({
             where: { email: verifiedUser.email },
-            data: { isVerified: true }
+            data: { isEmailVerified: true }
         });
 
         // Create non-verified user for OTP tests
@@ -48,7 +48,7 @@ describe('Auth Endpoints (e2e)', () => {
         await prisma.user.update({
             where: { email: nonVerifiedUser.email },
             data: {
-                isVerified: false,
+                isEmailVerified: false,
                 otpCode: '1234',
                 otpCodeExpiresAt: new Date(Date.now() + 15 * 60 * 1000)
             }

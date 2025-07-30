@@ -2,7 +2,7 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaService } from '../../../core/services/prisma.service';
-import { FileUploadService } from '../file-upload/file-upload.service';
+import { FileUploadService } from '../../file-upload/file-upload.service';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 

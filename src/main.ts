@@ -4,6 +4,7 @@ import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import * as compression from 'compression';
 import helmet from 'helmet';
+import { join } from 'path';
 import { AppModule } from './app.module';
 import setupSwagger from './core/config/swagger.config';
 
@@ -23,7 +24,13 @@ async function bootstrap() {
     });
 
     // Security
-    app.use(helmet());
+    app.use(helmet({
+        contentSecurityPolicy: {
+            directives: {
+                scriptSrc: ["'self'", "'unsafe-inline'"],
+            },
+        },
+    }));
 
     app.enableCors({
         origin: configService.get('ALLOWED_ORIGINS', '*'),
@@ -33,6 +40,9 @@ async function bootstrap() {
 
     // Compression
     app.use(compression());
+
+    // Serve static files
+    app.useStaticAssets(join(__dirname, '..', 'public'));
 
     // Validation
     app.useGlobalPipes(

@@ -1,0 +1,19 @@
+{
+  "displayName": "Post Module Tests",
+  "testMatch": ["<rootDir>/src/modules/MediaFiles/post/**/*.spec.ts"],
+  "collectCoverageFrom": [
+    "src/modules/MediaFiles/post/**/*.ts",
+    "!src/modules/MediaFiles/post/**/*.spec.ts",
+    "!src/modules/MediaFiles/post/**/*.dto.ts",
+    "!src/modules/MediaFiles/post/**/index.ts"
+  ],
+  "coverageDirectory": "coverage/post",
+  "coverageReporters": ["text", "lcov", "html"],
+  "testEnvironment": "node",
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "rootDir": "../../../..",
+  "testRegex": "\\.spec\\.ts$",
+  "transform": {
+    "^.+\\.(t|j)s$": "ts-jest"
+  }
+}

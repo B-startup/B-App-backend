@@ -38,6 +38,7 @@ import { MessageModule } from './modules/InteractionSocial/message/message.modul
 import { VideoModule } from './modules/MediaFiles/video/video.module';
 import { OfferModule } from './modules/ProjectManagement/offer/offer.module';
 import { BlockModule } from './modules/UserAccess/block/block.module';
+import { TestModule } from './modules/test/test.module';
 
 @Module({
     imports: [
@@ -114,7 +115,8 @@ import { BlockModule } from './modules/UserAccess/block/block.module';
         MessageModule,
         VideoModule,
         OfferModule,
-        BlockModule
+        BlockModule,
+        TestModule
     ],
     controllers: [],
     providers: [PrismaService]
