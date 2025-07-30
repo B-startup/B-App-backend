@@ -68,7 +68,7 @@ export class PostSectorController {
         type: [PostSectorResponseDto]
     })
     async findAll(): Promise<PostSectorResponseDto[]> {
-        return await this.postSectorService.findAll();
+        return  this.postSectorService.findAll();
     }
 
     @Get('popular-sectors')
