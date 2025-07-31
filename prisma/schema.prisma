@@ -1550,6 +1550,9 @@ model Post {
 
   /// ID of the user who created the post
   userId String
+  
+  /// Title or headline of the post
+  title String
 
   /// Main textual content of the post
   content String

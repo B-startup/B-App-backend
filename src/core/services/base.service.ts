@@ -22,6 +22,13 @@ export class BaseService<
         return this.prismaModel.findMany();
     }
 
+    async findByUser(userId: string): Promise<T[]> {
+        return this.prismaModel.findMany({
+            where: { userId },
+            orderBy: { createdAt: 'desc' }
+        });
+    }
+
     async findOne(id: string | number): Promise<T> {
         const entity = await this.prismaModel.findUnique({
             where: { id }

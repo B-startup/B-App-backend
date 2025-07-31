@@ -34,3 +34,7 @@ coverage/
 # Misc
 .cache/
 .temp/
+
+# Uploads files
+uploads/
+
