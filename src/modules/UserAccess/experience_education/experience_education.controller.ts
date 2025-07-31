@@ -1,52 +1,67 @@
 import {
     Controller,
-    Get,
     Post,
-    Body,
+    Get,
     Patch,
+    Delete,
     Param,
-    Delete
+    Body
 } from '@nestjs/common';
+import {
+    ApiTags,
+    ApiOperation,
+    ApiCreatedResponse,
+    ApiOkResponse,
+    ApiBadRequestResponse,
+    ApiNotFoundResponse
+} from '@nestjs/swagger';
 import { ExperienceEducationService } from './experience_education.service';
 import { CreateExperienceEducationDto } from './dto/create-experience_education.dto';
 import { UpdateExperienceEducationDto } from './dto/update-experience_education.dto';
+import { Experience_Education } from '@prisma/client';
 
+@ApiTags('ExperienceEducation')
 @Controller('experience-education')
 export class ExperienceEducationController {
-    constructor(
-        private readonly experienceEducationService: ExperienceEducationService
-    ) {}
+    constructor(private readonly service: ExperienceEducationService) {}
 
     @Post()
-    create(@Body() createExperienceEducationDto: CreateExperienceEducationDto) {
-        return this.experienceEducationService.create(
-            createExperienceEducationDto
-        );
+    @ApiOperation({ summary: 'Create a new experience or education entry' })
+    @ApiCreatedResponse({ description: 'Entry created successfully' })
+    @ApiBadRequestResponse({ description: 'Invalid data' })
+    create(@Body() dto: CreateExperienceEducationDto): Promise<Experience_Education> {
+        return this.service.create(dto);
     }
 
     @Get()
-    findAll() {
-        return this.experienceEducationService.findAll();
+    @ApiOperation({ summary: 'Get all experiences and educations' })
+    @ApiOkResponse({ description: 'List of entries' })
+    findAll(): Promise<Experience_Education[]> {
+        return this.service.findAll();
     }
 
     @Get(':id')
-    findOne(@Param('id') id: string) {
-        return this.experienceEducationService.findOne(+id);
+    @ApiOperation({ summary: 'Get an entry by ID' })
+    @ApiOkResponse({ description: 'Entry found' })
+    @ApiNotFoundResponse({ description: 'Entry not found' })
+    findOne(@Param('id') id: string): Promise<Experience_Education> {
+        return this.service.findOne(id);
     }
 
     @Patch(':id')
+    @ApiOperation({ summary: 'Update an entry' })
+    @ApiOkResponse({ description: 'Entry updated' })
     update(
-        @Param('id') id: string,
-        @Body() updateExperienceEducationDto: UpdateExperienceEducationDto
-    ) {
-        return this.experienceEducationService.update(
-            +id,
-            updateExperienceEducationDto
-        );
+      @Param('id') id: string,
+      @Body() dto: UpdateExperienceEducationDto
+    ): Promise<Experience_Education> {
+        return this.service.update(id, dto);
     }
 
     @Delete(':id')
-    remove(@Param('id') id: string) {
-        return this.experienceEducationService.remove(+id);
+    @ApiOperation({ summary: 'Delete an entry' })
+    @ApiOkResponse({ description: 'Entry deleted' })
+    remove(@Param('id') id: string): Promise<Experience_Education> {
+        return this.service.remove(id);
     }
 }
