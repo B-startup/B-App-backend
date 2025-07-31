@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
 import { PostTagService } from './post-tag.service';
 import { PostTagController } from './post-tag.controller';
-import { PrismaService } from '../../../core/services/prisma.service';
+import { PrismaClient } from '@prisma/client';
 
 @Module({
     controllers: [PostTagController],
-    providers: [PostTagService, PrismaService],
+    providers: [PostTagService, PrismaClient],
     exports: [PostTagService]
 })
 export class PostTagModule {}

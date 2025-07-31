@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Sector, PrismaClient } from '@prisma/client';
-import { BaseCrudServiceImpl } from 'src/core/common/services/base-crud.service';
+import { BaseCrudServiceImpl } from '../../../core/common/services/base-crud.service';
 import { CreateSectorDto } from './dto/create-sector.dto';
 import { UpdateSectorDto } from './dto/update-sector.dto';
 

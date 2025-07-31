@@ -1,18 +1,19 @@
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../../../core/services/prisma.service';
-import { BaseService } from '../../../core/services/base.service';
+import { PrismaClient, ProjectTag } from '@prisma/client';
+import { BaseCrudServiceImpl } from '../../../core/common/services/base-crud.service';
 import { CreateProjectTagDto } from './dto/create-project-tag.dto';
 import { UpdateProjectTagDto } from './dto/update-project-tag.dto';
-import { ProjectTag } from '@prisma/client';
 
 @Injectable()
-export class ProjectTagService extends BaseService<
+export class ProjectTagService extends BaseCrudServiceImpl<
     ProjectTag,
     CreateProjectTagDto,
     UpdateProjectTagDto
 > {
-    constructor(private readonly prisma: PrismaService) {
-        super(prisma.projectTag, 'ProjectTag');
+    protected model = this.prisma.projectTag;
+
+    constructor(protected override prisma: PrismaClient) {
+        super(prisma);
     }
 
     /**

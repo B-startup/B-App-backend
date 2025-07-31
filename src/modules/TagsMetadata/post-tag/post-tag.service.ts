@@ -1,19 +1,19 @@
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
-import { PostTag } from '@prisma/client';
-import { PrismaService } from '../../../core/services/prisma.service';
-import { BaseService } from '../../../core/services/base.service';
+import { PostTag, PrismaClient } from '@prisma/client';
+import { BaseCrudServiceImpl } from '../../../core/common/services/base-crud.service';
 import { CreatePostTagDto } from './dto/create-post-tag.dto';
 import { UpdatePostTagDto } from './dto/update-post-tag.dto';
 
 @Injectable()
-export class PostTagService extends BaseService<
+export class PostTagService extends BaseCrudServiceImpl<
     PostTag,
     CreatePostTagDto,
-    UpdatePostTagDto,
-    'PostTag'
+    UpdatePostTagDto
 > {
-    constructor(private readonly prisma: PrismaService) {
-        super(prisma.postTag, 'PostTag');
+    protected model = this.prisma.postTag;
+
+    constructor(protected override prisma: PrismaClient) {
+        super(prisma);
     }
 
     // Méthodes CRUD héritées du BaseService :

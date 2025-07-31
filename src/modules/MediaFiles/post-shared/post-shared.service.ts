@@ -1,19 +1,19 @@
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
-import { PostShared } from '@prisma/client';
-import { PrismaService } from '../../../core/services/prisma.service';
-import { BaseService } from '../../../core/services/base.service';
+import { PostShared,PrismaClient } from '@prisma/client';
+import { BaseCrudServiceImpl } from '../../../core/common/services/base-crud.service';
 import { CreatePostSharedDto } from './dto/create-post-shared.dto';
 import { UpdatePostSharedDto } from './dto/update-post-shared.dto';
 
 @Injectable()
-export class PostSharedService extends BaseService<
+export class PostSharedService extends BaseCrudServiceImpl<
     PostShared,
     CreatePostSharedDto,
-    UpdatePostSharedDto,
-    'PostShared'
+    UpdatePostSharedDto
 > {
-    constructor(private readonly prisma: PrismaService) {
-        super(prisma.postShared, 'PostShared');
+    protected model = this.prisma.postShared;
+
+    constructor(protected readonly prisma: PrismaClient) {
+        super(prisma);
     }
 
     // Méthodes CRUD héritées du BaseService :

@@ -345,8 +345,8 @@ npm run test:cov -- post-shared
 
 ## Architecture et patterns
 
-### BaseService Pattern
-Le `PostSharedService` étend `BaseService<PostShared>` qui fournit :
+### BaseCrudServiceImpl Pattern
+Le `PostSharedService` étend `BaseCrudServiceImpl<PostShared>` qui fournit :
 - **CRUD générique** : `findAll`, `findOne`, `create`, `update`, `remove`
 - **Gestion d'erreurs standardisée**
 - **Validation automatique** des DTOs
@@ -355,7 +355,7 @@ Le `PostSharedService` étend `BaseService<PostShared>` qui fournit :
 ### Avantages de cette approche :
 - **Consistance** : Tous les services suivent les mêmes patterns
 - **Réutilisabilité** : Code générique réutilisé
-- **Maintenabilité** : Modifications centralisées dans BaseService
+- **Maintenabilité** : Modifications centralisées dans BaseCrudServiceImpl
 - **Extensibilité** : Méthodes spécialisées ajoutées facilement
 
 ### Gestion des erreurs

@@ -1,9 +1,8 @@
 import { Injectable, ConflictException } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
-import { User } from '@prisma/client';
+import { User,PrismaClient } from '@prisma/client';
 
-import { BaseService } from '../../../core/services/base.service';
-import { PrismaService } from '../../../core/services/prisma.service';
+import { BaseCrudServiceImpl } from '../../../core/common/services/base-crud.service';
 import { cryptPassword, handleOtpOperation } from '../../../core/utils/auth';
 
 import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
@@ -13,16 +12,18 @@ import {
 } from 'src/core/constants/email.constants';
 
 @Injectable()
-export class UserService extends BaseService<
+export class UserService extends BaseCrudServiceImpl<
     User,
     CreateUserDto,
     UpdateUserDto
 > {
+    protected model = this.prisma.user;
+
     constructor(
-        private readonly prisma: PrismaService,
+        protected readonly prisma: PrismaClient,
         private readonly mailerService: MailerService
     ) {
-        super(prisma.user, 'User');
+        super(prisma);
     }
 
     async create(createDto: CreateUserDto): Promise<User> {

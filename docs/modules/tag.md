@@ -190,30 +190,31 @@ DELETE /tag/{id}
 
 ## Architecture et patterns
 
-### Héritage de BaseService
+### Héritage de BaseCrudServiceImpl
 
-Le `TagService` hérite de `BaseService` qui fournit :
+Le `TagService` hérite de `BaseCrudServiceImpl` qui fournit :
 - Méthodes CRUD standardisées
 - Gestion d'erreurs automatique
 - Types TypeScript stricts
 - Validation des DTOs
 
 ```typescript
-export class TagService extends BaseService<
+export class TagService extends BaseCrudServiceImpl<
     Tag,
     CreateTagDto,
-    UpdateTagDto,
-    'Tag'
+    UpdateTagDto
 > {
     // Méthodes personnalisées spécifiques aux tags
 }
 ```
 
-### Fonctionnalités héritées du BaseService
+### Fonctionnalités héritées du BaseCrudServiceImpl
 
 - `create(createTagDto)` : Création d'entité
 - `findAll()` : Récupération de toutes les entités
+- `findByUser(userId)` : Récupération par utilisateur
 - `findOne(id)` : Récupération par ID
+- `findOneOrFail(id)` : Récupération avec exception si non trouvé
 - `update(id, updateTagDto)` : Mise à jour
 - `remove(id)` : Suppression
 

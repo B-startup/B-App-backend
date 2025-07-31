@@ -1,24 +1,24 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PostMedia, PostMediaType } from '@prisma/client';
-import { PrismaService } from '../../../core/services/prisma.service';
-import { BaseService } from '../../../core/services/base.service';
+import { PostMedia, PostMediaType,PrismaClient } from '@prisma/client';
+import { BaseCrudServiceImpl } from '../../../core/common/services/base-crud.service';
 import { CreatePostMediaDto } from './dto/create-post-media.dto';
 import { UpdatePostMediaDto } from './dto/update-post-media.dto';
 import { UploadPostMediaDto } from './dto/upload-post-media.dto';
 import { PostMediaFileService } from './post-media-file.service';
 
 @Injectable()
-export class PostMediaService extends BaseService<
+export class PostMediaService extends BaseCrudServiceImpl<
     PostMedia,
     CreatePostMediaDto,
-    UpdatePostMediaDto,
-    'PostMedia'
+    UpdatePostMediaDto
 > {
+    protected model = this.prisma.postMedia;
+
     constructor(
-        private readonly prisma: PrismaService,
+        protected readonly prisma: PrismaClient,
         private readonly postMediaFileService: PostMediaFileService
     ) {
-        super(prisma.postMedia, 'PostMedia');
+        super(prisma);
     }
 
     // Méthodes CRUD héritées du BaseService :

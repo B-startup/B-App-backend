@@ -1,19 +1,19 @@
 import { Injectable, ConflictException } from '@nestjs/common';
-import { Tag } from '@prisma/client';
-import { PrismaService } from '../../../core/services/prisma.service';
-import { BaseService } from '../../../core/services/base.service';
+import { Tag, PrismaClient } from '@prisma/client';
+import { BaseCrudServiceImpl } from '../../../core/common/services/base-crud.service';
 import { CreateTagDto } from './dto/create-tag.dto';
 import { UpdateTagDto } from './dto/update-tag.dto';
 
 @Injectable()
-export class TagService extends BaseService<
+export class TagService extends BaseCrudServiceImpl<
     Tag,
     CreateTagDto,
-    UpdateTagDto,
-    'Tag'
+    UpdateTagDto
 > {
-    constructor(private readonly prisma: PrismaService) {
-        super(prisma.tag, 'Tag');
+    protected model = this.prisma.tag;
+
+    constructor(protected override prisma: PrismaClient) {
+        super(prisma);
     }
 
     // Méthodes CRUD héritées du BaseService :
