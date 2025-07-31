@@ -38,6 +38,6 @@ coverage/
 # Uploads files
 uploads/
 
-# Prisma
+# Prisma migrations
 prisma/migrations/
 
