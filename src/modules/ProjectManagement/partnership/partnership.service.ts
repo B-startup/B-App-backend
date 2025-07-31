@@ -1,26 +1,22 @@
 import { Injectable } from '@nestjs/common';
+import { Partnership, PrismaClient } from '@prisma/client';
+import { BaseCrudServiceImpl } from 'src/core/common/services/base-crud.service';
 import { CreatePartnershipDto } from './dto/create-partnership.dto';
 import { UpdatePartnershipDto } from './dto/update-partnership.dto';
 
 @Injectable()
-export class PartnershipService {
-    create(createPartnershipDto: CreatePartnershipDto) {
-        return 'This action adds a new partnership';
+export class PartnershipService extends BaseCrudServiceImpl<
+    Partnership,
+    CreatePartnershipDto,
+    UpdatePartnershipDto
+> {
+    protected model = this.prisma.partnership;
+
+    constructor(protected override prisma: PrismaClient) {
+        super(prisma);
     }
 
-    findAll() {
-        return `This action returns all partnership`;
-    }
-
-    findOne(id: number) {
-        return `This action returns a #${id} partnership`;
-    }
-
-    update(id: number, updatePartnershipDto: UpdatePartnershipDto) {
-        return `This action updates a #${id} partnership`;
-    }
-
-    remove(id: number) {
-        return `This action removes a #${id} partnership`;
+    override async remove(id: string): Promise<Partnership> {
+        return this.model.delete({ where: { id } });
     }
 }
