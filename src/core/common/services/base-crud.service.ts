@@ -30,8 +30,8 @@ export abstract class BaseCrudServiceImpl<
         return this.model.update({ where: { id }, data });
     }
 
-    async remove(id: string): Promise<void> {
-        await this.model.delete({ where: { id } });
+    async remove(id: string): Promise<T> {
+        return this.model.delete({ where: { id } });
     }
 
     findBy<K extends keyof T>(key: K, value: T[K]): Promise<T | null> {

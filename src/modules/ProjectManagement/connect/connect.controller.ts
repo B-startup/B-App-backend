@@ -1,45 +1,75 @@
 import {
-    Controller,
-    Get,
-    Post,
     Body,
-    Patch,
+    Controller,
+    Delete,
+    Get,
     Param,
-    Delete
+    Patch,
+    Post,
+    Query,
 } from '@nestjs/common';
+import {
+    ApiTags,
+    ApiOperation,
+    ApiOkResponse,
+    ApiCreatedResponse,
+    ApiBadRequestResponse,
+    ApiNotFoundResponse,
+} from '@nestjs/swagger';
+import { Connect } from '@prisma/client';
 import { ConnectService } from './connect.service';
 import { CreateConnectDto } from './dto/create-connect.dto';
 import { UpdateConnectDto } from './dto/update-connect.dto';
 
-@Controller('connect')
+@ApiTags('Connects')
+@Controller('connects')
 export class ConnectController {
     constructor(private readonly connectService: ConnectService) {}
 
     @Post()
-    create(@Body() createConnectDto: CreateConnectDto) {
-        return this.connectService.create(createConnectDto);
+    @ApiOperation({ summary: 'Create a connection request' })
+    @ApiCreatedResponse({ description: 'Connection request created' })
+    @ApiBadRequestResponse({ description: 'Invalid input' })
+    create(@Body() dto: CreateConnectDto): Promise<Connect> {
+        return this.connectService.create(dto);
     }
 
     @Get()
-    findAll() {
+    @ApiOperation({ summary: 'Get all connection requests' })
+    @ApiOkResponse({ description: 'List of connections' })
+    findAll(): Promise<Connect[]> {
         return this.connectService.findAll();
     }
 
+    @Get('search')
+    @ApiOperation({ summary: 'Search by status or user/project ID' })
+    search(@Query('q') keyword: string): Promise<Connect[]> {
+        return this.connectService.search(keyword, ['userId', 'projectId']);
+    }
+
+    @Get('paginate')
+    paginate(@Query('skip') skip = 0, @Query('take') take = 10): Promise<Connect[]> {
+        return this.connectService.paginate(Number(skip), Number(take));
+    }
+
     @Get(':id')
-    findOne(@Param('id') id: string) {
-        return this.connectService.findOne(+id);
+    @ApiOperation({ summary: 'Get connect by ID' })
+    @ApiOkResponse({ description: 'Connect found' })
+    findOne(@Param('id') id: string): Promise<Connect> {
+        return this.connectService.findOne(id);
     }
 
     @Patch(':id')
-    update(
-        @Param('id') id: string,
-        @Body() updateConnectDto: UpdateConnectDto
-    ) {
-        return this.connectService.update(+id, updateConnectDto);
+    @ApiOperation({ summary: 'Update connect' })
+    @ApiOkResponse({ description: 'Connect updated' })
+    update(@Param('id') id: string, @Body() dto: UpdateConnectDto): Promise<Connect> {
+        return this.connectService.update(id, dto);
     }
 
     @Delete(':id')
-    remove(@Param('id') id: string) {
-        return this.connectService.remove(+id);
+    @ApiOperation({ summary: 'Delete connect' })
+    @ApiOkResponse({ description: 'Connect deleted' })
+    remove(@Param('id') id: string): Promise<Connect> {
+        return this.connectService.remove(id);
     }
 }

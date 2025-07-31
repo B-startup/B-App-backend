@@ -16,7 +16,7 @@ import {
     ApiOperation,
     ApiResponse,
     ApiNotFoundResponse,
-    ApiBadRequestResponse,
+    ApiBadRequestResponse
 } from '@nestjs/swagger';
 
 @ApiTags('Projects')

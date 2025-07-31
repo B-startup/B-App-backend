@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
-import { TeamUsersService } from './team-users.service';
-import { TeamUsersController } from './team-users.controller';
+import { PrismaClient } from '@prisma/client';
+import { TeamUserController } from './team-users.controller';
+import { TeamUserService } from './team-users.service';
 
 @Module({
-    controllers: [TeamUsersController],
-    providers: [TeamUsersService]
+    controllers: [TeamUserController],
+    providers: [TeamUserService, PrismaClient], // ✅ لازم PrismaClient يكون هنا
 })
 export class TeamUsersModule {}
