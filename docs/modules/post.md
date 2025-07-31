@@ -1,6 +1,6 @@
 # Module Post - API Documentation
 
-Ce module fournit un CRUD complet pour les posts en utilisant le `BaseService` et des fonctionnalités avancées.
+Ce module fournit un CRUD complet pour les posts en utilisant le `BaseCrudServiceImpl` et des fonctionnalités avancées.
 
 ## Endpoints disponibles
 
@@ -121,13 +121,14 @@ Hérite de `CreatePostDto` avec tous les champs optionnels, plus :
 }
 ```
 
-## Fonctionnalités héritées du BaseService
+## Fonctionnalités héritées du BaseCrudServiceImpl
 
-Le `PostService` hérite de `BaseService` et bénéficie automatiquement de :
+Le `PostService` hérite de `BaseCrudServiceImpl` et bénéficie automatiquement de :
 - Gestion d'erreurs standardisée
 - Validation automatique des DTOs
 - Gestion des erreurs Prisma (P2025 pour "not found")
 - Types TypeScript stricts
+- Méthodes CRUD complètes (create, findAll, findByUser, findOne, findOneOrFail, update, remove)
 
 ## Fonctionnalités avancées
 
@@ -178,4 +179,24 @@ post/
 ├── post.controller.ts
 ├── post.service.ts
 └── post.module.ts
+```
+
+## Architecture et patterns
+
+### Héritage de BaseCrudServiceImpl
+
+Le `PostService` hérite de `BaseCrudServiceImpl` qui fournit :
+- Méthodes CRUD standardisées
+- Gestion d'erreurs automatique
+- Types TypeScript stricts
+- Validation des DTOs
+
+```typescript
+export class PostService extends BaseCrudServiceImpl<
+    Post,
+    CreatePostDto,
+    UpdatePostDto
+> {
+    // Méthodes personnalisées spécifiques aux posts
+}
 ```

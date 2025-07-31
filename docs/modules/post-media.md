@@ -4,7 +4,7 @@ Ce module fournit un CRUD complet pour la gestion des médias (images et vidéos
 
 ## 🚀 Fonctionnalités principales
 
-- **CRUD complet** avec `BaseService`
+- **CRUD complet** avec `BaseCrudServiceImpl`
 - **Upload de fichiers** avec validation stricte
 - **Stockage organisé** par type (images/vidéos)
 - **Gestion automatique** des dossiers
@@ -208,5 +208,25 @@ Utilisez cet endpoint pour identifier les fichiers manquants.
 
 ### Nettoyage des fichiers orphelins
 Si vous supprimez des posts, pensez à supprimer aussi leurs médias pour éviter les fichiers orphelins.
+
+## Architecture et patterns
+
+### Héritage de BaseCrudServiceImpl
+
+Le `PostMediaService` hérite de `BaseCrudServiceImpl` qui fournit :
+- Méthodes CRUD standardisées
+- Gestion d'erreurs automatique
+- Types TypeScript stricts
+- Validation des DTOs
+
+```typescript
+export class PostMediaService extends BaseCrudServiceImpl<
+    PostMedia,
+    CreatePostMediaDto,
+    UpdatePostMediaDto
+> {
+    // Méthodes personnalisées spécifiques aux médias de posts
+}
+```
 
 Le module PostMedia est maintenant complet avec toutes les fonctionnalités nécessaires pour une application mobile moderne ! 🚀

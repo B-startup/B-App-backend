@@ -1,29 +1,22 @@
 import { Injectable } from '@nestjs/common';
+import { PrismaClient, Experience_Education } from '@prisma/client';
+import { BaseCrudServiceImpl } from 'src/core/common/services/base-crud.service';
 import { CreateExperienceEducationDto } from './dto/create-experience_education.dto';
 import { UpdateExperienceEducationDto } from './dto/update-experience_education.dto';
 
 @Injectable()
-export class ExperienceEducationService {
-    create(createExperienceEducationDto: CreateExperienceEducationDto) {
-        return 'This action adds a new experienceEducation';
+export class ExperienceEducationService extends BaseCrudServiceImpl<
+    Experience_Education,
+    CreateExperienceEducationDto,
+    UpdateExperienceEducationDto
+> {
+    protected model = this.prisma.experience_Education;
+
+    constructor(protected override prisma: PrismaClient) {
+        super(prisma);
     }
 
-    findAll() {
-        return `This action returns all experienceEducation`;
-    }
-
-    findOne(id: number) {
-        return `This action returns a #${id} experienceEducation`;
-    }
-
-    update(
-        id: number,
-        updateExperienceEducationDto: UpdateExperienceEducationDto
-    ) {
-        return `This action updates a #${id} experienceEducation`;
-    }
-
-    remove(id: number) {
-        return `This action removes a #${id} experienceEducation`;
+    override async remove(id: string): Promise<Experience_Education> {
+        return this.model.delete({ where: { id } });
     }
 }

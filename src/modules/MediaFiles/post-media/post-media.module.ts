@@ -3,7 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { PostMediaService } from './post-media.service';
 import { PostMediaController } from './post-media.controller';
 import { PostMediaFileService } from './post-media-file.service';
-import { PrismaService } from '../../../core/services/prisma.service';
+import { PrismaClient } from '@prisma/client';
 
 @Module({
     imports: [ConfigModule],
@@ -11,7 +11,7 @@ import { PrismaService } from '../../../core/services/prisma.service';
     providers: [
         PostMediaService, 
         PostMediaFileService, 
-        PrismaService
+        PrismaClient
     ],
     exports: [PostMediaService, PostMediaFileService]
 })

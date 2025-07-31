@@ -1,19 +1,19 @@
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
-import { PostSector } from '@prisma/client';
-import { PrismaService } from '../../../core/services/prisma.service';
-import { BaseService } from '../../../core/services/base.service';
+import { PostSector, PrismaClient } from '@prisma/client';
+import { BaseCrudServiceImpl } from '../../../core/common/services/base-crud.service';
 import { CreatePostSectorDto } from './dto/create-post-sector.dto';
 import { UpdatePostSectorDto } from './dto/update-post-sector.dto';
 
 @Injectable()
-export class PostSectorService extends BaseService<
+export class PostSectorService extends BaseCrudServiceImpl<
     PostSector,
     CreatePostSectorDto,
-    UpdatePostSectorDto,
-    'PostSector'
+    UpdatePostSectorDto
 > {
-    constructor(private readonly prisma: PrismaService) {
-        super(prisma.postSector, 'PostSector');
+    protected model = this.prisma.postSector;
+
+    constructor(protected override prisma: PrismaClient) {
+        super(prisma);
     }
 
     // Méthodes CRUD héritées du BaseService :

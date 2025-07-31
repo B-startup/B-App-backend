@@ -1,20 +1,20 @@
 import { Injectable } from '@nestjs/common';
-import { Post } from '@prisma/client';
-import { PrismaService } from '../../../core/services/prisma.service';
-import { BaseService } from '../../../core/services/base.service';
+import { Post, PrismaClient } from '@prisma/client';
+import { BaseCrudServiceImpl } from '../../../core/common/services/base-crud.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PaginationDto } from './dto/pagination.dto';
 
 @Injectable()
-export class PostService extends BaseService<
+export class PostService extends BaseCrudServiceImpl<
     Post,
     CreatePostDto,
-    UpdatePostDto,
-    'Post'
+    UpdatePostDto
 > {
-    constructor(private readonly prisma: PrismaService) {
-        super(prisma.post, 'Post');
+    protected model = this.prisma.post;
+
+    constructor(protected readonly prisma: PrismaClient) {
+        super(prisma);
     }
 
     // Méthodes CRUD héritées du BaseService :

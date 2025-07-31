@@ -207,7 +207,7 @@ countByTag(tagId: string): Promise<number>
 ### Dépendances
 - **Tag Module** : Gestion des tags disponibles
 - **Project Module** : Validation des projets
-- **BaseService** : Héritage des méthodes CRUD standard
+- **BaseCrudServiceImpl** : Héritage des méthodes CRUD standard
 
 ### Relations
 ```typescript
@@ -217,8 +217,8 @@ Tag (1) ←→ (N) ProjectTag
 // Avec le module Project  
 Project (1) ←→ (N) ProjectTag
 
-// Avec BaseService
-ProjectTagService extends BaseService<ProjectTag, CreateProjectTagDto, UpdateProjectTagDto>
+// Avec BaseCrudServiceImpl
+ProjectTagService extends BaseCrudServiceImpl<ProjectTag, CreateProjectTagDto, UpdateProjectTagDto>
 ```
 
 ## 📊 Métriques et Performance

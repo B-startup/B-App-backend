@@ -1,12 +1,12 @@
 # 🏷️ TagsMetadata Modules - CRUD Complete
 
-Ce document présente les **quatre modules CRUD** créés avec BaseService pour la gestion des métadonnées de tags et secteurs dans l'application BOM.
+Ce document présente les **quatre modules CRUD** créés avec BaseCrudServiceImpl pour la gestion des métadonnées de tags et secteurs dans l'application BOM.
 
 ## 📋 Vue d'ensemble
 
-Les modules **Tag**, **PostSector**, **PostTag** et **ProjectTag** fournissent une API complète pour la gestion des métadonnées et associations dans le système. Tous utilisent le pattern BaseService pour une cohérence architecturale.
+Les modules **Tag**, **PostSector**, **PostTag** et **ProjectTag** fournissent une API complète pour la gestion des métadonnées et associations dans le système. Tous utilisent le pattern BaseCrudServiceImpl pour une cohérence architecturale.
 
-### 🎯 Nouveau : Module ProjectTag
+### 🎯 Module ProjectTag
 
 Le **ProjectTag Module** a été ajouté avec des fonctionnalités avancées :
 - ✅ **29 tests** complets (15 service + 14 controller)
@@ -22,7 +22,7 @@ Le **ProjectTag Module** a été ajouté avec des fonctionnalités avancées :
 **Objectif** : Gestion des tags génériques pour catégoriser projets et posts.
 
 **Fonctionnalités** :
-- ✅ CRUD complet avec BaseService
+- ✅ CRUD complet avec BaseCrudServiceImpl
 - ✅ Validation d'unicité des noms
 - ✅ Recherche par nom (partielle, insensible à la casse)
 - ✅ Statistiques d'utilisation (projets + posts)
@@ -48,7 +48,7 @@ DELETE /tag/:id                  # Supprimer un tag
 **Objectif** : Gestion des associations many-to-many entre Posts et Secteurs.
 
 **Fonctionnalités** :
-- ✅ CRUD complet avec BaseService
+- ✅ CRUD complet avec BaseCrudServiceImpl
 - ✅ Associations post-secteur avec validation d'unicité
 - ✅ Vérification d'existence des entités liées
 - ✅ Recherche par post ou par secteur
@@ -76,7 +76,7 @@ DELETE /post-sector/association/:postId/:sectorId # Supprimer association spéci
 **Objectif** : Gestion des associations many-to-many entre Posts et Tags.
 
 **Fonctionnalités** :
-- ✅ CRUD complet avec BaseService
+- ✅ CRUD complet avec BaseCrudServiceImpl
 - ✅ Associations post-tag avec validation d'unicité
 - ✅ Ajout multiple de tags à un post
 - ✅ Recherche de posts similaires basée sur tags partagés
@@ -100,11 +100,38 @@ DELETE /post-tag/:id                      # Supprimer une association
 DELETE /post-tag/association/:postId/:tagId # Supprimer association spécifique
 ```
 
+### 4. ProjectTag Module (`/project-tag`)
+
+**Objectif** : Gestion des associations many-to-many entre Projects et Tags.
+
+**Fonctionnalités** :
+- ✅ CRUD complet avec BaseCrudServiceImpl
+- ✅ Associations projet-tag avec validation d'unicité
+- ✅ Ajout multiple de tags à un projet
+- ✅ Recherche de projets similaires basée sur tags partagés
+- ✅ Tags populaires par nombre de projets
+- ✅ Compteurs et statistiques avancées
+- ✅ Recommandations intelligentes
+
+**Endpoints** :
+```
+POST   /project-tag                       # Créer une association
+POST   /project-tag/multiple             # Ajouter plusieurs tags à un projet
+GET    /project-tag                      # Lister toutes les associations
+GET    /project-tag/popular              # Tags populaires
+GET    /project-tag/project/:id          # Tags d'un projet
+GET    /project-tag/tag/:id              # Projets d'un tag
+GET    /project-tag/similar/:id          # Projets similaires
+GET    /project-tag/count/project/:id    # Compter tags d'un projet
+GET    /project-tag/count/tag/:id        # Compter projets d'un tag
+DELETE /project-tag                      # Supprimer une association
+```
+
 ## Architecture
 
-### Pattern BaseService
+### Pattern BaseCrudServiceImpl
 
-Tous les modules héritent de `BaseService<T, CreateDTO, UpdateDTO, ModelName>` qui fournit :
+Tous les modules héritent de `BaseCrudServiceImpl<T, CreateDTO, UpdateDTO>` qui fournit :
 
 ```typescript
 // Méthodes CRUD automatiques
@@ -138,6 +165,13 @@ Chaque service ajoute des méthodes spécialisées :
 - `findSimilarPosts()` : Recommandations
 - `findPopularTags()` : Tags populaires
 - `findByTagWithPosts()` : Données relationnelles
+
+**ProjectTagService** :
+- `createAssociation()` : Association avec validation
+- `addMultipleTagsToProject()` : Ajout en masse
+- `findSimilarProjects()` : Recommandations
+- `findPopularTags()` : Tags populaires
+- `findByProjectWithTags()` : Données relationnelles
 
 ## Modèles de données
 
@@ -187,6 +221,22 @@ model PostTag {
 }
 ```
 
+### ProjectTag
+```prisma
+model ProjectTag {
+  id        String @id @default(uuid())
+  projectId String
+  tagId     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tag     Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  
+  @@unique([projectId, tagId])
+}
+```
+
 ## Tests
 
 ### Structure des tests
@@ -199,72 +249,11 @@ module/
 │   └── controller.spec.ts       # Tests endpoints REST
 ```
 
-### Couverture de tests prévue
+### Couverture de tests
 - **DTOs** : Validation des champs et contraintes
 - **Services** : Logique métier et intégration Prisma
 - **Controllers** : Endpoints REST et gestion d'erreurs
 - **Intégration** : Tests bout en bout
-
-## Comment tester avec Swagger
-
-### 1. Accès à Swagger UI
-```
-http://localhost:3000/api
-```
-
-### 2. Scénario de test complet
-
-#### Étape 1 : Créer des tags
-```json
-POST /tag
-{
-  "name": "Fintech",
-  "description": "Financial technology"
-}
-
-POST /tag
-{
-  "name": "AI",
-  "description": "Artificial Intelligence"
-}
-```
-
-#### Étape 2 : Associer tags à un post
-```json
-POST /post-tag
-{
-  "postId": "your-post-id",
-  "tagId": "fintech-tag-id"
-}
-
-POST /post-tag/bulk/your-post-id
-{
-  "tagIds": ["fintech-tag-id", "ai-tag-id"]
-}
-```
-
-#### Étape 3 : Associer secteur à un post
-```json
-POST /post-sector
-{
-  "postId": "your-post-id",
-  "sectorId": "your-sector-id"
-}
-```
-
-#### Étape 4 : Consulter les statistiques
-```
-GET /tag/most-used
-GET /post-tag/popular-tags
-GET /post-sector/popular-sectors
-```
-
-#### Étape 5 : Recherche et découverte
-```
-GET /tag?search=fin
-GET /post-tag/similar/your-post-id
-GET /post-tag/post/your-post-id?withTags=true
-```
 
 ## Gestion d'erreurs
 
@@ -294,34 +283,6 @@ GET /post-tag/post/your-post-id?withTags=true
 }
 ```
 
-## Déploiement
-
-### Commandes de migration
-
-```bash
-# Générer le client Prisma (déjà fait)
-npx prisma generate
-
-# Créer une migration si modèles modifiés
-npx prisma migrate dev --name add_tags_metadata_modules
-
-# Réinitialiser la base (développement uniquement)
-npx prisma migrate reset
-```
-
-### Installation et démarrage
-
-```bash
-# Installer les dépendances
-npm install
-
-# Démarrer en mode développement
-npm run start:dev
-
-# Démarrer en mode production
-npm run start:prod
-```
-
 ## Bonnes pratiques
 
 ### Validation
@@ -346,4 +307,4 @@ npm run start:prod
 
 ## Conclusion
 
-Les trois modules **Tag**, **PostSector** et **PostTag** fournissent une base solide pour la gestion des métadonnées dans l'application BOM. Ils suivent les meilleures pratiques NestJS et utilisent le pattern BaseService pour une architecture cohérente et maintenable.
+Les quatre modules **Tag**, **PostSector**, **PostTag** et **ProjectTag** fournissent une base solide pour la gestion des métadonnées dans l'application BOM. Ils suivent les meilleures pratiques NestJS et utilisent le pattern BaseCrudServiceImpl pour une architecture cohérente et maintenable.

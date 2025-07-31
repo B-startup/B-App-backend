@@ -41,7 +41,7 @@ describe('TagService', () => {
         }).compile();
 
         service = module.get<TagService>(TagService);
-        mockPrismaService = module.get(PrismaService) as any;
+        mockPrismaService = module.get(PrismaService);
     });
 
     afterEach(() => {
