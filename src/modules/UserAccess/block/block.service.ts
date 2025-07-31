@@ -1,26 +1,22 @@
 import { Injectable } from '@nestjs/common';
+import { PrismaClient, Block } from '@prisma/client';
+import { BaseCrudServiceImpl } from 'src/core/common/services/base-crud.service';
 import { CreateBlockDto } from './dto/create-block.dto';
 import { UpdateBlockDto } from './dto/update-block.dto';
 
 @Injectable()
-export class BlockService {
-    create(createBlockDto: CreateBlockDto) {
-        return 'This action adds a new block';
+export class BlockService extends BaseCrudServiceImpl<
+    Block,
+    CreateBlockDto,
+    UpdateBlockDto
+> {
+    protected model = this.prisma.block;
+
+    constructor(protected override prisma: PrismaClient) {
+        super(prisma);
     }
 
-    findAll() {
-        return `This action returns all block`;
-    }
-
-    findOne(id: number) {
-        return `This action returns a #${id} block`;
-    }
-
-    update(id: number, updateBlockDto: UpdateBlockDto) {
-        return `This action updates a #${id} block`;
-    }
-
-    remove(id: number) {
-        return `This action removes a #${id} block`;
+    override async remove(id: string): Promise<Block> {
+        return this.model.delete({ where: { id } });
     }
 }

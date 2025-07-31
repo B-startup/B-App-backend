@@ -1,45 +1,50 @@
 import {
     Controller,
-    Get,
     Post,
-    Body,
+    Get,
     Patch,
+    Delete,
     Param,
-    Delete
+    Body
 } from '@nestjs/common';
 import { AttemptLogService } from './attempt_log.service';
 import { CreateAttemptLogDto } from './dto/create-attempt_log.dto';
 import { UpdateAttemptLogDto } from './dto/update-attempt_log.dto';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { Attempt_log } from '@prisma/client';
 
+@ApiTags('AttemptLog')
 @Controller('attempt-log')
 export class AttemptLogController {
-    constructor(private readonly attemptLogService: AttemptLogService) {}
+    constructor(private readonly service: AttemptLogService) {}
 
     @Post()
-    create(@Body() createAttemptLogDto: CreateAttemptLogDto) {
-        return this.attemptLogService.create(createAttemptLogDto);
+    @ApiOperation({ summary: 'Create log entry' })
+    create(@Body() dto: CreateAttemptLogDto): Promise<Attempt_log> {
+        return this.service.create(dto);
     }
 
     @Get()
-    findAll() {
-        return this.attemptLogService.findAll();
+    @ApiOperation({ summary: 'Get all log entries' })
+    findAll(): Promise<Attempt_log[]> {
+        return this.service.findAll();
     }
 
     @Get(':id')
-    findOne(@Param('id') id: string) {
-        return this.attemptLogService.findOne(+id);
+    @ApiOperation({ summary: 'Get log entry by ID' })
+    findOne(@Param('id') id: string): Promise<Attempt_log> {
+        return this.service.findOne(id);
     }
 
     @Patch(':id')
-    update(
-        @Param('id') id: string,
-        @Body() updateAttemptLogDto: UpdateAttemptLogDto
-    ) {
-        return this.attemptLogService.update(+id, updateAttemptLogDto);
+    @ApiOperation({ summary: 'Update a log entry' })
+    update(@Param('id') id: string, @Body() dto: UpdateAttemptLogDto): Promise<Attempt_log> {
+        return this.service.update(id, dto);
     }
 
     @Delete(':id')
-    remove(@Param('id') id: string) {
-        return this.attemptLogService.remove(+id);
+    @ApiOperation({ summary: 'Delete a log entry' })
+    remove(@Param('id') id: string): Promise<Attempt_log> {
+        return this.service.remove(id);
     }
 }
