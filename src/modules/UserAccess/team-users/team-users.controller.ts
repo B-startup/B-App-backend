@@ -7,39 +7,61 @@ import {
     Param,
     Delete
 } from '@nestjs/common';
-import { TeamUsersService } from './team-users.service';
+import {
+    ApiTags,
+    ApiOperation,
+    ApiCreatedResponse,
+    ApiOkResponse,
+    ApiBadRequestResponse
+} from '@nestjs/swagger';
+import { TeamUsers } from '@prisma/client';
+import { TeamUserService } from './team-users.service';
 import { CreateTeamUserDto } from './dto/create-team-user.dto';
 import { UpdateTeamUserDto } from './dto/update-team-user.dto';
 
+@ApiTags('TeamUsers')
 @Controller('team-users')
-export class TeamUsersController {
-    constructor(private readonly teamUsersService: TeamUsersService) {}
+export class TeamUserController {
+    constructor(private readonly teamUserService: TeamUserService) {}
 
     @Post()
-    create(@Body() createTeamUserDto: CreateTeamUserDto) {
-        return this.teamUsersService.create(createTeamUserDto);
+    @ApiOperation({ summary: 'Add a user to a team' })
+    @ApiCreatedResponse({ description: 'User added to team successfully' })
+    @ApiBadRequestResponse({
+        description: 'User already in team or invalid data'
+    })
+    create(@Body() dto: CreateTeamUserDto): Promise<TeamUsers> {
+        return this.teamUserService.create(dto);
     }
 
     @Get()
-    findAll() {
-        return this.teamUsersService.findAll();
+    @ApiOperation({ summary: 'Get all team-user links' })
+    @ApiOkResponse({ description: 'List of all team-user entries' })
+    findAll(): Promise<TeamUsers[]> {
+        return this.teamUserService.findAll();
     }
 
     @Get(':id')
-    findOne(@Param('id') id: string) {
-        return this.teamUsersService.findOne(+id);
+    @ApiOperation({ summary: 'Get a team-user link by ID' })
+    @ApiOkResponse({ description: 'Team-user entry found' })
+    findOne(@Param('id') id: string): Promise<TeamUsers> {
+        return this.teamUserService.findOne(id);
     }
 
     @Patch(':id')
+    @ApiOperation({ summary: 'Update team-user link' })
+    @ApiOkResponse({ description: 'Team-user link updated' })
     update(
         @Param('id') id: string,
-        @Body() updateTeamUserDto: UpdateTeamUserDto
-    ) {
-        return this.teamUsersService.update(+id, updateTeamUserDto);
+        @Body() dto: UpdateTeamUserDto
+    ): Promise<TeamUsers> {
+        return this.teamUserService.update(id, dto);
     }
 
     @Delete(':id')
-    remove(@Param('id') id: string) {
-        return this.teamUsersService.remove(+id);
+    @ApiOperation({ summary: 'Remove a user from a team' })
+    @ApiOkResponse({ description: 'User removed from team' })
+    remove(@Param('id') id: string): Promise<TeamUsers> {
+        return this.teamUserService.remove(id);
     }
 }

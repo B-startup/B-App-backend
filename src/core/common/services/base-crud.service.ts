@@ -1,4 +1,4 @@
-import { PrismaClient,Prisma } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import { NotFoundException } from '@nestjs/common';
 import { BaseCrudService } from '../interfaces/base-crud.interface';
 
@@ -38,12 +38,14 @@ export abstract class BaseCrudServiceImpl<
         return entity;
     }
 
+    /**
+     * Finds a single entity by its ID or throws a NotFoundException if not found.
+     * @param id - The unique identifier of the entity to be found.
+     * @returns A promise that resolves to the found entity.
+     * @throws NotFoundException if the entity is not found.
+     */
     async findOneOrFail(id: string): Promise<T> {
-        const entity = await this.findOne(id);
-        if (!entity) {
-            throw new NotFoundException(`Entity not found`);
-        }
-        return entity;
+        return this.findOne(id);
     }
 
     async update(id: string, data: UpdateDto): Promise<T> {

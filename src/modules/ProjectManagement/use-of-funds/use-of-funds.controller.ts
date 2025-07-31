@@ -1,45 +1,67 @@
 import {
-    Controller,
-    Get,
-    Post,
     Body,
-    Patch,
+    Controller,
+    Delete,
+    Get,
     Param,
-    Delete
+    Patch,
+    Post
 } from '@nestjs/common';
+import {
+    ApiTags,
+    ApiOperation,
+    ApiCreatedResponse,
+    ApiOkResponse,
+    ApiNotFoundResponse,
+    ApiBadRequestResponse
+} from '@nestjs/swagger';
+import { UseOfFunds } from '@prisma/client';
 import { UseOfFundsService } from './use-of-funds.service';
-import { CreateUseOfFundDto } from './dto/create-use-of-fund.dto';
+import { CreateUseOfFundsDto } from './dto/create-use-of-fund.dto';
 import { UpdateUseOfFundDto } from './dto/update-use-of-fund.dto';
 
+@ApiTags('Use of Funds')
 @Controller('use-of-funds')
 export class UseOfFundsController {
     constructor(private readonly useOfFundsService: UseOfFundsService) {}
 
     @Post()
-    create(@Body() createUseOfFundDto: CreateUseOfFundDto) {
-        return this.useOfFundsService.create(createUseOfFundDto);
+    @ApiOperation({ summary: 'Create new fund allocation' })
+    @ApiCreatedResponse({ description: 'Use of funds entry created' })
+    @ApiBadRequestResponse({ description: 'Invalid input' })
+    create(@Body() dto: CreateUseOfFundsDto): Promise<UseOfFunds> {
+        return this.useOfFundsService.create(dto);
     }
 
     @Get()
-    findAll() {
+    @ApiOperation({ summary: 'List all fund allocations' })
+    @ApiOkResponse({ description: 'List of use-of-funds entries' })
+    findAll(): Promise<UseOfFunds[]> {
         return this.useOfFundsService.findAll();
     }
 
     @Get(':id')
-    findOne(@Param('id') id: string) {
-        return this.useOfFundsService.findOne(+id);
+    @ApiOperation({ summary: 'Get fund allocation by ID' })
+    @ApiOkResponse({ description: 'Use of funds entry found' })
+    @ApiNotFoundResponse({ description: 'Entry not found' })
+    findOne(@Param('id') id: string): Promise<UseOfFunds> {
+        return this.useOfFundsService.findOne(id);
     }
 
     @Patch(':id')
+    @ApiOperation({ summary: 'Update fund allocation' })
+    @ApiOkResponse({ description: 'Use of funds entry updated' })
     update(
         @Param('id') id: string,
-        @Body() updateUseOfFundDto: UpdateUseOfFundDto
-    ) {
-        return this.useOfFundsService.update(+id, updateUseOfFundDto);
+        @Body() dto: UpdateUseOfFundDto
+    ): Promise<UseOfFunds> {
+        return this.useOfFundsService.update(id, dto);
     }
 
     @Delete(':id')
-    remove(@Param('id') id: string) {
-        return this.useOfFundsService.remove(+id);
+    @ApiOperation({ summary: 'Delete fund allocation' })
+    @ApiOkResponse({ description: 'Use of funds entry deleted' })
+    remove(@Param('id') id: string): Promise<UseOfFunds> {
+        return this.useOfFundsService.remove(id);
     }
 }

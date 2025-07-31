@@ -1,26 +1,22 @@
 import { Injectable } from '@nestjs/common';
+import { Team, PrismaClient } from '@prisma/client';
+import { BaseCrudServiceImpl } from 'src/core/common/services/base-crud.service';
 import { CreateTeamDto } from './dto/create-team.dto';
 import { UpdateTeamDto } from './dto/update-team.dto';
 
 @Injectable()
-export class TeamService {
-    create(createTeamDto: CreateTeamDto) {
-        return 'This action adds a new team';
+export class TeamService extends BaseCrudServiceImpl<
+    Team,
+    CreateTeamDto,
+    UpdateTeamDto
+> {
+    protected model = this.prisma.team;
+
+    constructor(protected override prisma: PrismaClient) {
+        super(prisma);
     }
 
-    findAll() {
-        return `This action returns all team`;
-    }
-
-    findOne(id: number) {
-        return `This action returns a #${id} team`;
-    }
-
-    update(id: number, updateTeamDto: UpdateTeamDto) {
-        return `This action updates a #${id} team`;
-    }
-
-    remove(id: number) {
-        return `This action removes a #${id} team`;
+    override async remove(id: string): Promise<Team> {
+        return this.model.delete({ where: { id } });
     }
 }
