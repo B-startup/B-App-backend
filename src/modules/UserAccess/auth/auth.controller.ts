@@ -1,9 +1,12 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { FileUploadService } from 'src/modules/ProjectManagement/file-upload/file-upload.service';
+import { TokenProtected } from '../../../core/common/decorators/token-protected.decorator';
+import { CurrentUser, CurrentToken } from '../../../core/common/decorators/current-user.decorator';
 import { AuthService } from './auth.service';
 import { ForgetPasswordDto } from './dto/forget-password.dto';
 import { LoginDto } from './dto/login.dto';
+import { LogoutDto } from './dto/logout.dto';
 import { ResendOtpDto } from './dto/resend-otp.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
@@ -69,5 +72,37 @@ export class AuthController {
             resetPasswordDto.email,
             resetPasswordDto.password
         );
+    }
+
+    @Post('logout')
+    @TokenProtected()
+    @ApiOperation({ summary: 'Logout user with token blacklist verification' })
+    @ApiResponse({ status: 200, description: 'Logout successful' })
+    @ApiResponse({ status: 401, description: 'Token invalid or user not found' })
+    async logout(
+        @CurrentUser() user: any,
+        @CurrentToken() token: string,
+        @Body() logoutDto?: LogoutDto
+    ) {
+        return this.authService.logout(
+            user.sub, // userId from JWT payload
+            token,    // token from request header
+            logoutDto?.logoutFromAllDevices || false
+        );
+    }
+
+    @Post('validate-token')
+    @TokenProtected()
+    @ApiOperation({ summary: 'Validate current token (requires valid token)' })
+    @ApiResponse({ status: 200, description: 'Token is valid' })
+    @ApiResponse({ status: 401, description: 'Token is invalid or revoked' })
+    async validateToken(@CurrentUser() user: any, @CurrentToken() token: string) {
+        // Si on arrive ici, le token est déjà validé par TokenBlacklistGuard
+        return {
+            valid: true,
+            userId: user.sub,
+            email: user.email,
+            message: 'Token is valid and not blacklisted'
+        };
     }
 }

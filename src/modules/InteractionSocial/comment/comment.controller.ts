@@ -10,21 +10,37 @@ import {
     ParseUUIDPipe
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
+import { TokenProtected } from '../../../core/common/decorators/token-protected.decorator';
+import { OwnerProtected } from '../../../core/common/decorators/owner-protected.decorator';
+import { CurrentUser } from '../../../core/common/decorators/current-user.decorator';
 import { CommentService } from './comment.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
+import { LikeService } from '../like/like.service';
+import { CreateLikeDto } from '../like/dto/create-like.dto';
+import { ToggleLikeDto } from './dto/toggle-like.dto';
 
 @ApiTags('Comments')
 @Controller('comments')
 export class CommentController {
-    constructor(private readonly commentService: CommentService) {}
+    constructor(
+        private readonly commentService: CommentService,
+        private readonly likeService: LikeService
+    ) {}
 
     @Post()
-    @ApiOperation({ summary: 'Create a new comment' })
+    @TokenProtected()
+    @ApiOperation({ summary: 'Create a new comment (requires authentication)' })
     @ApiResponse({ status: 201, description: 'Comment created successfully' })
     @ApiResponse({ status: 400, description: 'Bad request' })
-    create(@Body() createCommentDto: CreateCommentDto) {
-        return this.commentService.create(createCommentDto);
+    @ApiResponse({ status: 401, description: 'Unauthorized - token required' })
+    create(@Body() createCommentDto: CreateCommentDto, @CurrentUser() user: any) {
+        // Ajouter l'ID de l'utilisateur connecté au commentaire
+        const commentWithUser = {
+            ...createCommentDto,
+            userId: user.sub // ID de l'utilisateur depuis le JWT
+        };
+        return this.commentService.create(commentWithUser);
     }
 
     @Get()
@@ -114,41 +130,65 @@ export class CommentController {
     }
 
     @Patch(':id')
-    @ApiOperation({ summary: 'Update a comment' })
+    @OwnerProtected('comment')
+    @ApiOperation({ summary: 'Update a comment (owner only)' })
     @ApiParam({ name: 'id', description: 'Comment ID' })
     @ApiResponse({ status: 200, description: 'Comment updated successfully' })
-    @ApiResponse({ status: 404, description: 'Comment not found' })
     update(
         @Param('id', ParseUUIDPipe) id: string,
-        @Body() updateCommentDto: UpdateCommentDto
+        @Body() updateCommentDto: UpdateCommentDto,
+        @CurrentUser() user: any
     ) {
         return this.commentService.update(id, updateCommentDto);
     }
 
-    @Patch(':id/increment-likes')
-    @ApiOperation({ summary: 'Increment likes for a comment' })
+    @Post(':id/toggle-like')
+    @TokenProtected()
+    @ApiOperation({ summary: 'Toggle like for a comment (requires authentication)' })
     @ApiParam({ name: 'id', description: 'Comment ID' })
-    @ApiResponse({ status: 200, description: 'Comment likes incremented successfully' })
+    @ApiResponse({ status: 200, description: 'Comment like toggled successfully' })
     @ApiResponse({ status: 404, description: 'Comment not found' })
-    incrementLikes(@Param('id', ParseUUIDPipe) id: string) {
-        return this.commentService.incrementLikes(id);
+    @ApiResponse({ status: 401, description: 'Unauthorized - token required' })
+    async toggleLike(
+        @Param('id', ParseUUIDPipe) commentId: string,
+        @Body() toggleLikeData: ToggleLikeDto,
+        @CurrentUser() user: any
+    ) {
+        const createLikeDto: CreateLikeDto = {
+            userId: user.sub, // Utiliser l'ID de l'utilisateur connecté
+            commentId
+        };
+        return this.likeService.toggleLike(createLikeDto);
     }
 
-    @Patch(':id/decrement-likes')
-    @ApiOperation({ summary: 'Decrement likes for a comment' })
+    @Get(':id/likes')
+    @ApiOperation({ summary: 'Get likes for a comment' })
     @ApiParam({ name: 'id', description: 'Comment ID' })
-    @ApiResponse({ status: 200, description: 'Comment likes decremented successfully' })
+    @ApiResponse({ status: 200, description: 'Comment likes retrieved successfully' })
     @ApiResponse({ status: 404, description: 'Comment not found' })
-    decrementLikes(@Param('id', ParseUUIDPipe) id: string) {
-        return this.commentService.decrementLikes(id);
+    getCommentLikes(@Param('id', ParseUUIDPipe) commentId: string) {
+        return this.likeService.findByComment(commentId);
+    }
+
+    @Get(':id/likes/count')
+    @ApiOperation({ summary: 'Count likes for a comment' })
+    @ApiParam({ name: 'id', description: 'Comment ID' })
+    @ApiResponse({ status: 200, description: 'Comment like count retrieved successfully' })
+    @ApiResponse({ status: 404, description: 'Comment not found' })
+    async getCommentLikeCount(@Param('id', ParseUUIDPipe) commentId: string) {
+        const count = await this.likeService.countCommentLikes(commentId);
+        return { count };
     }
 
     @Delete(':id')
-    @ApiOperation({ summary: 'Delete a comment' })
+    @OwnerProtected('comment')
+    @ApiOperation({ summary: 'Delete a comment (owner only)' })
     @ApiParam({ name: 'id', description: 'Comment ID' })
     @ApiResponse({ status: 200, description: 'Comment deleted successfully' })
-    @ApiResponse({ status: 404, description: 'Comment not found' })
-    remove(@Param('id', ParseUUIDPipe) id: string) {
+    remove(
+        @Param('id', ParseUUIDPipe) id: string,
+        @CurrentUser() user: any
+    ) {
         return this.commentService.remove(id);
     }
 }

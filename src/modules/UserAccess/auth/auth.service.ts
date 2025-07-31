@@ -6,6 +6,7 @@ import {
 } from '../../../core/constants/email.constants';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../../../core/services/prisma.service';
+import { TokenBlacklistService } from '../../../core/services/token-blacklist.service';
 import {
     comparePassword,
     cryptPassword,
@@ -22,7 +23,8 @@ export class AuthService {
         private readonly prisma: PrismaService,
         private readonly jwtService: JwtService,
         private readonly UserService: UserService,
-        private readonly mailerService: MailerService
+        private readonly mailerService: MailerService,
+        private readonly tokenBlacklistService: TokenBlacklistService
     ) {}
 
     async signIn(credentials: LoginDto) {
@@ -196,5 +198,96 @@ export class AuthService {
             email,
             emailOptions
         );
+    }
+
+    /**
+     * Logout user avec blacklist et gestion des tokens
+     * Cette implémentation révoque réellement les tokens côté serveur
+     */
+    async logout(
+        userId?: string, 
+        token?: string,
+        logoutFromAllDevices: boolean = false
+    ): Promise<{ 
+        message: string; 
+        instructions: string[] 
+    }> {
+        // Vérifier que l'utilisateur existe si userId fourni
+        if (userId) {
+            const user = await this.prisma.user.findUnique({
+                where: { id: userId }
+            });
+
+            if (!user) {
+                throw new UnauthorizedException('User not found');
+            }
+
+            // Mettre à jour lastLogoutAt pour invalider les anciens tokens
+            await this.prisma.user.update({
+                where: { id: userId },
+                data: {
+                    lastLogoutAt: new Date()
+                }
+            });
+
+            // Si logout de tous les appareils
+            if (logoutFromAllDevices) {
+                await this.tokenBlacklistService.blacklistAllUserTokens(userId, 'logout_all_devices');
+            }
+        }
+
+        // Ajouter le token actuel à la blacklist s'il est fourni
+        if (token) {
+            await this.tokenBlacklistService.blacklistToken(token, userId, 'logout');
+        }
+
+        return {
+            message: 'Logout successful. Token has been invalidated.',
+            instructions: [
+                'Token has been blacklisted on server',
+                'Remove access token from localStorage/sessionStorage',
+                'Clear refresh token',
+                'Redirect to login page'
+            ]
+        };
+    }
+
+    /**
+     * Vérifier si un token est valide (pas blacklisté)
+     */
+    async isTokenValid(token: string, userId?: string): Promise<boolean> {
+        // Vérifier si le token est blacklisté
+        const isBlacklisted = await this.tokenBlacklistService.isTokenBlacklisted(token);
+        if (isBlacklisted) {
+            return false;
+        }
+
+        // Si userId fourni, vérifier lastLogoutAt
+        if (userId) {
+            try {
+                const decoded = this.jwtService.decode(token);
+                const tokenIssuedAt = decoded && typeof decoded === 'object' && 'iat' in decoded 
+                    ? new Date(decoded.iat * 1000) 
+                    : null;
+
+                if (tokenIssuedAt) {
+                    const user = await this.prisma.user.findUnique({
+                        where: { id: userId },
+                        select: { lastLogoutAt: true }
+                    });
+
+                    // Si lastLogoutAt est après l'émission du token, le token est invalide
+                    if (user?.lastLogoutAt && user.lastLogoutAt > tokenIssuedAt) {
+                        return false;
+                    }
+                }
+            } catch (error) {
+                // Token malformé ou erreur de décodage
+                console.error('Error decoding token:', error);
+                return false;
+            }
+        }
+
+        return true;
     }
 }

@@ -7,6 +7,9 @@ Bienvenue dans la documentation complète de l'application B-App Backend.
 ### 📚 [Modules](./modules/README.md)
 Documentation complète de tous les modules de l'application.
 
+### 🔐 [Système de Logout Sécurisé](./README-logout.md)
+Documentation complète du système d'authentification et de révocation de tokens avec blacklist.
+
 #### TagsMetadata
 - 🏷️ [Tag Module](./modules/tag.md) - Gestion des tags génériques
 - 🔗 [Project Tag Module](./modules/project-tag.md) - Associations projets-tags

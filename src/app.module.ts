@@ -2,6 +2,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { join } from 'path';
 import { LoggerMiddleware } from './core/common/middleware/logger.middleware';
@@ -46,6 +47,9 @@ import { BlockModule } from './modules/UserAccess/block/block.module';
             isGlobal: true,
             cache: true
         }),
+
+        // Task Scheduling
+        ScheduleModule.forRoot(),
 
         // Rate Limiting
         ThrottlerModule.forRootAsync({

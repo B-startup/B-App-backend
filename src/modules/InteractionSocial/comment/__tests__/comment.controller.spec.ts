@@ -1,13 +1,18 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CommentController } from '../comment.controller';
 import { CommentService } from '../comment.service';
+import { LikeService } from '../../like/like.service';
 import { CreateCommentDto } from '../dto/create-comment.dto';
 import { UpdateCommentDto } from '../dto/update-comment.dto';
-import { Comment } from '@prisma/client';
+import { ToggleLikeDto } from '../dto/toggle-like.dto';
+import { Comment, Like } from '@prisma/client';
+import { JwtModule } from '@nestjs/jwt';
+import { ConfigModule } from '@nestjs/config';
 
 describe('CommentController', () => {
     let controller: CommentController;
     let mockCommentService: jest.Mocked<CommentService>;
+    let mockLikeService: jest.Mocked<LikeService>;
 
     const mockComment: Comment = {
         id: 'comment-1',
@@ -31,6 +36,16 @@ describe('CommentController', () => {
         replies: []
     };
 
+    const mockLike: Like = {
+        id: 'like-1',
+        userId: 'user-1',
+        projectId: null,
+        postId: null,
+        commentId: 'comment-1',
+        createdAt: new Date('2025-07-31T10:00:00.000Z'),
+        updatedAt: new Date('2025-07-31T10:00:00.000Z')
+    };
+
     beforeEach(async () => {
         const mockService = {
             create: jest.fn(),
@@ -44,24 +59,73 @@ describe('CommentController', () => {
             findReplies: jest.fn(),
             getProjectCommentStats: jest.fn(),
             getPostCommentStats: jest.fn(),
-            incrementLikes: jest.fn(),
-            decrementLikes: jest.fn(),
             search: jest.fn(),
             paginate: jest.fn()
         };
 
+        const mockLikeServiceObj = {
+            toggleLike: jest.fn(),
+            findByComment: jest.fn(),
+            countCommentLikes: jest.fn(),
+            create: jest.fn(),
+            remove: jest.fn()
+        };
+
+        // Mock pour tous les services nécessaires aux guards
+        const mockPrismaService = {
+            user: { findUnique: jest.fn() },
+            comment: { findUnique: jest.fn() },
+            post: { findUnique: jest.fn() },
+            project: { findUnique: jest.fn() }
+        };
+
+        const mockTokenBlacklistService = {
+            isTokenBlacklisted: jest.fn().mockResolvedValue(false),
+            addToBlacklist: jest.fn()
+        };
+
         const module: TestingModule = await Test.createTestingModule({
+            imports: [
+                ConfigModule.forRoot(),
+                JwtModule.register({ secret: 'test-secret' })
+            ],
             controllers: [CommentController],
             providers: [
                 {
                     provide: CommentService,
                     useValue: mockService
+                },
+                {
+                    provide: LikeService,
+                    useValue: mockLikeServiceObj
+                },
+                {
+                    provide: 'PrismaService',
+                    useValue: mockPrismaService
+                },
+                {
+                    provide: 'TokenBlacklistService', 
+                    useValue: mockTokenBlacklistService
+                },
+                // Ajoutons les vrais noms des classes aussi
+                {
+                    provide: 'PrismaService',
+                    useValue: mockPrismaService
+                },
+                {
+                    provide: 'TokenBlacklistService',
+                    useValue: mockTokenBlacklistService
                 }
             ]
+        }).overrideGuard(require('../../../../core/common/guards/token-blacklist.guard').TokenBlacklistGuard).useValue({
+            canActivate: jest.fn(() => true)
+        }).overrideGuard(require('../../../../core/common/guards/resource-owner.guard').ResourceOwnerGuard).useValue({
+            canActivate: jest.fn(() => true)
         }).compile();
 
         controller = module.get<CommentController>(CommentController);
         mockCommentService = module.get(CommentService);
+        mockLikeService = module.get(LikeService);
     });
 
     afterEach(() => {
@@ -76,12 +140,16 @@ describe('CommentController', () => {
                 projectId: 'project-1'
             };
 
+            const mockUser = { sub: 'user-1' };
             mockCommentService.create.mockResolvedValue(mockComment);
 
-            const result = await controller.create(createCommentDto);
+            const result = await controller.create(createCommentDto, mockUser);
 
             expect(result).toEqual(mockComment);
-            expect(mockCommentService.create).toHaveBeenCalledWith(createCommentDto);
+            expect(mockCommentService.create).toHaveBeenCalledWith({
+                ...createCommentDto,
+                userId: 'user-1'
+            });
         });
 
         it('should create a reply comment', async () => {
@@ -92,13 +160,17 @@ describe('CommentController', () => {
                 projectId: 'project-1'
             };
 
+            const mockUser = { sub: 'user-2' };
             const reply = { ...mockComment, id: 'reply-1', parentId: 'comment-1' };
             mockCommentService.create.mockResolvedValue(reply);
 
-            const result = await controller.create(createReplyDto);
+            const result = await controller.create(createReplyDto, mockUser);
 
             expect(result).toEqual(reply);
-            expect(mockCommentService.create).toHaveBeenCalledWith(createReplyDto);
+            expect(mockCommentService.create).toHaveBeenCalledWith({
+                ...createReplyDto,
+                userId: 'user-2'
+            });
         });
     });
 
@@ -244,45 +316,83 @@ describe('CommentController', () => {
             const updateCommentDto: UpdateCommentDto = {
                 content: 'Updated comment content'
             };
+            const mockUser = { sub: 'user-1' };
             const updatedComment = { ...mockComment, content: 'Updated comment content' };
             mockCommentService.update.mockResolvedValue(updatedComment);
 
-            const result = await controller.update('comment-1', updateCommentDto);
+            const result = await controller.update('comment-1', updateCommentDto, mockUser);
 
             expect(result).toEqual(updatedComment);
             expect(mockCommentService.update).toHaveBeenCalledWith('comment-1', updateCommentDto);
         });
     });
 
-    describe('incrementLikes', () => {
-        it('should increment likes for a comment', async () => {
-            const updatedComment = { ...mockComment, nbLikes: 1 };
-            mockCommentService.incrementLikes.mockResolvedValue(updatedComment);
+    describe('toggleLike', () => {
+        it('should toggle like for a comment', async () => {
+            const toggleLikeDto: ToggleLikeDto = {
+                userId: 'user-1'
+            };
+            const mockUser = { sub: 'user-1' };
+            const toggleResult = { liked: true, like: mockLike };
+            mockLikeService.toggleLike.mockResolvedValue(toggleResult);
 
-            const result = await controller.incrementLikes('comment-1');
+            const result = await controller.toggleLike('comment-1', toggleLikeDto, mockUser);
 
-            expect(result).toEqual(updatedComment);
-            expect(mockCommentService.incrementLikes).toHaveBeenCalledWith('comment-1');
+            expect(result).toEqual(toggleResult);
+            expect(mockLikeService.toggleLike).toHaveBeenCalledWith({
+                userId: 'user-1',
+                commentId: 'comment-1'
+            });
+        });
+
+        it('should toggle unlike for a comment', async () => {
+            const toggleLikeDto: ToggleLikeDto = {
+                userId: 'user-1'
+            };
+            const mockUser = { sub: 'user-1' };
+            const toggleResult = { liked: false };
+            mockLikeService.toggleLike.mockResolvedValue(toggleResult);
+
+            const result = await controller.toggleLike('comment-1', toggleLikeDto, mockUser);
+
+            expect(result).toEqual(toggleResult);
+            expect(mockLikeService.toggleLike).toHaveBeenCalledWith({
+                userId: 'user-1',
+                commentId: 'comment-1'
+            });
         });
     });
 
-    describe('decrementLikes', () => {
-        it('should decrement likes for a comment', async () => {
-            const updatedComment = { ...mockComment, nbLikes: -1 };
-            mockCommentService.decrementLikes.mockResolvedValue(updatedComment);
+    describe('getCommentLikes', () => {
+        it('should return likes for a comment', async () => {
+            const likes = [mockLike];
+            mockLikeService.findByComment.mockResolvedValue(likes);
 
-            const result = await controller.decrementLikes('comment-1');
+            const result = await controller.getCommentLikes('comment-1');
 
-            expect(result).toEqual(updatedComment);
-            expect(mockCommentService.decrementLikes).toHaveBeenCalledWith('comment-1');
+            expect(result).toEqual(likes);
+            expect(mockLikeService.findByComment).toHaveBeenCalledWith('comment-1');
+        });
+    });
+
+    describe('getCommentLikeCount', () => {
+        it('should return like count for a comment', async () => {
+            const count = 5;
+            mockLikeService.countCommentLikes.mockResolvedValue(count);
+
+            const result = await controller.getCommentLikeCount('comment-1');
+
+            expect(result).toEqual({ count });
+            expect(mockLikeService.countCommentLikes).toHaveBeenCalledWith('comment-1');
         });
     });
 
     describe('remove', () => {
         it('should remove a comment', async () => {
+            const mockUser = { sub: 'user-1' };
             mockCommentService.remove.mockResolvedValue(mockComment);
 
-            const result = await controller.remove('comment-1');
+            const result = await controller.remove('comment-1', mockUser);
 
             expect(result).toEqual(mockComment);
             expect(mockCommentService.remove).toHaveBeenCalledWith('comment-1');
