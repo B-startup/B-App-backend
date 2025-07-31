@@ -52,8 +52,8 @@ export class PartnershipController {
     @ApiOperation({ summary: 'Update a partnership' })
     @ApiOkResponse({ description: 'Partnership updated successfully' })
     update(
-      @Param('id') id: string,
-      @Body() dto: UpdatePartnershipDto
+        @Param('id') id: string,
+        @Body() dto: UpdatePartnershipDto
     ): Promise<Partnership> {
         return this.partnershipService.update(id, dto);
     }

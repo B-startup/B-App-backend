@@ -5,6 +5,6 @@ import { TeamUserService } from './team-users.service';
 
 @Module({
     controllers: [TeamUserController],
-    providers: [TeamUserService, PrismaClient], // ✅ لازم PrismaClient يكون هنا
+    providers: [TeamUserService, PrismaClient]
 })
 export class TeamUsersModule {}

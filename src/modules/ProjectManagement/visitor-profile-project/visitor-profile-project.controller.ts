@@ -10,7 +10,7 @@ import {
 import { VisitorProfileProjectService } from './visitor-profile-project.service';
 import { CreateVisitorProfileProjectDto } from './dto/create-visitor-profile-project.dto';
 import { UpdateVisitorProfileProjectDto } from './dto/update-visitor-profile-project.dto';
-import { ApiTags, ApiOperation, ApiOkResponse } from '@nestjs/swagger';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { VisitorProfileProject } from '@prisma/client';
 
 @ApiTags('VisitorProfileProject')

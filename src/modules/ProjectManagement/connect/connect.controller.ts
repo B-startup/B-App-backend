@@ -6,15 +6,14 @@ import {
     Param,
     Patch,
     Post,
-    Query,
+    Query
 } from '@nestjs/common';
 import {
     ApiTags,
     ApiOperation,
     ApiOkResponse,
     ApiCreatedResponse,
-    ApiBadRequestResponse,
-    ApiNotFoundResponse,
+    ApiBadRequestResponse
 } from '@nestjs/swagger';
 import { Connect } from '@prisma/client';
 import { ConnectService } from './connect.service';
@@ -48,7 +47,10 @@ export class ConnectController {
     }
 
     @Get('paginate')
-    paginate(@Query('skip') skip = 0, @Query('take') take = 10): Promise<Connect[]> {
+    paginate(
+        @Query('skip') skip = 0,
+        @Query('take') take = 10
+    ): Promise<Connect[]> {
         return this.connectService.paginate(Number(skip), Number(take));
     }
 
@@ -62,7 +64,10 @@ export class ConnectController {
     @Patch(':id')
     @ApiOperation({ summary: 'Update connect' })
     @ApiOkResponse({ description: 'Connect updated' })
-    update(@Param('id') id: string, @Body() dto: UpdateConnectDto): Promise<Connect> {
+    update(
+        @Param('id') id: string,
+        @Body() dto: UpdateConnectDto
+    ): Promise<Connect> {
         return this.connectService.update(id, dto);
     }
 
