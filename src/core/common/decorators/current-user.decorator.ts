@@ -10,7 +10,7 @@ export const CurrentUser = createParamDecorator(
         const user = request.user;
 
         return data ? user?.[data] : user;
-    },
+    }
 );
 
 /**
@@ -21,5 +21,5 @@ export const CurrentToken = createParamDecorator(
     (data: unknown, ctx: ExecutionContext) => {
         const request = ctx.switchToHttp().getRequest();
         return request.token;
-    },
+    }
 );

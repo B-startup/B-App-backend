@@ -17,7 +17,7 @@ import { SocialMediaModule } from './modules/UserAccess/social-media/social-medi
 import { ExperienceEducationModule } from './modules/UserAccess/experience_education/experience_education.module';
 import { InterestsModule } from './modules/ProjectManagement/interests/interests.module';
 import { TeamUsersModule } from './modules/UserAccess/team-users/team-users.module';
-import { FileModule } from './modules/MediaFiles/file/file.module';
+import { FileModule } from './modules/ProjectManagement/file/file.module';
 import { ProjectTagModule } from './modules/TagsMetadata/project-tag/project-tag.module';
 import { PostTagModule } from './modules/TagsMetadata/post-tag/post-tag.module';
 import { PostSectorModule } from './modules/TagsMetadata/post-sector/post-sector.module';
@@ -118,7 +118,7 @@ import { BlockModule } from './modules/UserAccess/block/block.module';
         MessageModule,
         VideoModule,
         OfferModule,
-        BlockModule,
+        BlockModule
     ],
     controllers: [],
     providers: [PrismaService]

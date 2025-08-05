@@ -1,5 +1,9 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
-import { PostShared,PrismaClient } from '@prisma/client';
+import {
+    Injectable,
+    ConflictException,
+    NotFoundException
+} from '@nestjs/common';
+import { PostShared, PrismaClient } from '@prisma/client';
 import { BaseCrudServiceImpl } from '../../../core/common/services/base-crud.service';
 import { CreatePostSharedDto } from './dto/create-post-shared.dto';
 import { UpdatePostSharedDto } from './dto/update-post-shared.dto';
@@ -43,7 +47,9 @@ export class PostSharedService extends BaseCrudServiceImpl<
     /**
      * Partage un post (avec vérification d'unicité)
      */
-    async sharePost(createPostSharedDto: CreatePostSharedDto): Promise<PostShared> {
+    async sharePost(
+        createPostSharedDto: CreatePostSharedDto
+    ): Promise<PostShared> {
         const { userId, postId } = createPostSharedDto;
 
         // Vérifier si l'utilisateur a déjà partagé ce post

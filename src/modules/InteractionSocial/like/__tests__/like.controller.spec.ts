@@ -88,9 +88,13 @@ describe('LikeController', () => {
                 projectId: 'project-1'
             };
 
-            mockLikeService.create.mockRejectedValue(new ConflictException('User has already liked this item'));
+            mockLikeService.create.mockRejectedValue(
+                new ConflictException('User has already liked this item')
+            );
 
-            await expect(controller.create(createLikeDto)).rejects.toThrow(ConflictException);
+            await expect(controller.create(createLikeDto)).rejects.toThrow(
+                ConflictException
+            );
         });
     });
 
@@ -107,7 +111,9 @@ describe('LikeController', () => {
             const result = await controller.toggleLike(createLikeDto);
 
             expect(result).toEqual(toggleResult);
-            expect(mockLikeService.toggleLike).toHaveBeenCalledWith(createLikeDto);
+            expect(mockLikeService.toggleLike).toHaveBeenCalledWith(
+                createLikeDto
+            );
         });
 
         it('should toggle like successfully (unlike)', async () => {
@@ -122,7 +128,9 @@ describe('LikeController', () => {
             const result = await controller.toggleLike(createLikeDto);
 
             expect(result).toEqual(toggleResult);
-            expect(mockLikeService.toggleLike).toHaveBeenCalledWith(createLikeDto);
+            expect(mockLikeService.toggleLike).toHaveBeenCalledWith(
+                createLikeDto
+            );
         });
     });
 
@@ -163,7 +171,9 @@ describe('LikeController', () => {
             const result = await controller.getUserLikeActivity('user-1');
 
             expect(result).toEqual(activity);
-            expect(mockLikeService.getUserLikeActivity).toHaveBeenCalledWith('user-1');
+            expect(mockLikeService.getUserLikeActivity).toHaveBeenCalledWith(
+                'user-1'
+            );
         });
     });
 
@@ -175,7 +185,9 @@ describe('LikeController', () => {
             const result = await controller.findByProject('project-1');
 
             expect(result).toEqual(likes);
-            expect(mockLikeService.findByProject).toHaveBeenCalledWith('project-1');
+            expect(mockLikeService.findByProject).toHaveBeenCalledWith(
+                'project-1'
+            );
         });
     });
 
@@ -186,7 +198,9 @@ describe('LikeController', () => {
             const result = await controller.countProjectLikes('project-1');
 
             expect(result).toEqual({ count: 5 });
-            expect(mockLikeService.countProjectLikes).toHaveBeenCalledWith('project-1');
+            expect(mockLikeService.countProjectLikes).toHaveBeenCalledWith(
+                'project-1'
+            );
         });
     });
 
@@ -209,7 +223,9 @@ describe('LikeController', () => {
             const result = await controller.countPostLikes('post-1');
 
             expect(result).toEqual({ count: 10 });
-            expect(mockLikeService.countPostLikes).toHaveBeenCalledWith('post-1');
+            expect(mockLikeService.countPostLikes).toHaveBeenCalledWith(
+                'post-1'
+            );
         });
     });
 
@@ -221,7 +237,9 @@ describe('LikeController', () => {
             const result = await controller.findByComment('comment-1');
 
             expect(result).toEqual(likes);
-            expect(mockLikeService.findByComment).toHaveBeenCalledWith('comment-1');
+            expect(mockLikeService.findByComment).toHaveBeenCalledWith(
+                'comment-1'
+            );
         });
     });
 
@@ -232,7 +250,9 @@ describe('LikeController', () => {
             const result = await controller.countCommentLikes('comment-1');
 
             expect(result).toEqual({ count: 3 });
-            expect(mockLikeService.countCommentLikes).toHaveBeenCalledWith('comment-1');
+            expect(mockLikeService.countCommentLikes).toHaveBeenCalledWith(
+                'comment-1'
+            );
         });
     });
 
@@ -240,19 +260,35 @@ describe('LikeController', () => {
         it('should return true when user has liked the target', async () => {
             mockLikeService.hasUserLiked.mockResolvedValue(true);
 
-            const result = await controller.hasUserLiked('user-1', 'project-1', 'project');
+            const result = await controller.hasUserLiked(
+                'user-1',
+                'project-1',
+                'project'
+            );
 
             expect(result).toEqual({ hasLiked: true });
-            expect(mockLikeService.hasUserLiked).toHaveBeenCalledWith('user-1', 'project-1', 'project');
+            expect(mockLikeService.hasUserLiked).toHaveBeenCalledWith(
+                'user-1',
+                'project-1',
+                'project'
+            );
         });
 
         it('should return false when user has not liked the target', async () => {
             mockLikeService.hasUserLiked.mockResolvedValue(false);
 
-            const result = await controller.hasUserLiked('user-1', 'post-1', 'post');
+            const result = await controller.hasUserLiked(
+                'user-1',
+                'post-1',
+                'post'
+            );
 
             expect(result).toEqual({ hasLiked: false });
-            expect(mockLikeService.hasUserLiked).toHaveBeenCalledWith('user-1', 'post-1', 'post');
+            expect(mockLikeService.hasUserLiked).toHaveBeenCalledWith(
+                'user-1',
+                'post-1',
+                'post'
+            );
         });
     });
 
@@ -300,7 +336,10 @@ describe('LikeController', () => {
             const result = await controller.update('like-1', updateLikeDto);
 
             expect(result).toEqual(updatedLike);
-            expect(mockLikeService.update).toHaveBeenCalledWith('like-1', updateLikeDto);
+            expect(mockLikeService.update).toHaveBeenCalledWith(
+                'like-1',
+                updateLikeDto
+            );
         });
     });
 

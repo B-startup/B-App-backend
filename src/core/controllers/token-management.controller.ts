@@ -14,7 +14,10 @@ export class TokenManagementController {
 
     @Get('blacklist/stats')
     @ApiOperation({ summary: 'Get blacklist statistics (Admin)' })
-    @ApiResponse({ status: 200, description: 'Blacklist statistics retrieved successfully' })
+    @ApiResponse({
+        status: 200,
+        description: 'Blacklist statistics retrieved successfully'
+    })
     @ApiResponse({ status: 401, description: 'Unauthorized access' })
     async getBlacklistStats(@CurrentUser() user: any) {
         const stats = await this.tokenBlacklistService.getBlacklistStats();
@@ -30,7 +33,8 @@ export class TokenManagementController {
     @ApiResponse({ status: 200, description: 'Cleanup completed successfully' })
     @ApiResponse({ status: 401, description: 'Unauthorized access' })
     async cleanupExpiredTokens(@CurrentUser() user: any) {
-        const deletedCount = await this.tokenBlacklistService.cleanupExpiredTokens();
+        const deletedCount =
+            await this.tokenBlacklistService.cleanupExpiredTokens();
         return {
             message: 'Cleanup completed successfully',
             deletedCount,

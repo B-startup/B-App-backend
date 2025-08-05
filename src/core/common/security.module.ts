@@ -29,8 +29,9 @@ import { ResourceOwnerGuard } from './guards/resource-owner.guard';
         ResourceOwnerGuard
     ],
     exports: [
-        TokenBlacklistGuard,
-        ResourceOwnerGuard,
+        JwtModule,           // ✅ Correctement exporté
+        TokenBlacklistGuard, // ✅ Disponible pour injection
+        ResourceOwnerGuard,  // ✅ Disponible pour injection
         TokenBlacklistService,
         PrismaService
     ]

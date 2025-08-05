@@ -44,8 +44,11 @@ describe('PostMediaFileService', () => {
         };
 
         it('should upload an image file successfully', async () => {
-            const result = await service.uploadFile(mockImageFile, PostMediaType.IMAGE);
-            
+            const result = await service.uploadFile(
+                mockImageFile,
+                PostMediaType.IMAGE
+            );
+
             expect(result).toHaveProperty('mediaUrl');
             expect(result).toHaveProperty('filename');
             expect(result.mediaUrl).toContain('/uploads/postMedia/images/');

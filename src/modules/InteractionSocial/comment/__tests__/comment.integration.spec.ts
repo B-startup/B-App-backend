@@ -8,7 +8,6 @@ import { CounterService } from '../../../../core/common/services/counter.service
 describe('CommentController (Integration)', () => {
     let app: INestApplication;
     let prismaService: PrismaService;
-    let counterService: CounterService;
 
     const mockComment = {
         id: 'comment-1',
@@ -24,28 +23,28 @@ describe('CommentController (Integration)', () => {
 
     beforeAll(async () => {
         const moduleFixture: TestingModule = await Test.createTestingModule({
-            imports: [CommentModule],
+            imports: [CommentModule]
         })
-        .overrideProvider(PrismaService)
-        .useValue({
-            comment: {
-                create: jest.fn().mockResolvedValue(mockComment),
-                findMany: jest.fn().mockResolvedValue([mockComment]),
-                findUnique: jest.fn().mockResolvedValue(mockComment),
-                findFirst: jest.fn().mockResolvedValue(mockComment),
-                update: jest.fn().mockResolvedValue(mockComment),
-                delete: jest.fn().mockResolvedValue(mockComment),
-                count: jest.fn().mockResolvedValue(1)
-            }
-        })
-        .overrideProvider(CounterService)
-        .useValue({
-            updateCommentCount: jest.fn().mockResolvedValue(undefined),
-            updateLikeCount: jest.fn().mockResolvedValue(undefined),
-            updateViewCount: jest.fn().mockResolvedValue(undefined),
-            recalculateCounters: jest.fn().mockResolvedValue(undefined)
-        })
-        .compile();
+            .overrideProvider(PrismaService)
+            .useValue({
+                comment: {
+                    create: jest.fn().mockResolvedValue(mockComment),
+                    findMany: jest.fn().mockResolvedValue([mockComment]),
+                    findUnique: jest.fn().mockResolvedValue(mockComment),
+                    findFirst: jest.fn().mockResolvedValue(mockComment),
+                    update: jest.fn().mockResolvedValue(mockComment),
+                    delete: jest.fn().mockResolvedValue(mockComment),
+                    count: jest.fn().mockResolvedValue(1)
+                }
+            })
+            .overrideProvider(CounterService)
+            .useValue({
+                updateCommentCount: jest.fn().mockResolvedValue(undefined),
+                updateLikeCount: jest.fn().mockResolvedValue(undefined),
+                updateViewCount: jest.fn().mockResolvedValue(undefined),
+                recalculateCounters: jest.fn().mockResolvedValue(undefined)
+            })
+            .compile();
 
         app = moduleFixture.createNestApplication();
         await app.init();
@@ -136,7 +135,8 @@ describe('CommentController (Integration)', () => {
             };
 
             // Mock count calls for stats
-            prismaService.comment.count = jest.fn()
+            prismaService.comment.count = jest
+                .fn()
                 .mockResolvedValueOnce(10) // total
                 .mockResolvedValueOnce(7); // top level
 
@@ -164,8 +164,13 @@ describe('CommentController (Integration)', () => {
                 content: 'Updated comment content'
             };
 
-            const updatedComment = { ...mockComment, content: 'Updated comment content' };
-            prismaService.comment.update = jest.fn().mockResolvedValue(updatedComment);
+            const updatedComment = {
+                ...mockComment,
+                content: 'Updated comment content'
+            };
+            prismaService.comment.update = jest
+                .fn()
+                .mockResolvedValue(updatedComment);
 
             const response = await request(app.getHttpServer())
                 .patch('/comments/comment-1')

@@ -17,8 +17,8 @@ export function TokenProtected() {
                 type: 'object',
                 properties: {
                     statusCode: { type: 'number', example: 401 },
-                    message: { 
-                        type: 'string', 
+                    message: {
+                        type: 'string',
                         examples: [
                             'Access token is required',
                             'Token has been revoked or invalidated',

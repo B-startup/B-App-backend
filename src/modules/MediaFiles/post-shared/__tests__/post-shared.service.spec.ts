@@ -83,7 +83,9 @@ describe('PostSharedService', () => {
             mockPrismaService.postShared.findFirst.mockResolvedValue(null);
             mockPrismaService.post.findUnique.mockResolvedValue(mockPost);
             mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
-            mockPrismaService.postShared.create.mockResolvedValue(mockPostShared);
+            mockPrismaService.postShared.create.mockResolvedValue(
+                mockPostShared
+            );
             mockPrismaService.post.update.mockResolvedValue({
                 ...mockPost,
                 nbShares: mockPost.nbShares + 1
@@ -92,12 +94,14 @@ describe('PostSharedService', () => {
             const result = await service.sharePost(createPostSharedDto);
 
             expect(result).toEqual(mockPostShared);
-            expect(mockPrismaService.postShared.findFirst).toHaveBeenCalledWith({
-                where: {
-                    userId: createPostSharedDto.userId,
-                    postId: createPostSharedDto.postId
+            expect(mockPrismaService.postShared.findFirst).toHaveBeenCalledWith(
+                {
+                    where: {
+                        userId: createPostSharedDto.userId,
+                        postId: createPostSharedDto.postId
+                    }
                 }
-            });
+            );
             expect(mockPrismaService.post.update).toHaveBeenCalledWith({
                 where: { id: createPostSharedDto.postId },
                 data: { nbShares: { increment: 1 } }
@@ -105,24 +109,30 @@ describe('PostSharedService', () => {
         });
 
         it('should throw ConflictException if user already shared the post', async () => {
-            mockPrismaService.postShared.findFirst.mockResolvedValue(mockPostShared);
+            mockPrismaService.postShared.findFirst.mockResolvedValue(
+                mockPostShared
+            );
 
-            await expect(service.sharePost(createPostSharedDto))
-                .rejects.toThrow(ConflictException);
-            expect(mockPrismaService.postShared.findFirst).toHaveBeenCalledWith({
-                where: {
-                    userId: createPostSharedDto.userId,
-                    postId: createPostSharedDto.postId
+            await expect(
+                service.sharePost(createPostSharedDto)
+            ).rejects.toThrow(ConflictException);
+            expect(mockPrismaService.postShared.findFirst).toHaveBeenCalledWith(
+                {
+                    where: {
+                        userId: createPostSharedDto.userId,
+                        postId: createPostSharedDto.postId
+                    }
                 }
-            });
+            );
         });
 
         it('should throw NotFoundException if post does not exist', async () => {
             mockPrismaService.postShared.findFirst.mockResolvedValue(null);
             mockPrismaService.post.findUnique.mockResolvedValue(null);
 
-            await expect(service.sharePost(createPostSharedDto))
-                .rejects.toThrow(NotFoundException);
+            await expect(
+                service.sharePost(createPostSharedDto)
+            ).rejects.toThrow(NotFoundException);
             expect(mockPrismaService.post.findUnique).toHaveBeenCalledWith({
                 where: { id: createPostSharedDto.postId }
             });
@@ -133,8 +143,9 @@ describe('PostSharedService', () => {
             mockPrismaService.post.findUnique.mockResolvedValue(mockPost);
             mockPrismaService.user.findUnique.mockResolvedValue(null);
 
-            await expect(service.sharePost(createPostSharedDto))
-                .rejects.toThrow(NotFoundException);
+            await expect(
+                service.sharePost(createPostSharedDto)
+            ).rejects.toThrow(NotFoundException);
             expect(mockPrismaService.user.findUnique).toHaveBeenCalledWith({
                 where: { id: createPostSharedDto.userId }
             });
@@ -143,22 +154,31 @@ describe('PostSharedService', () => {
 
     describe('unsharePost', () => {
         it('should successfully unshare a post', async () => {
-            mockPrismaService.postShared.findFirst.mockResolvedValue(mockPostShared);
-            mockPrismaService.postShared.delete.mockResolvedValue(mockPostShared);
+            mockPrismaService.postShared.findFirst.mockResolvedValue(
+                mockPostShared
+            );
+            mockPrismaService.postShared.delete.mockResolvedValue(
+                mockPostShared
+            );
             mockPrismaService.post.update.mockResolvedValue({
                 ...mockPost,
                 nbShares: mockPost.nbShares - 1
             });
 
-            const result = await service.unsharePost('test-user-id', 'test-post-id');
+            const result = await service.unsharePost(
+                'test-user-id',
+                'test-post-id'
+            );
 
             expect(result).toEqual(mockPostShared);
-            expect(mockPrismaService.postShared.findFirst).toHaveBeenCalledWith({
-                where: {
-                    userId: 'test-user-id',
-                    postId: 'test-post-id'
+            expect(mockPrismaService.postShared.findFirst).toHaveBeenCalledWith(
+                {
+                    where: {
+                        userId: 'test-user-id',
+                        postId: 'test-post-id'
+                    }
                 }
-            });
+            );
             expect(mockPrismaService.post.update).toHaveBeenCalledWith({
                 where: { id: 'test-post-id' },
                 data: { nbShares: { decrement: 1 } }
@@ -168,16 +188,22 @@ describe('PostSharedService', () => {
         it('should throw NotFoundException if share does not exist', async () => {
             mockPrismaService.postShared.findFirst.mockResolvedValue(null);
 
-            await expect(service.unsharePost('test-user-id', 'test-post-id'))
-                .rejects.toThrow(NotFoundException);
+            await expect(
+                service.unsharePost('test-user-id', 'test-post-id')
+            ).rejects.toThrow(NotFoundException);
         });
     });
 
     describe('hasUserSharedPost', () => {
         it('should return true if user has shared the post', async () => {
-            mockPrismaService.postShared.findFirst.mockResolvedValue(mockPostShared);
+            mockPrismaService.postShared.findFirst.mockResolvedValue(
+                mockPostShared
+            );
 
-            const result = await service.hasUserSharedPost('test-user-id', 'test-post-id');
+            const result = await service.hasUserSharedPost(
+                'test-user-id',
+                'test-post-id'
+            );
 
             expect(result).toBe(true);
         });
@@ -185,7 +211,10 @@ describe('PostSharedService', () => {
         it('should return false if user has not shared the post', async () => {
             mockPrismaService.postShared.findFirst.mockResolvedValue(null);
 
-            const result = await service.hasUserSharedPost('test-user-id', 'test-post-id');
+            const result = await service.hasUserSharedPost(
+                'test-user-id',
+                'test-post-id'
+            );
 
             expect(result).toBe(false);
         });
@@ -218,7 +247,9 @@ describe('PostSharedService', () => {
                     }
                 }
             ];
-            mockPrismaService.postShared.findMany.mockResolvedValue(sharesWithUsers);
+            mockPrismaService.postShared.findMany.mockResolvedValue(
+                sharesWithUsers
+            );
 
             const result = await service.findByPostWithUsers('test-post-id');
 
@@ -257,9 +288,12 @@ describe('PostSharedService', () => {
                     }
                 }
             ];
-            mockPrismaService.postShared.findMany.mockResolvedValue(sharesWithPosts);
+            mockPrismaService.postShared.findMany.mockResolvedValue(
+                sharesWithPosts
+            );
 
-            const result = await service.findUserSharesWithPosts('test-user-id');
+            const result =
+                await service.findUserSharesWithPosts('test-user-id');
 
             expect(result).toEqual(sharesWithPosts);
             expect(mockPrismaService.postShared.findMany).toHaveBeenCalledWith({
@@ -319,7 +353,9 @@ describe('PostSharedService', () => {
                 userId: 'test-user-id',
                 description: 'Test description'
             };
-            mockPrismaService.postShared.create.mockResolvedValue(mockPostShared);
+            mockPrismaService.postShared.create.mockResolvedValue(
+                mockPostShared
+            );
 
             const result = await service.create(createDto);
 
@@ -353,12 +389,16 @@ describe('PostSharedService', () => {
         });
 
         it('should find one post share', async () => {
-            mockPrismaService.postShared.findUnique.mockResolvedValue(mockPostShared);
+            mockPrismaService.postShared.findUnique.mockResolvedValue(
+                mockPostShared
+            );
 
             const result = await service.findOne('test-share-id');
 
             expect(result).toEqual(mockPostShared);
-            expect(mockPrismaService.postShared.findUnique).toHaveBeenCalledWith({
+            expect(
+                mockPrismaService.postShared.findUnique
+            ).toHaveBeenCalledWith({
                 where: { id: 'test-share-id' }
             });
         });
@@ -380,7 +420,9 @@ describe('PostSharedService', () => {
         });
 
         it('should remove a post share', async () => {
-            mockPrismaService.postShared.delete.mockResolvedValue(mockPostShared);
+            mockPrismaService.postShared.delete.mockResolvedValue(
+                mockPostShared
+            );
 
             const result = await service.remove('test-share-id');
 

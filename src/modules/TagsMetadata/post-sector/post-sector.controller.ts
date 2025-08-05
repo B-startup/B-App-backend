@@ -34,8 +34,8 @@ export class PostSectorController {
         type: CreatePostSectorDto,
         schema: {
             example: {
-                postId: "post-uuid-string",
-                sectorId: "sector-uuid-string"
+                postId: 'post-uuid-string',
+                sectorId: 'sector-uuid-string'
             }
         }
     })
@@ -45,19 +45,23 @@ export class PostSectorController {
         type: PostSectorResponseDto,
         schema: {
             example: {
-                id: "uuid-string",
-                postId: "post-uuid-string",
-                sectorId: "sector-uuid-string",
-                createdAt: "2025-07-30T10:30:00.000Z",
-                updatedAt: "2025-07-30T10:30:00.000Z"
+                id: 'uuid-string',
+                postId: 'post-uuid-string',
+                sectorId: 'sector-uuid-string',
+                createdAt: '2025-07-30T10:30:00.000Z',
+                updatedAt: '2025-07-30T10:30:00.000Z'
             }
         }
     })
     @ApiResponse({ status: 400, description: 'Bad Request' })
     @ApiResponse({ status: 404, description: 'Post or Sector not found' })
     @ApiResponse({ status: 409, description: 'Association already exists' })
-    async create(@Body() createPostSectorDto: CreatePostSectorDto): Promise<PostSectorResponseDto> {
-        return await this.postSectorService.createAssociation(createPostSectorDto);
+    async create(
+        @Body() createPostSectorDto: CreatePostSectorDto
+    ): Promise<PostSectorResponseDto> {
+        return await this.postSectorService.createAssociation(
+            createPostSectorDto
+        );
     }
 
     @Get()
@@ -68,7 +72,7 @@ export class PostSectorController {
         type: [PostSectorResponseDto]
     })
     async findAll(): Promise<PostSectorResponseDto[]> {
-        return  this.postSectorService.findAll();
+        return this.postSectorService.findAll();
     }
 
     @Get('popular-sectors')
@@ -83,9 +87,7 @@ export class PostSectorController {
         status: 200,
         description: 'Popular sectors retrieved successfully'
     })
-    async findPopularSectors(
-        @Query('limit') limit?: string
-    ) {
+    async findPopularSectors(@Query('limit') limit?: string) {
         const limitNumber = limit ? parseInt(limit, 10) : 10;
         return await this.postSectorService.findPopularSectors(limitNumber);
     }
@@ -197,14 +199,17 @@ export class PostSectorController {
         @Param('id') id: string,
         @Body() updatePostSectorDto: UpdatePostSectorDto
     ): Promise<PostSectorResponseDto> {
-        return  this.postSectorService.update(id, updatePostSectorDto);
+        return this.postSectorService.update(id, updatePostSectorDto);
     }
 
     @Delete(':id')
     @HttpCode(HttpStatus.NO_CONTENT)
     @ApiOperation({ summary: 'Delete post-sector association by ID' })
     @ApiParam({ name: 'id', description: 'Post-sector association ID' })
-    @ApiResponse({ status: 204, description: 'Association deleted successfully' })
+    @ApiResponse({
+        status: 204,
+        description: 'Association deleted successfully'
+    })
     @ApiResponse({ status: 404, description: 'Association not found' })
     async remove(@Param('id') id: string): Promise<void> {
         await this.postSectorService.remove(id);
@@ -215,7 +220,10 @@ export class PostSectorController {
     @ApiOperation({ summary: 'Delete specific post-sector association' })
     @ApiParam({ name: 'postId', description: 'Post ID' })
     @ApiParam({ name: 'sectorId', description: 'Sector ID' })
-    @ApiResponse({ status: 204, description: 'Association deleted successfully' })
+    @ApiResponse({
+        status: 204,
+        description: 'Association deleted successfully'
+    })
     @ApiResponse({ status: 404, description: 'Association not found' })
     async removeAssociation(
         @Param('postId') postId: string,

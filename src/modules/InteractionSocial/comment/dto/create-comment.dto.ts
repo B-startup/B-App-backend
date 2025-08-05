@@ -7,12 +7,16 @@ export class CreateCommentDto {
     @IsNotEmpty()
     userId: string;
 
-    @ApiPropertyOptional({ description: 'ID of the project associated with the comment' })
+    @ApiPropertyOptional({
+        description: 'ID of the project associated with the comment'
+    })
     @IsUUID()
     @IsOptional()
     projectId?: string;
 
-    @ApiPropertyOptional({ description: 'ID of the post associated with the comment' })
+    @ApiPropertyOptional({
+        description: 'ID of the post associated with the comment'
+    })
     @IsUUID()
     @IsOptional()
     postId?: string;

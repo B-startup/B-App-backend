@@ -227,7 +227,8 @@ describe('PostService', () => {
             mockPrismaService.post.count.mockResolvedValue(total);
 
             const paginationDto = { page: 1, limit: 10 };
-            const result = await service.findPublicPostsPaginated(paginationDto);
+            const result =
+                await service.findPublicPostsPaginated(paginationDto);
 
             expect(mockPrismaService.post.findMany).toHaveBeenCalledWith({
                 where: { isPublic: true },
@@ -328,7 +329,11 @@ describe('PostService', () => {
             const postsWithRelations = [
                 {
                     ...mockPost,
-                    user: { id: 'user-id', name: 'Test User', email: 'test@example.com' },
+                    user: {
+                        id: 'user-id',
+                        name: 'Test User',
+                        email: 'test@example.com'
+                    },
                     media: [],
                     Like: [],
                     Comment: [],
@@ -337,7 +342,9 @@ describe('PostService', () => {
                 }
             ];
 
-            mockPrismaService.post.findMany.mockResolvedValue(postsWithRelations);
+            mockPrismaService.post.findMany.mockResolvedValue(
+                postsWithRelations
+            );
 
             const result = await service.findAllWithRelations();
 
@@ -384,7 +391,11 @@ describe('PostService', () => {
         it('should return a post with all relations', async () => {
             const postWithRelations = {
                 ...mockPost,
-                user: { id: 'user-id', name: 'Test User', email: 'test@example.com' },
+                user: {
+                    id: 'user-id',
+                    name: 'Test User',
+                    email: 'test@example.com'
+                },
                 media: [],
                 Like: [],
                 Comment: [],
@@ -392,7 +403,9 @@ describe('PostService', () => {
                 PostTag: []
             };
 
-            mockPrismaService.post.findUnique.mockResolvedValue(postWithRelations);
+            mockPrismaService.post.findUnique.mockResolvedValue(
+                postWithRelations
+            );
 
             const result = await service.findOneWithRelations('test-post-id');
 

@@ -26,14 +26,22 @@ export class CommentService extends BaseCrudServiceImpl<
      */
     async create(data: CreateCommentDto): Promise<Comment> {
         const comment = await super.create(data);
-        
+
         // Incrémenter le compteur de commentaires dans l'entité parente
         if (data.projectId) {
-            await this.counterService.updateCommentCount('project', data.projectId, true);
+            await this.counterService.updateCommentCount(
+                'project',
+                data.projectId,
+                true
+            );
         } else if (data.postId) {
-            await this.counterService.updateCommentCount('post', data.postId, true);
+            await this.counterService.updateCommentCount(
+                'post',
+                data.postId,
+                true
+            );
         }
-        
+
         return comment;
     }
 
@@ -43,16 +51,24 @@ export class CommentService extends BaseCrudServiceImpl<
     async remove(id: string): Promise<Comment> {
         // Récupérer le commentaire avant suppression pour connaître l'entité parente
         const commentToDelete = await this.findOne(id);
-        
+
         const deletedComment = await super.remove(id);
-        
+
         // Décrémenter le compteur de commentaires dans l'entité parente
         if (commentToDelete.projectId) {
-            await this.counterService.updateCommentCount('project', commentToDelete.projectId, false);
+            await this.counterService.updateCommentCount(
+                'project',
+                commentToDelete.projectId,
+                false
+            );
         } else if (commentToDelete.postId) {
-            await this.counterService.updateCommentCount('post', commentToDelete.postId, false);
+            await this.counterService.updateCommentCount(
+                'post',
+                commentToDelete.postId,
+                false
+            );
         }
-        
+
         return deletedComment;
     }
 
@@ -197,9 +213,9 @@ export class CommentService extends BaseCrudServiceImpl<
         });
 
         const topLevelComments = await this.model.count({
-            where: { 
+            where: {
                 projectId,
-                parentId: null 
+                parentId: null
             }
         });
 
@@ -221,9 +237,9 @@ export class CommentService extends BaseCrudServiceImpl<
         });
 
         const topLevelComments = await this.model.count({
-            where: { 
+            where: {
                 postId,
-                parentId: null 
+                parentId: null
             }
         });
 

@@ -79,7 +79,9 @@ describe('PostShared Integration Tests', () => {
             mockPrismaService.postShared.findFirst.mockResolvedValue(null);
             mockPrismaService.post.findUnique.mockResolvedValue(mockPost);
             mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
-            mockPrismaService.postShared.create.mockResolvedValue(mockPostShared);
+            mockPrismaService.postShared.create.mockResolvedValue(
+                mockPostShared
+            );
             mockPrismaService.post.update.mockResolvedValue({
                 ...mockPost,
                 nbShares: 1
@@ -99,7 +101,9 @@ describe('PostShared Integration Tests', () => {
                 userId: 'test-user-id'
             };
 
-            mockPrismaService.postShared.findFirst.mockResolvedValue(mockPostShared);
+            mockPrismaService.postShared.findFirst.mockResolvedValue(
+                mockPostShared
+            );
 
             await request(app.getHttpServer())
                 .post('/post-shared')
@@ -144,7 +148,9 @@ describe('PostShared Integration Tests', () => {
                     }
                 }
             ];
-            mockPrismaService.postShared.findMany.mockResolvedValue(sharesWithUsers);
+            mockPrismaService.postShared.findMany.mockResolvedValue(
+                sharesWithUsers
+            );
 
             const response = await request(app.getHttpServer())
                 .get('/post-shared/post/test-post-id?withUsers=true')
@@ -183,7 +189,9 @@ describe('PostShared Integration Tests', () => {
                     }
                 }
             ];
-            mockPrismaService.postShared.findMany.mockResolvedValue(sharesWithPosts);
+            mockPrismaService.postShared.findMany.mockResolvedValue(
+                sharesWithPosts
+            );
 
             const response = await request(app.getHttpServer())
                 .get('/post-shared/user/test-user-id?withPosts=true')
@@ -219,7 +227,9 @@ describe('PostShared Integration Tests', () => {
 
     describe('/post-shared/:id (GET)', () => {
         it('should return a specific post share', async () => {
-            mockPrismaService.postShared.findUnique.mockResolvedValue(mockPostShared);
+            mockPrismaService.postShared.findUnique.mockResolvedValue(
+                mockPostShared
+            );
 
             const response = await request(app.getHttpServer())
                 .get('/post-shared/test-share-id')
@@ -256,7 +266,9 @@ describe('PostShared Integration Tests', () => {
 
     describe('/post-shared/:id (DELETE)', () => {
         it('should delete a post share', async () => {
-            mockPrismaService.postShared.delete.mockResolvedValue(mockPostShared);
+            mockPrismaService.postShared.delete.mockResolvedValue(
+                mockPostShared
+            );
 
             const response = await request(app.getHttpServer())
                 .delete('/post-shared/test-share-id')
@@ -268,8 +280,12 @@ describe('PostShared Integration Tests', () => {
 
     describe('/post-shared/unshare/:userId/:postId (DELETE)', () => {
         it('should unshare a post', async () => {
-            mockPrismaService.postShared.findFirst.mockResolvedValue(mockPostShared);
-            mockPrismaService.postShared.delete.mockResolvedValue(mockPostShared);
+            mockPrismaService.postShared.findFirst.mockResolvedValue(
+                mockPostShared
+            );
+            mockPrismaService.postShared.delete.mockResolvedValue(
+                mockPostShared
+            );
             mockPrismaService.post.update.mockResolvedValue({
                 ...mockPost,
                 nbShares: 0

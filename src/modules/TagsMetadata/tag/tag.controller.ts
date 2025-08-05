@@ -1,22 +1,22 @@
-import { 
-    Controller, 
-    Get, 
-    Post, 
-    Body, 
-    Patch, 
-    Param, 
-    Delete, 
+import {
+    Controller,
+    Get,
+    Post,
+    Body,
+    Patch,
+    Param,
+    Delete,
     Query,
     HttpCode,
     HttpStatus
 } from '@nestjs/common';
-import { 
-    ApiTags, 
-    ApiOperation, 
-    ApiResponse, 
-    ApiParam, 
-    ApiQuery, 
-    ApiBody 
+import {
+    ApiTags,
+    ApiOperation,
+    ApiResponse,
+    ApiParam,
+    ApiQuery,
+    ApiBody
 } from '@nestjs/swagger';
 import { TagService } from './tag.service';
 import { CreateTagDto } from './dto/create-tag.dto';
@@ -34,8 +34,8 @@ export class TagController {
         type: CreateTagDto,
         schema: {
             example: {
-                name: "Fintech",
-                description: "Financial technology related posts and projects"
+                name: 'Fintech',
+                description: 'Financial technology related posts and projects'
             }
         }
     })
@@ -45,11 +45,11 @@ export class TagController {
         type: TagResponseDto,
         schema: {
             example: {
-                id: "uuid-string",
-                name: "Fintech",
-                description: "Financial technology related posts and projects",
-                createdAt: "2025-07-30T10:30:00.000Z",
-                updatedAt: "2025-07-30T10:30:00.000Z"
+                id: 'uuid-string',
+                name: 'Fintech',
+                description: 'Financial technology related posts and projects',
+                createdAt: '2025-07-30T10:30:00.000Z',
+                updatedAt: '2025-07-30T10:30:00.000Z'
             }
         }
     })
@@ -105,9 +105,7 @@ export class TagController {
         status: 200,
         description: 'Most used tags retrieved successfully'
     })
-    async findMostUsed(
-        @Query('limit') limit?: string
-    ) {
+    async findMostUsed(@Query('limit') limit?: string) {
         const limitNumber = limit ? parseInt(limit, 10) : 10;
         return await this.tagService.findMostUsedTags(limitNumber);
     }

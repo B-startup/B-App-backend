@@ -18,7 +18,9 @@ export class CommentResponseDto {
     @ApiProperty({ description: 'User ID who wrote the comment' })
     userId: string;
 
-    @ApiPropertyOptional({ description: 'Project ID associated with the comment' })
+    @ApiPropertyOptional({
+        description: 'Project ID associated with the comment'
+    })
     projectId?: string;
 
     @ApiPropertyOptional({ description: 'Post ID associated with the comment' })
@@ -39,10 +41,16 @@ export class CommentResponseDto {
     @ApiProperty({ description: 'Comment last update timestamp' })
     updatedAt: Date;
 
-    @ApiPropertyOptional({ description: 'User who wrote the comment', type: CommentUserDto })
+    @ApiPropertyOptional({
+        description: 'User who wrote the comment',
+        type: CommentUserDto
+    })
     user?: CommentUserDto;
 
-    @ApiPropertyOptional({ description: 'Replies to this comment', type: [CommentResponseDto] })
+    @ApiPropertyOptional({
+        description: 'Replies to this comment',
+        type: [CommentResponseDto]
+    })
     replies?: CommentResponseDto[];
 }
 

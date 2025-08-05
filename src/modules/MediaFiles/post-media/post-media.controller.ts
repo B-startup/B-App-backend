@@ -14,22 +14,22 @@ import {
     ParseEnumPipe
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { 
-    ApiTags, 
-    ApiOperation, 
-    ApiResponse, 
-    ApiParam, 
+import {
+    ApiTags,
+    ApiOperation,
+    ApiResponse,
+    ApiParam,
     ApiQuery,
     ApiConsumes,
     ApiBody
 } from '@nestjs/swagger';
 import { PostMediaType } from '@prisma/client';
 import { PostMediaService } from './post-media.service';
-import { 
-    CreatePostMediaDto, 
-    UpdatePostMediaDto, 
+import {
+    CreatePostMediaDto,
+    UpdatePostMediaDto,
     PostMediaResponseDto,
-    UploadPostMediaDto 
+    UploadPostMediaDto
 } from './dto';
 
 @ApiTags('Post Media')
@@ -46,7 +46,9 @@ export class PostMediaController {
     })
     @ApiResponse({ status: 400, description: 'Bad Request' })
     @ApiResponse({ status: 404, description: 'Post not found' })
-    async create(@Body() createPostMediaDto: CreatePostMediaDto): Promise<PostMediaResponseDto> {
+    async create(
+        @Body() createPostMediaDto: CreatePostMediaDto
+    ): Promise<PostMediaResponseDto> {
         return await this.postMediaService.create(createPostMediaDto);
     }
 
@@ -82,7 +84,10 @@ export class PostMediaController {
         description: 'Media uploaded and created successfully',
         type: PostMediaResponseDto
     })
-    @ApiResponse({ status: 400, description: 'Bad Request - Invalid file or parameters' })
+    @ApiResponse({
+        status: 400,
+        description: 'Bad Request - Invalid file or parameters'
+    })
     @ApiResponse({ status: 404, description: 'Post not found' })
     async uploadMedia(
         @UploadedFile() file: Express.Multer.File,
@@ -137,8 +142,8 @@ export class PostMediaController {
 
     @Get('type/:type')
     @ApiOperation({ summary: 'Get all media by type' })
-    @ApiParam({ 
-        name: 'type', 
+    @ApiParam({
+        name: 'type',
         description: 'Media type',
         enum: PostMediaType
     })
@@ -176,15 +181,15 @@ export class PostMediaController {
         @Param('postId') postId: string,
         @Query('type') type?: PostMediaType
     ): Promise<{ count: number }> {
-        const count = type 
+        const count = type
             ? await this.postMediaService.countByPostAndType(postId, type)
             : await this.postMediaService.countByPost(postId);
-        
+
         return { count };
     }
 
     @Get('integrity/check')
-    @ApiOperation({ 
+    @ApiOperation({
         summary: 'Check file integrity (admin only)',
         description: 'Verify that all media files exist on disk'
     })
@@ -204,7 +209,8 @@ export class PostMediaController {
         }
     })
     async checkFileIntegrity() {
-        const { valid, missing } = await this.postMediaService.checkFileIntegrity();
+        const { valid, missing } =
+            await this.postMediaService.checkFileIntegrity();
         return {
             validCount: valid.length,
             missingCount: missing.length,

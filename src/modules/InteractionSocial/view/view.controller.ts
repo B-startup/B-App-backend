@@ -24,10 +24,10 @@ export class ViewController {
     @Post()
     @HttpCode(HttpStatus.CREATED)
     @ApiOperation({ summary: 'Create a new view record' })
-    @ApiResponse({ 
-        status: 201, 
+    @ApiResponse({
+        status: 201,
         description: 'View record created successfully',
-        type: ViewResponseDto 
+        type: ViewResponseDto
     })
     @ApiResponse({ status: 400, description: 'Invalid input data' })
     async create(@Body() createViewDto: CreateViewDto) {
@@ -36,10 +36,10 @@ export class ViewController {
 
     @Get()
     @ApiOperation({ summary: 'Get all view records' })
-    @ApiResponse({ 
-        status: 200, 
+    @ApiResponse({
+        status: 200,
         description: 'List of all view records',
-        type: [ViewResponseDto] 
+        type: [ViewResponseDto]
     })
     async findAll() {
         return this.viewService.findAll();
@@ -48,10 +48,10 @@ export class ViewController {
     @Get('user/:userId')
     @ApiOperation({ summary: 'Get all views by a specific user' })
     @ApiParam({ name: 'userId', description: 'User ID', type: 'string' })
-    @ApiResponse({ 
-        status: 200, 
+    @ApiResponse({
+        status: 200,
         description: 'List of views by user',
-        type: [ViewResponseDto] 
+        type: [ViewResponseDto]
     })
     async findByUser(@Param('userId', ParseUUIDPipe) userId: string) {
         return this.viewService.findByUser(userId);
@@ -60,10 +60,10 @@ export class ViewController {
     @Get('video/:videoId')
     @ApiOperation({ summary: 'Get all views for a specific video' })
     @ApiParam({ name: 'videoId', description: 'Video ID', type: 'string' })
-    @ApiResponse({ 
-        status: 200, 
+    @ApiResponse({
+        status: 200,
         description: 'List of views for video',
-        type: [ViewResponseDto] 
+        type: [ViewResponseDto]
     })
     async findByVideo(@Param('videoId', ParseUUIDPipe) videoId: string) {
         return this.viewService.findByVideo(videoId);
@@ -72,8 +72,8 @@ export class ViewController {
     @Get('video/:videoId/count')
     @ApiOperation({ summary: 'Get total view count for a video' })
     @ApiParam({ name: 'videoId', description: 'Video ID', type: 'string' })
-    @ApiResponse({ 
-        status: 200, 
+    @ApiResponse({
+        status: 200,
         description: 'View count for video',
         schema: {
             type: 'object',
@@ -89,8 +89,8 @@ export class ViewController {
     @Get('video/:videoId/total-time')
     @ApiOperation({ summary: 'Get total time spent viewing a video' })
     @ApiParam({ name: 'videoId', description: 'Video ID', type: 'string' })
-    @ApiResponse({ 
-        status: 200, 
+    @ApiResponse({
+        status: 200,
         description: 'Total time spent viewing video',
         schema: {
             type: 'object',
@@ -107,8 +107,8 @@ export class ViewController {
     @ApiOperation({ summary: 'Check if user has viewed a video' })
     @ApiParam({ name: 'userId', description: 'User ID', type: 'string' })
     @ApiParam({ name: 'videoId', description: 'Video ID', type: 'string' })
-    @ApiResponse({ 
-        status: 200, 
+    @ApiResponse({
+        status: 200,
         description: 'Whether user has viewed the video',
         schema: {
             type: 'object',
@@ -127,8 +127,8 @@ export class ViewController {
     @Get('user/:userId/stats')
     @ApiOperation({ summary: 'Get viewing statistics for a user' })
     @ApiParam({ name: 'userId', description: 'User ID', type: 'string' })
-    @ApiResponse({ 
-        status: 200, 
+    @ApiResponse({
+        status: 200,
         description: 'User viewing statistics',
         schema: {
             type: 'object',
@@ -146,10 +146,10 @@ export class ViewController {
     @Get(':id')
     @ApiOperation({ summary: 'Get a specific view by ID' })
     @ApiParam({ name: 'id', description: 'View ID', type: 'string' })
-    @ApiResponse({ 
-        status: 200, 
+    @ApiResponse({
+        status: 200,
         description: 'View record found',
-        type: ViewResponseDto 
+        type: ViewResponseDto
     })
     @ApiResponse({ status: 404, description: 'View not found' })
     async findOne(@Param('id', ParseUUIDPipe) id: string) {
@@ -159,14 +159,14 @@ export class ViewController {
     @Patch(':id')
     @ApiOperation({ summary: 'Update a view record' })
     @ApiParam({ name: 'id', description: 'View ID', type: 'string' })
-    @ApiResponse({ 
-        status: 200, 
+    @ApiResponse({
+        status: 200,
         description: 'View record updated successfully',
-        type: ViewResponseDto 
+        type: ViewResponseDto
     })
     @ApiResponse({ status: 404, description: 'View not found' })
     async update(
-        @Param('id', ParseUUIDPipe) id: string, 
+        @Param('id', ParseUUIDPipe) id: string,
         @Body() updateViewDto: UpdateViewDto
     ) {
         return this.viewService.update(id, updateViewDto);
@@ -176,7 +176,10 @@ export class ViewController {
     @HttpCode(HttpStatus.NO_CONTENT)
     @ApiOperation({ summary: 'Delete a view record' })
     @ApiParam({ name: 'id', description: 'View ID', type: 'string' })
-    @ApiResponse({ status: 204, description: 'View record deleted successfully' })
+    @ApiResponse({
+        status: 204,
+        description: 'View record deleted successfully'
+    })
     @ApiResponse({ status: 404, description: 'View not found' })
     async remove(@Param('id', ParseUUIDPipe) id: string) {
         return this.viewService.remove(id);

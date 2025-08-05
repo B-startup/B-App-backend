@@ -9,7 +9,13 @@ import {
     Query,
     ParseUUIDPipe
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
+import {
+    ApiTags,
+    ApiOperation,
+    ApiResponse,
+    ApiParam,
+    ApiQuery
+} from '@nestjs/swagger';
 import { TokenProtected } from '../../../core/common/decorators/token-protected.decorator';
 import { OwnerProtected } from '../../../core/common/decorators/owner-protected.decorator';
 import { CurrentUser } from '../../../core/common/decorators/current-user.decorator';
@@ -28,24 +34,20 @@ export class CommentController {
         private readonly likeService: LikeService
     ) {}
 
-    @Post()
-    @TokenProtected()
-    @ApiOperation({ summary: 'Create a new comment (requires authentication)' })
+     @Post()
+    @ApiOperation({ summary: 'Create a new comment' })
     @ApiResponse({ status: 201, description: 'Comment created successfully' })
     @ApiResponse({ status: 400, description: 'Bad request' })
-    @ApiResponse({ status: 401, description: 'Unauthorized - token required' })
-    create(@Body() createCommentDto: CreateCommentDto, @CurrentUser() user: any) {
-        // Ajouter l'ID de l'utilisateur connecté au commentaire
-        const commentWithUser = {
-            ...createCommentDto,
-            userId: user.sub // ID de l'utilisateur depuis le JWT
-        };
-        return this.commentService.create(commentWithUser);
+    create(@Body() createCommentDto: CreateCommentDto) {
+        return this.commentService.create(createCommentDto);
     }
 
     @Get()
     @ApiOperation({ summary: 'Get all comments' })
-    @ApiResponse({ status: 200, description: 'Comments retrieved successfully' })
+    @ApiResponse({
+        status: 200,
+        description: 'Comments retrieved successfully'
+    })
     findAll() {
         return this.commentService.findAll();
     }
@@ -53,7 +55,10 @@ export class CommentController {
     @Get('user/:userId')
     @ApiOperation({ summary: 'Get comments by user' })
     @ApiParam({ name: 'userId', description: 'User ID' })
-    @ApiResponse({ status: 200, description: 'User comments retrieved successfully' })
+    @ApiResponse({
+        status: 200,
+        description: 'User comments retrieved successfully'
+    })
     findByUser(@Param('userId', ParseUUIDPipe) userId: string) {
         return this.commentService.findByUser(userId);
     }
@@ -61,7 +66,10 @@ export class CommentController {
     @Get('project/:projectId')
     @ApiOperation({ summary: 'Get comments for a specific project' })
     @ApiParam({ name: 'projectId', description: 'Project ID' })
-    @ApiResponse({ status: 200, description: 'Project comments retrieved successfully' })
+    @ApiResponse({
+        status: 200,
+        description: 'Project comments retrieved successfully'
+    })
     findByProject(@Param('projectId', ParseUUIDPipe) projectId: string) {
         return this.commentService.findByProject(projectId);
     }
@@ -69,7 +77,10 @@ export class CommentController {
     @Get('post/:postId')
     @ApiOperation({ summary: 'Get comments for a specific post' })
     @ApiParam({ name: 'postId', description: 'Post ID' })
-    @ApiResponse({ status: 200, description: 'Post comments retrieved successfully' })
+    @ApiResponse({
+        status: 200,
+        description: 'Post comments retrieved successfully'
+    })
     findByPost(@Param('postId', ParseUUIDPipe) postId: string) {
         return this.commentService.findByPost(postId);
     }
@@ -77,7 +88,10 @@ export class CommentController {
     @Get('replies/:parentId')
     @ApiOperation({ summary: 'Get replies for a specific comment' })
     @ApiParam({ name: 'parentId', description: 'Parent comment ID' })
-    @ApiResponse({ status: 200, description: 'Comment replies retrieved successfully' })
+    @ApiResponse({
+        status: 200,
+        description: 'Comment replies retrieved successfully'
+    })
     findReplies(@Param('parentId', ParseUUIDPipe) parentId: string) {
         return this.commentService.findReplies(parentId);
     }
@@ -85,15 +99,23 @@ export class CommentController {
     @Get('project/:projectId/stats')
     @ApiOperation({ summary: 'Get comment statistics for a project' })
     @ApiParam({ name: 'projectId', description: 'Project ID' })
-    @ApiResponse({ status: 200, description: 'Project comment statistics retrieved successfully' })
-    getProjectCommentStats(@Param('projectId', ParseUUIDPipe) projectId: string) {
+    @ApiResponse({
+        status: 200,
+        description: 'Project comment statistics retrieved successfully'
+    })
+    getProjectCommentStats(
+        @Param('projectId', ParseUUIDPipe) projectId: string
+    ) {
         return this.commentService.getProjectCommentStats(projectId);
     }
 
     @Get('post/:postId/stats')
     @ApiOperation({ summary: 'Get comment statistics for a post' })
     @ApiParam({ name: 'postId', description: 'Post ID' })
-    @ApiResponse({ status: 200, description: 'Post comment statistics retrieved successfully' })
+    @ApiResponse({
+        status: 200,
+        description: 'Post comment statistics retrieved successfully'
+    })
     getPostCommentStats(@Param('postId', ParseUUIDPipe) postId: string) {
         return this.commentService.getPostCommentStats(postId);
     }
@@ -101,20 +123,31 @@ export class CommentController {
     @Get('search')
     @ApiOperation({ summary: 'Search comments by keyword' })
     @ApiQuery({ name: 'keyword', description: 'Search keyword' })
-    @ApiResponse({ status: 200, description: 'Search results retrieved successfully' })
+    @ApiResponse({
+        status: 200,
+        description: 'Search results retrieved successfully'
+    })
     search(@Query('keyword') keyword: string) {
         return this.commentService.search(keyword, ['content']);
     }
 
     @Get('paginate')
     @ApiOperation({ summary: 'Get paginated comments' })
-    @ApiQuery({ name: 'skip', required: false, description: 'Number of items to skip' })
-    @ApiQuery({ name: 'take', required: false, description: 'Number of items to take' })
-    @ApiResponse({ status: 200, description: 'Paginated comments retrieved successfully' })
-    paginate(
-        @Query('skip') skip?: string,
-        @Query('take') take?: string
-    ) {
+    @ApiQuery({
+        name: 'skip',
+        required: false,
+        description: 'Number of items to skip'
+    })
+    @ApiQuery({
+        name: 'take',
+        required: false,
+        description: 'Number of items to take'
+    })
+    @ApiResponse({
+        status: 200,
+        description: 'Paginated comments retrieved successfully'
+    })
+    paginate(@Query('skip') skip?: string, @Query('take') take?: string) {
         const skipNum = skip ? parseInt(skip, 10) : 0;
         const takeNum = take ? parseInt(take, 10) : 10;
         return this.commentService.paginate(skipNum, takeNum);
@@ -137,16 +170,21 @@ export class CommentController {
     update(
         @Param('id', ParseUUIDPipe) id: string,
         @Body() updateCommentDto: UpdateCommentDto,
-        @CurrentUser() user: any
+        @CurrentUser() _user: any
     ) {
         return this.commentService.update(id, updateCommentDto);
     }
 
     @Post(':id/toggle-like')
     @TokenProtected()
-    @ApiOperation({ summary: 'Toggle like for a comment (requires authentication)' })
+    @ApiOperation({
+        summary: 'Toggle like for a comment (requires authentication)'
+    })
     @ApiParam({ name: 'id', description: 'Comment ID' })
-    @ApiResponse({ status: 200, description: 'Comment like toggled successfully' })
+    @ApiResponse({
+        status: 200,
+        description: 'Comment like toggled successfully'
+    })
     @ApiResponse({ status: 404, description: 'Comment not found' })
     @ApiResponse({ status: 401, description: 'Unauthorized - token required' })
     async toggleLike(
@@ -164,7 +202,10 @@ export class CommentController {
     @Get(':id/likes')
     @ApiOperation({ summary: 'Get likes for a comment' })
     @ApiParam({ name: 'id', description: 'Comment ID' })
-    @ApiResponse({ status: 200, description: 'Comment likes retrieved successfully' })
+    @ApiResponse({
+        status: 200,
+        description: 'Comment likes retrieved successfully'
+    })
     @ApiResponse({ status: 404, description: 'Comment not found' })
     getCommentLikes(@Param('id', ParseUUIDPipe) commentId: string) {
         return this.likeService.findByComment(commentId);
@@ -173,7 +214,10 @@ export class CommentController {
     @Get(':id/likes/count')
     @ApiOperation({ summary: 'Count likes for a comment' })
     @ApiParam({ name: 'id', description: 'Comment ID' })
-    @ApiResponse({ status: 200, description: 'Comment like count retrieved successfully' })
+    @ApiResponse({
+        status: 200,
+        description: 'Comment like count retrieved successfully'
+    })
     @ApiResponse({ status: 404, description: 'Comment not found' })
     async getCommentLikeCount(@Param('id', ParseUUIDPipe) commentId: string) {
         const count = await this.likeService.countCommentLikes(commentId);
@@ -185,10 +229,7 @@ export class CommentController {
     @ApiOperation({ summary: 'Delete a comment (owner only)' })
     @ApiParam({ name: 'id', description: 'Comment ID' })
     @ApiResponse({ status: 200, description: 'Comment deleted successfully' })
-    remove(
-        @Param('id', ParseUUIDPipe) id: string,
-        @CurrentUser() user: any
-    ) {
+    remove(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() _user: any) {
         return this.commentService.remove(id);
     }
 }

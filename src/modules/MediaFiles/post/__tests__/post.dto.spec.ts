@@ -100,7 +100,7 @@ describe('Post DTOs', () => {
             });
 
             expect(dto.isPublic).toBe(true);
-            
+
             const errors = await validate(dto);
             expect(errors).toHaveLength(0);
         });
@@ -200,7 +200,7 @@ describe('Post DTOs', () => {
 
             expect(dto.page).toBe(1);
             expect(dto.limit).toBe(20);
-            
+
             const errors = await validate(dto);
             expect(errors).toHaveLength(0);
         });

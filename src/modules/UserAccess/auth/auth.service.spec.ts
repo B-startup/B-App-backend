@@ -102,7 +102,7 @@ describe('AuthService', () => {
     describe('logout', () => {
         it('should successfully logout without userId and token', async () => {
             const result = await service.logout();
-            
+
             expect(result).toEqual({
                 message: 'Logout successful. Token has been invalidated.',
                 instructions: [
@@ -121,7 +121,7 @@ describe('AuthService', () => {
                 email: 'user@example.com',
                 name: 'Test User'
             });
-            
+
             mockPrismaService.user.update.mockResolvedValue({
                 id: userId,
                 email: 'user@example.com',
@@ -130,7 +130,7 @@ describe('AuthService', () => {
             });
 
             const result = await service.logout(userId);
-            
+
             expect(result).toEqual({
                 message: 'Logout successful. Token has been invalidated.',
                 instructions: [
@@ -152,43 +152,53 @@ describe('AuthService', () => {
         it('should blacklist token when provided', async () => {
             const userId = 'user-123';
             const token = 'sample-token';
-            
+
             mockPrismaService.user.findUnique.mockResolvedValue({
                 id: userId,
                 email: 'user@example.com',
                 name: 'Test User'
             });
-            
+
             mockPrismaService.user.update.mockResolvedValue({});
-            mockTokenBlacklistService.blacklistToken.mockResolvedValue(undefined);
+            mockTokenBlacklistService.blacklistToken.mockResolvedValue(
+                undefined
+            );
 
             await service.logout(userId, token);
-            
-            expect(mockTokenBlacklistService.blacklistToken).toHaveBeenCalledWith(token, userId, 'logout');
+
+            expect(
+                mockTokenBlacklistService.blacklistToken
+            ).toHaveBeenCalledWith(token, userId, 'logout');
         });
 
         it('should logout from all devices when requested', async () => {
             const userId = 'user-123';
-            
+
             mockPrismaService.user.findUnique.mockResolvedValue({
                 id: userId,
                 email: 'user@example.com',
                 name: 'Test User'
             });
-            
+
             mockPrismaService.user.update.mockResolvedValue({});
-            mockTokenBlacklistService.blacklistAllUserTokens.mockResolvedValue(undefined);
+            mockTokenBlacklistService.blacklistAllUserTokens.mockResolvedValue(
+                undefined
+            );
 
             await service.logout(userId, undefined, true);
-            
-            expect(mockTokenBlacklistService.blacklistAllUserTokens).toHaveBeenCalledWith(userId, 'logout_all_devices');
+
+            expect(
+                mockTokenBlacklistService.blacklistAllUserTokens
+            ).toHaveBeenCalledWith(userId, 'logout_all_devices');
         });
 
         it('should throw error for invalid userId', async () => {
             const userId = 'invalid-user-id';
             mockPrismaService.user.findUnique.mockResolvedValue(null);
 
-            await expect(service.logout(userId)).rejects.toThrow('User not found');
+            await expect(service.logout(userId)).rejects.toThrow(
+                'User not found'
+            );
             expect(mockPrismaService.user.findUnique).toHaveBeenCalledWith({
                 where: { id: userId }
             });
@@ -198,20 +208,26 @@ describe('AuthService', () => {
     describe('isTokenValid', () => {
         it('should return false for blacklisted token', async () => {
             const token = 'blacklisted-token';
-            mockTokenBlacklistService.isTokenBlacklisted.mockResolvedValue(true);
+            mockTokenBlacklistService.isTokenBlacklisted.mockResolvedValue(
+                true
+            );
 
             const result = await service.isTokenValid(token);
-            
+
             expect(result).toBe(false);
-            expect(mockTokenBlacklistService.isTokenBlacklisted).toHaveBeenCalledWith(token);
+            expect(
+                mockTokenBlacklistService.isTokenBlacklisted
+            ).toHaveBeenCalledWith(token);
         });
 
         it('should return true for valid token', async () => {
             const token = 'valid-token';
-            mockTokenBlacklistService.isTokenBlacklisted.mockResolvedValue(false);
+            mockTokenBlacklistService.isTokenBlacklisted.mockResolvedValue(
+                false
+            );
 
             const result = await service.isTokenValid(token);
-            
+
             expect(result).toBe(true);
         });
     });

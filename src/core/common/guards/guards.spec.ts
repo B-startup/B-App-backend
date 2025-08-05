@@ -5,17 +5,28 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { TokenBlacklistService } from '../../services/token-blacklist.service';
 import { PrismaService } from '../../services/prisma.service';
-import { ExecutionContext, UnauthorizedException, ForbiddenException } from '@nestjs/common';
+import {
+    ExecutionContext,
+    UnauthorizedException,
+    ForbiddenException
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 
 describe('Security Guards', () => {
     let tokenBlacklistGuard: TokenBlacklistGuard;
     let resourceOwnerGuard: ResourceOwnerGuard;
     let mockJwtService: jest.Mocked<JwtService>;
-    let mockConfigService: jest.Mocked<ConfigService>;
     let mockTokenBlacklistService: jest.Mocked<TokenBlacklistService>;
     let mockPrismaService: any;
     let mockReflector: jest.Mocked<Reflector>;
+
+    // Helper function to create mock execution context
+    const createMockContext = (request: any): ExecutionContext => ({
+        switchToHttp: () => ({
+            getRequest: () => request
+        }),
+        getHandler: () => ({})
+    } as ExecutionContext);
 
     beforeEach(async () => {
         const mockJwt = {
@@ -61,10 +72,10 @@ describe('Security Guards', () => {
             ]
         }).compile();
 
-        tokenBlacklistGuard = module.get<TokenBlacklistGuard>(TokenBlacklistGuard);
+        tokenBlacklistGuard =
+            module.get<TokenBlacklistGuard>(TokenBlacklistGuard);
         resourceOwnerGuard = module.get<ResourceOwnerGuard>(ResourceOwnerGuard);
         mockJwtService = module.get(JwtService);
-        mockConfigService = module.get(ConfigService);
         mockTokenBlacklistService = module.get(TokenBlacklistService);
         mockPrismaService = module.get(PrismaService);
         mockReflector = module.get(Reflector);
@@ -76,32 +87,35 @@ describe('Security Guards', () => {
         });
 
         it('should reject requests without token', async () => {
-            const mockContext = {
-                switchToHttp: () => ({
-                    getRequest: () => ({
-                        headers: {}
-                    })
-                })
-            } as ExecutionContext;
+            const mockRequest = {
+                headers: {}
+            };
+            const mockContext = createMockContext(mockRequest);
 
-            await expect(tokenBlacklistGuard.canActivate(mockContext)).rejects.toThrow(UnauthorizedException);
+            await expect(
+                tokenBlacklistGuard.canActivate(mockContext)
+            ).rejects.toThrow(UnauthorizedException);
         });
 
         it('should reject blacklisted tokens', async () => {
-            const mockContext = {
-                switchToHttp: () => ({
-                    getRequest: () => ({
-                        headers: {
-                            authorization: 'Bearer valid-token'
-                        }
-                    })
-                })
-            } as ExecutionContext;
+            const mockRequest = {
+                headers: {
+                    authorization: 'Bearer valid-token'
+                }
+            };
+            const mockContext = createMockContext(mockRequest);
 
-            mockJwtService.verifyAsync.mockResolvedValue({ sub: 'user-123', iat: Date.now() / 1000 });
-            mockTokenBlacklistService.isTokenBlacklisted.mockResolvedValue(true);
+            mockJwtService.verifyAsync.mockResolvedValue({
+                sub: 'user-123',
+                iat: Date.now() / 1000
+            });
+            mockTokenBlacklistService.isTokenBlacklisted.mockResolvedValue(
+                true
+            );
 
-            await expect(tokenBlacklistGuard.canActivate(mockContext)).rejects.toThrow(UnauthorizedException);
+            await expect(
+                tokenBlacklistGuard.canActivate(mockContext)
+            ).rejects.toThrow(UnauthorizedException);
         });
 
         it('should allow valid tokens', async () => {
@@ -110,19 +124,21 @@ describe('Security Guards', () => {
                     authorization: 'Bearer valid-token'
                 }
             };
+            const mockContext = createMockContext(request);
 
-            const mockContext = {
-                switchToHttp: () => ({
-                    getRequest: () => request
-                })
-            } as ExecutionContext;
-
-            mockJwtService.verifyAsync.mockResolvedValue({ sub: 'user-123', iat: Date.now() / 1000 });
-            mockTokenBlacklistService.isTokenBlacklisted.mockResolvedValue(false);
-            mockPrismaService.user.findUnique.mockResolvedValue({ lastLogoutAt: null });
+            mockJwtService.verifyAsync.mockResolvedValue({
+                sub: 'user-123',
+                iat: Date.now() / 1000
+            });
+            mockTokenBlacklistService.isTokenBlacklisted.mockResolvedValue(
+                false
+            );
+            mockPrismaService.user.findUnique.mockResolvedValue({
+                lastLogoutAt: null
+            });
 
             const result = await tokenBlacklistGuard.canActivate(mockContext);
-            
+
             expect(result).toBe(true);
             expect(request['user']).toBeDefined();
             expect(request['token']).toBe('valid-token');
@@ -135,15 +151,11 @@ describe('Security Guards', () => {
         });
 
         it('should allow access when no resource type is specified', async () => {
-            const mockContext = {
-                switchToHttp: () => ({
-                    getRequest: () => ({
-                        user: { sub: 'user-123' },
-                        params: { id: 'resource-id' }
-                    })
-                }),
-                getHandler: () => ({})
-            } as ExecutionContext;
+            const mockRequest = {
+                user: { sub: 'user-123' },
+                params: { id: 'resource-id' }
+            };
+            const mockContext = createMockContext(mockRequest);
 
             mockReflector.get.mockReturnValue(undefined);
 
@@ -152,38 +164,36 @@ describe('Security Guards', () => {
         });
 
         it('should allow access for resource owner', async () => {
-            const mockContext = {
-                switchToHttp: () => ({
-                    getRequest: () => ({
-                        user: { sub: 'user-123' },
-                        params: { id: 'comment-id' }
-                    })
-                }),
-                getHandler: () => ({})
-            } as ExecutionContext;
+            const mockRequest = {
+                user: { sub: 'user-123' },
+                params: { id: 'comment-id' }
+            };
+            const mockContext = createMockContext(mockRequest);
 
             mockReflector.get.mockReturnValue('comment');
-            mockPrismaService.comment.findUnique.mockResolvedValue({ userId: 'user-123' });
+            mockPrismaService.comment.findUnique.mockResolvedValue({
+                userId: 'user-123'
+            });
 
             const result = await resourceOwnerGuard.canActivate(mockContext);
             expect(result).toBe(true);
         });
 
         it('should reject non-owner', async () => {
-            const mockContext = {
-                switchToHttp: () => ({
-                    getRequest: () => ({
-                        user: { sub: 'user-123' },
-                        params: { id: 'comment-id' }
-                    })
-                }),
-                getHandler: () => ({})
-            } as ExecutionContext;
+            const mockRequest = {
+                user: { sub: 'user-123' },
+                params: { id: 'comment-id' }
+            };
+            const mockContext = createMockContext(mockRequest);
 
             mockReflector.get.mockReturnValue('comment');
-            mockPrismaService.comment.findUnique.mockResolvedValue({ userId: 'other-user' });
+            mockPrismaService.comment.findUnique.mockResolvedValue({
+                userId: 'other-user'
+            });
 
-            await expect(resourceOwnerGuard.canActivate(mockContext)).rejects.toThrow(ForbiddenException);
+            await expect(
+                resourceOwnerGuard.canActivate(mockContext)
+            ).rejects.toThrow(ForbiddenException);
         });
     });
 });

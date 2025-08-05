@@ -116,7 +116,9 @@ describe('ViewController', () => {
 
             const result = await controller.countVideoViews(videoId);
 
-            expect(mockViewService.countVideoViews).toHaveBeenCalledWith(videoId);
+            expect(mockViewService.countVideoViews).toHaveBeenCalledWith(
+                videoId
+            );
             expect(result).toEqual(countResult);
         });
     });
@@ -130,7 +132,9 @@ describe('ViewController', () => {
 
             const result = await controller.getTotalTimeSpent(videoId);
 
-            expect(mockViewService.getTotalTimeSpent).toHaveBeenCalledWith(videoId);
+            expect(mockViewService.getTotalTimeSpent).toHaveBeenCalledWith(
+                videoId
+            );
             expect(result).toEqual(timeResult);
         });
     });
@@ -145,7 +149,10 @@ describe('ViewController', () => {
 
             const result = await controller.hasUserViewed(userId, videoId);
 
-            expect(mockViewService.hasUserViewed).toHaveBeenCalledWith(userId, videoId);
+            expect(mockViewService.hasUserViewed).toHaveBeenCalledWith(
+                userId,
+                videoId
+            );
             expect(result).toEqual(hasViewedResult);
         });
     });
@@ -163,7 +170,9 @@ describe('ViewController', () => {
 
             const result = await controller.getUserViewingStats(userId);
 
-            expect(mockViewService.getUserViewingStats).toHaveBeenCalledWith(userId);
+            expect(mockViewService.getUserViewingStats).toHaveBeenCalledWith(
+                userId
+            );
             expect(result).toEqual(statsResult);
         });
     });
@@ -191,7 +200,10 @@ describe('ViewController', () => {
 
             const result = await controller.update(viewId, updateViewDto);
 
-            expect(mockViewService.update).toHaveBeenCalledWith(viewId, updateViewDto);
+            expect(mockViewService.update).toHaveBeenCalledWith(
+                viewId,
+                updateViewDto
+            );
             expect(result).toEqual(updatedView);
         });
     });

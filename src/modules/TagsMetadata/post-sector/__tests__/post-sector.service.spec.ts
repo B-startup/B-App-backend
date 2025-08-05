@@ -81,16 +81,20 @@ describe('PostSectorService', () => {
             mockPrismaService.postSector.findFirst.mockResolvedValue(null); // No existing association
             mockPrismaService.post.findUnique.mockResolvedValue(mockPost);
             mockPrismaService.sector.findUnique.mockResolvedValue(mockSector);
-            mockPrismaService.postSector.create.mockResolvedValue(mockPostSector);
+            mockPrismaService.postSector.create.mockResolvedValue(
+                mockPostSector
+            );
 
             const result = await service.createAssociation(createDto);
 
-            expect(mockPrismaService.postSector.findFirst).toHaveBeenCalledWith({
-                where: {
-                    postId: 'test-post-id',
-                    sectorId: 'test-sector-id'
+            expect(mockPrismaService.postSector.findFirst).toHaveBeenCalledWith(
+                {
+                    where: {
+                        postId: 'test-post-id',
+                        sectorId: 'test-sector-id'
+                    }
                 }
-            });
+            );
             expect(mockPrismaService.post.findUnique).toHaveBeenCalledWith({
                 where: { id: 'test-post-id' }
             });
@@ -104,7 +108,9 @@ describe('PostSectorService', () => {
         });
 
         it('should throw ConflictException when association already exists', async () => {
-            mockPrismaService.postSector.findFirst.mockResolvedValue(mockPostSector);
+            mockPrismaService.postSector.findFirst.mockResolvedValue(
+                mockPostSector
+            );
 
             await expect(service.createAssociation(createDto)).rejects.toThrow(
                 ConflictException
@@ -135,7 +141,9 @@ describe('PostSectorService', () => {
     describe('findByPost', () => {
         it('should return associations for a post', async () => {
             const associations = [mockPostSector];
-            mockPrismaService.postSector.findMany.mockResolvedValue(associations);
+            mockPrismaService.postSector.findMany.mockResolvedValue(
+                associations
+            );
 
             const result = await service.findByPost('test-post-id');
 
@@ -150,7 +158,9 @@ describe('PostSectorService', () => {
     describe('findBySector', () => {
         it('should return associations for a sector', async () => {
             const associations = [mockPostSector];
-            mockPrismaService.postSector.findMany.mockResolvedValue(associations);
+            mockPrismaService.postSector.findMany.mockResolvedValue(
+                associations
+            );
 
             const result = await service.findBySector('test-sector-id');
 
@@ -164,17 +174,26 @@ describe('PostSectorService', () => {
 
     describe('removeAssociation', () => {
         it('should remove association successfully', async () => {
-            mockPrismaService.postSector.findFirst.mockResolvedValue(mockPostSector);
-            mockPrismaService.postSector.delete.mockResolvedValue(mockPostSector);
+            mockPrismaService.postSector.findFirst.mockResolvedValue(
+                mockPostSector
+            );
+            mockPrismaService.postSector.delete.mockResolvedValue(
+                mockPostSector
+            );
 
-            const result = await service.removeAssociation('test-post-id', 'test-sector-id');
+            const result = await service.removeAssociation(
+                'test-post-id',
+                'test-sector-id'
+            );
 
-            expect(mockPrismaService.postSector.findFirst).toHaveBeenCalledWith({
-                where: {
-                    postId: 'test-post-id',
-                    sectorId: 'test-sector-id'
+            expect(mockPrismaService.postSector.findFirst).toHaveBeenCalledWith(
+                {
+                    where: {
+                        postId: 'test-post-id',
+                        sectorId: 'test-sector-id'
+                    }
                 }
-            });
+            );
             expect(mockPrismaService.postSector.delete).toHaveBeenCalledWith({
                 where: { id: 'test-association-id' }
             });
@@ -184,9 +203,9 @@ describe('PostSectorService', () => {
         it('should throw NotFoundException when association not found', async () => {
             mockPrismaService.postSector.findFirst.mockResolvedValue(null);
 
-            await expect(service.removeAssociation('test-post-id', 'test-sector-id')).rejects.toThrow(
-                NotFoundException
-            );
+            await expect(
+                service.removeAssociation('test-post-id', 'test-sector-id')
+            ).rejects.toThrow(NotFoundException);
         });
     });
 
@@ -210,11 +229,21 @@ describe('PostSectorService', () => {
                 { sectorId: 'sector-2', _count: { postId: 5 } }
             ];
             const sectors = [
-                { id: 'sector-1', name: 'Fintech', description: 'Financial tech' },
-                { id: 'sector-2', name: 'Healthcare', description: 'Health tech' }
+                {
+                    id: 'sector-1',
+                    name: 'Fintech',
+                    description: 'Financial tech'
+                },
+                {
+                    id: 'sector-2',
+                    name: 'Healthcare',
+                    description: 'Health tech'
+                }
             ];
 
-            mockPrismaService.postSector.groupBy.mockResolvedValue(groupByResult);
+            mockPrismaService.postSector.groupBy.mockResolvedValue(
+                groupByResult
+            );
             mockPrismaService.sector.findMany.mockResolvedValue(sectors);
 
             const result = await service.findPopularSectors(2);

@@ -24,13 +24,15 @@ async function bootstrap() {
     });
 
     // Security
-    app.use(helmet({
-        contentSecurityPolicy: {
-            directives: {
-                scriptSrc: ["'self'", "'unsafe-inline'"],
-            },
-        },
-    }));
+    app.use(
+        helmet({
+            contentSecurityPolicy: {
+                directives: {
+                    scriptSrc: ["'self'", "'unsafe-inline'"]
+                }
+            }
+        })
+    );
 
     app.enableCors({
         origin: configService.get('ALLOWED_ORIGINS', '*'),

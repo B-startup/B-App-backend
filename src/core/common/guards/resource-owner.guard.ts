@@ -1,4 +1,10 @@
-import { CanActivate, ExecutionContext, Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+    CanActivate,
+    ExecutionContext,
+    Injectable,
+    ForbiddenException,
+    NotFoundException
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { PrismaService } from '../../services/prisma.service';
 
@@ -17,10 +23,13 @@ export class ResourceOwnerGuard implements CanActivate {
         const request = context.switchToHttp().getRequest();
         const user = request.user;
         const resourceId = request.params.id;
-        
+
         // Déterminer le type de ressource depuis les métadonnées
-        const resourceType = this.reflector.get<string>('resourceType', context.getHandler());
-        
+        const resourceType = this.reflector.get<string>(
+            'resourceType',
+            context.getHandler()
+        );
+
         if (!resourceType) {
             // Si pas de métadonnées, on laisse passer (garde optionnel)
             return true;
@@ -30,24 +39,37 @@ export class ResourceOwnerGuard implements CanActivate {
             throw new ForbiddenException('User or resource ID not found');
         }
 
-        const isOwner = await this.checkResourceOwnership(resourceType, resourceId, user.sub);
-        
+        const isOwner = await this.checkResourceOwnership(
+            resourceType,
+            resourceId,
+            user.sub
+        );
+
         if (!isOwner) {
-            throw new ForbiddenException(`You are not the owner of this ${resourceType}`);
+            throw new ForbiddenException(
+                `You are not the owner of this ${resourceType}`
+            );
         }
 
         return true;
     }
 
-    private async checkResourceOwnership(resourceType: string, resourceId: string, userId: string): Promise<boolean> {
+    private async checkResourceOwnership(
+        resourceType: string,
+        resourceId: string,
+        userId: string
+    ): Promise<boolean> {
         try {
             switch (resourceType) {
                 case 'comment': {
-                    const comment = await this.prismaService.comment.findUnique({
-                        where: { id: resourceId },
-                        select: { userId: true }
-                    });
-                    if (!comment) throw new NotFoundException('Comment not found');
+                    const comment = await this.prismaService.comment.findUnique(
+                        {
+                            where: { id: resourceId },
+                            select: { userId: true }
+                        }
+                    );
+                    if (!comment)
+                        throw new NotFoundException('Comment not found');
                     return comment.userId === userId;
                 }
 
@@ -61,19 +83,27 @@ export class ResourceOwnerGuard implements CanActivate {
                 }
 
                 case 'project': {
-                    const project = await this.prismaService.project.findUnique({
-                        where: { id: resourceId },
-                        select: { creatorId: true }
-                    });
-                    if (!project) throw new NotFoundException('Project not found');
+                    const project = await this.prismaService.project.findUnique(
+                        {
+                            where: { id: resourceId },
+                            select: { creatorId: true }
+                        }
+                    );
+                    if (!project)
+                        throw new NotFoundException('Project not found');
                     return project.creatorId === userId;
                 }
 
                 default:
-                    throw new Error(`Resource type '${resourceType}' not supported`);
+                    throw new Error(
+                        `Resource type '${resourceType}' not supported`
+                    );
             }
         } catch (error) {
-            if (error instanceof NotFoundException || error instanceof ForbiddenException) {
+            if (
+                error instanceof NotFoundException ||
+                error instanceof ForbiddenException
+            ) {
                 throw error;
             }
             // Log l'erreur et rejeter pour sécurité

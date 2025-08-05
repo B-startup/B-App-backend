@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PostMedia, PostMediaType,PrismaClient } from '@prisma/client';
+import { PostMedia, PostMediaType, PrismaClient } from '@prisma/client';
 import { BaseCrudServiceImpl } from '../../../core/common/services/base-crud.service';
 import { CreatePostMediaDto } from './dto/create-post-media.dto';
 import { UpdatePostMediaDto } from './dto/update-post-media.dto';
@@ -38,7 +38,7 @@ export class PostMediaService extends BaseCrudServiceImpl<
      */
     async findByUser(userId: string): Promise<PostMedia[]> {
         return await this.prisma.postMedia.findMany({
-            where: { 
+            where: {
                 post: {
                     userId: userId
                 }
@@ -71,12 +71,14 @@ export class PostMediaService extends BaseCrudServiceImpl<
         });
 
         if (!post) {
-            throw new NotFoundException(`Post with ID ${uploadDto.postId} not found`);
+            throw new NotFoundException(
+                `Post with ID ${uploadDto.postId} not found`
+            );
         }
 
         // Upload du fichier
         const { mediaUrl } = await this.postMediaFileService.uploadFile(
-            file, 
+            file,
             uploadDto.mediaType
         );
 
@@ -96,7 +98,7 @@ export class PostMediaService extends BaseCrudServiceImpl<
     async removeWithFile(id: string): Promise<PostMedia> {
         // Récupérer le média pour obtenir l'URL du fichier
         const postMedia = await this.findOne(id);
-        
+
         // Supprimer le fichier physique
         await this.postMediaFileService.deleteFile(postMedia.mediaUrl);
 
@@ -127,11 +129,14 @@ export class PostMediaService extends BaseCrudServiceImpl<
     /**
      * Trouver tous les médias d'un post par type
      */
-    async findByPostAndType(postId: string, mediaType: PostMediaType): Promise<PostMedia[]> {
+    async findByPostAndType(
+        postId: string,
+        mediaType: PostMediaType
+    ): Promise<PostMedia[]> {
         return await this.prisma.postMedia.findMany({
-            where: { 
+            where: {
                 postId,
-                mediaType 
+                mediaType
             },
             orderBy: { createdAt: 'asc' }
         });
@@ -149,11 +154,14 @@ export class PostMediaService extends BaseCrudServiceImpl<
     /**
      * Compter les médias par type pour un post
      */
-    async countByPostAndType(postId: string, mediaType: PostMediaType): Promise<number> {
+    async countByPostAndType(
+        postId: string,
+        mediaType: PostMediaType
+    ): Promise<number> {
         return await this.prisma.postMedia.count({
-            where: { 
+            where: {
                 postId,
-                mediaType 
+                mediaType
             }
         });
     }
@@ -190,7 +198,9 @@ export class PostMediaService extends BaseCrudServiceImpl<
         const missing: PostMedia[] = [];
 
         for (const media of allMedia) {
-            const fileStats = this.postMediaFileService.getFileStats(media.mediaUrl);
+            const fileStats = this.postMediaFileService.getFileStats(
+                media.mediaUrl
+            );
             if (fileStats.exists) {
                 valid.push(media);
             } else {

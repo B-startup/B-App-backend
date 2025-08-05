@@ -114,7 +114,11 @@ describe('Post Integration Tests', () => {
             const postsWithRelations = [
                 {
                     ...mockPost,
-                    user: { id: 'user-id', name: 'Test User', email: 'test@example.com' },
+                    user: {
+                        id: 'user-id',
+                        name: 'Test User',
+                        email: 'test@example.com'
+                    },
                     media: [],
                     Like: [],
                     Comment: [],
@@ -123,7 +127,9 @@ describe('Post Integration Tests', () => {
                 }
             ];
 
-            mockPrismaService.post.findMany.mockResolvedValue(postsWithRelations);
+            mockPrismaService.post.findMany.mockResolvedValue(
+                postsWithRelations
+            );
 
             const response = await request(app.getHttpServer())
                 .get('/posts?withRelations=true')

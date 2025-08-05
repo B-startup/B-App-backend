@@ -4,7 +4,7 @@ import { UpdateDiscussionDto } from './dto/update-discussion.dto';
 
 @Injectable()
 export class DiscussionService {
-    create(createDiscussionDto: CreateDiscussionDto) {
+    create(_createDiscussionDto: CreateDiscussionDto) {
         return 'This action adds a new discussion';
     }
 
@@ -16,7 +16,7 @@ export class DiscussionService {
         return `This action returns a #${id} discussion`;
     }
 
-    update(id: number, updateDiscussionDto: UpdateDiscussionDto) {
+    update(id: number, _updateDiscussionDto: UpdateDiscussionDto) {
         return `This action updates a #${id} discussion`;
     }
 

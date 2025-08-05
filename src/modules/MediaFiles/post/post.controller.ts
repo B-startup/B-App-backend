@@ -10,7 +10,14 @@ import {
     HttpStatus,
     HttpCode
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiBody } from '@nestjs/swagger';
+import {
+    ApiTags,
+    ApiOperation,
+    ApiResponse,
+    ApiParam,
+    ApiQuery,
+    ApiBody
+} from '@nestjs/swagger';
 import { PostService } from './post.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
@@ -28,11 +35,11 @@ export class PostController {
         type: CreatePostDto,
         schema: {
             example: {
-                userId: "user-uuid-string",
-                title: "My Amazing Post Title",
-                content: "This is my post content...",
+                userId: 'user-uuid-string',
+                title: 'My Amazing Post Title',
+                content: 'This is my post content...',
                 isPublic: true,
-                mlPrediction: "category-prediction"
+                mlPrediction: 'category-prediction'
             }
         }
     })
@@ -42,23 +49,25 @@ export class PostController {
         type: PostResponseDto,
         schema: {
             example: {
-                id: "uuid-string",
-                userId: "user-uuid-string",
-                title: "My Amazing Post Title",
-                content: "This is my post content...",
+                id: 'uuid-string',
+                userId: 'user-uuid-string',
+                title: 'My Amazing Post Title',
+                content: 'This is my post content...',
                 nbLikes: 0,
                 nbComments: 0,
                 nbShares: 0,
                 nbViews: 0,
                 isPublic: true,
-                mlPrediction: "category-prediction",
-                createdAt: "2025-07-30T10:30:00.000Z",
-                updatedAt: "2025-07-30T10:30:00.000Z"
+                mlPrediction: 'category-prediction',
+                createdAt: '2025-07-30T10:30:00.000Z',
+                updatedAt: '2025-07-30T10:30:00.000Z'
             }
         }
     })
     @ApiResponse({ status: 400, description: 'Bad Request' })
-    async create(@Body() createPostDto: CreatePostDto): Promise<PostResponseDto> {
+    async create(
+        @Body() createPostDto: CreatePostDto
+    ): Promise<PostResponseDto> {
         return await this.postService.create(createPostDto);
     }
 
@@ -138,7 +147,9 @@ export class PostController {
         // Si des paramètres de pagination sont fournis
         if (page || limit) {
             const paginationDto = { page, limit };
-            return await this.postService.findPublicPostsPaginated(paginationDto);
+            return await this.postService.findPublicPostsPaginated(
+                paginationDto
+            );
         }
         return await this.postService.findPublicPosts();
     }
@@ -152,7 +163,9 @@ export class PostController {
         type: [PostResponseDto]
     })
     @ApiResponse({ status: 404, description: 'User not found' })
-    async findByUser(@Param('userId') userId: string): Promise<PostResponseDto[]> {
+    async findByUser(
+        @Param('userId') userId: string
+    ): Promise<PostResponseDto[]> {
         return await this.postService.findByUser(userId);
     }
 

@@ -8,7 +8,14 @@ import {
     Delete,
     Query
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiBody } from '@nestjs/swagger';
+import {
+    ApiTags,
+    ApiOperation,
+    ApiResponse,
+    ApiParam,
+    ApiQuery,
+    ApiBody
+} from '@nestjs/swagger';
 import { PostSharedService } from './post-shared.service';
 import { CreatePostSharedDto } from './dto/create-post-shared.dto';
 import { UpdatePostSharedDto } from './dto/update-post-shared.dto';
@@ -25,9 +32,9 @@ export class PostSharedController {
         type: CreatePostSharedDto,
         schema: {
             example: {
-                postId: "post-uuid-string",
-                userId: "user-uuid-string",
-                description: "Check out this amazing post!"
+                postId: 'post-uuid-string',
+                userId: 'user-uuid-string',
+                description: 'Check out this amazing post!'
             }
         }
     })
@@ -37,19 +44,24 @@ export class PostSharedController {
         type: PostSharedResponseDto,
         schema: {
             example: {
-                id: "uuid-string",
-                postId: "post-uuid-string",
-                userId: "user-uuid-string",
-                description: "Check out this amazing post!",
-                createdAt: "2025-07-30T10:30:00.000Z",
-                updatedAt: "2025-07-30T10:30:00.000Z"
+                id: 'uuid-string',
+                postId: 'post-uuid-string',
+                userId: 'user-uuid-string',
+                description: 'Check out this amazing post!',
+                createdAt: '2025-07-30T10:30:00.000Z',
+                updatedAt: '2025-07-30T10:30:00.000Z'
             }
         }
     })
     @ApiResponse({ status: 400, description: 'Bad Request' })
     @ApiResponse({ status: 404, description: 'Post or User not found' })
-    @ApiResponse({ status: 409, description: 'User has already shared this post' })
-    async create(@Body() createPostSharedDto: CreatePostSharedDto): Promise<PostSharedResponseDto> {
+    @ApiResponse({
+        status: 409,
+        description: 'User has already shared this post'
+    })
+    async create(
+        @Body() createPostSharedDto: CreatePostSharedDto
+    ): Promise<PostSharedResponseDto> {
         return await this.postSharedService.sharePost(createPostSharedDto);
     }
 

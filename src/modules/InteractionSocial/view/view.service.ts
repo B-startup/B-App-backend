@@ -7,7 +7,11 @@ import { CreateViewDto } from './dto/create-view.dto';
 import { UpdateViewDto } from './dto/update-view.dto';
 
 @Injectable()
-export class ViewService extends BaseCrudServiceImpl<View, CreateViewDto, UpdateViewDto> {
+export class ViewService extends BaseCrudServiceImpl<
+    View,
+    CreateViewDto,
+    UpdateViewDto
+> {
     protected model: any;
 
     constructor(
@@ -67,7 +71,11 @@ export class ViewService extends BaseCrudServiceImpl<View, CreateViewDto, Update
         });
 
         if (video?.projectId) {
-            await this.counterService.updateViewCount('project', video.projectId, true);
+            await this.counterService.updateViewCount(
+                'project',
+                video.projectId,
+                true
+            );
         }
 
         return view;
@@ -166,7 +174,10 @@ export class ViewService extends BaseCrudServiceImpl<View, CreateViewDto, Update
     /**
      * Checks if a user has viewed a specific video
      */
-    async hasUserViewed(userId: string, videoId: string): Promise<{ hasViewed: boolean }> {
+    async hasUserViewed(
+        userId: string,
+        videoId: string
+    ): Promise<{ hasViewed: boolean }> {
         const view = await this.model.findFirst({
             where: {
                 userId,
@@ -211,7 +222,11 @@ export class ViewService extends BaseCrudServiceImpl<View, CreateViewDto, Update
         });
 
         if (video?.projectId) {
-            await this.counterService.updateViewCount('project', video.projectId, false);
+            await this.counterService.updateViewCount(
+                'project',
+                video.projectId,
+                false
+            );
         }
 
         return this.model.delete({

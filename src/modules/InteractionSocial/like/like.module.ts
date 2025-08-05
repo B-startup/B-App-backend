@@ -7,7 +7,7 @@ import { CounterService } from '../../../core/common/services/counter.service';
 @Module({
     controllers: [LikeController],
     providers: [
-        LikeService, 
+        LikeService,
         PrismaService,
         {
             provide: CounterService,

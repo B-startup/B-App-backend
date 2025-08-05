@@ -118,7 +118,11 @@ describe('LikeService', () => {
                 commentId: 'comment-1'
             };
 
-            const commentLike = { ...mockLike, commentId: 'comment-1', projectId: null };
+            const commentLike = {
+                ...mockLike,
+                commentId: 'comment-1',
+                projectId: null
+            };
             mockPrismaService.like.create.mockResolvedValue(commentLike);
 
             const result = await service.create(createLikeDto);
@@ -140,7 +144,9 @@ describe('LikeService', () => {
             // Mock existing like
             mockPrismaService.like.findFirst.mockResolvedValue(mockLike);
 
-            await expect(service.create(createLikeDto)).rejects.toThrow(ConflictException);
+            await expect(service.create(createLikeDto)).rejects.toThrow(
+                ConflictException
+            );
             expect(mockPrismaService.like.create).not.toHaveBeenCalled();
             expect(mockCounterService.updateLikeCount).not.toHaveBeenCalled();
         });
@@ -180,7 +186,11 @@ describe('LikeService', () => {
         });
 
         it('should remove a like and update comment counter', async () => {
-            const commentLike = { ...mockLike, commentId: 'comment-1', projectId: null };
+            const commentLike = {
+                ...mockLike,
+                commentId: 'comment-1',
+                projectId: null
+            };
             mockPrismaService.like.findUnique.mockResolvedValue(commentLike);
             mockPrismaService.like.delete.mockResolvedValue(commentLike);
 
@@ -241,7 +251,9 @@ describe('LikeService', () => {
 
     describe('findByProject', () => {
         it('should find all likes for a project with user info', async () => {
-            mockPrismaService.like.findMany.mockResolvedValue([mockLikeWithUser]);
+            mockPrismaService.like.findMany.mockResolvedValue([
+                mockLikeWithUser
+            ]);
 
             const result = await service.findByProject('project-1');
 
@@ -264,7 +276,9 @@ describe('LikeService', () => {
 
     describe('findByPost', () => {
         it('should find all likes for a post with user info', async () => {
-            mockPrismaService.like.findMany.mockResolvedValue([mockLikeWithUser]);
+            mockPrismaService.like.findMany.mockResolvedValue([
+                mockLikeWithUser
+            ]);
 
             const result = await service.findByPost('post-1');
 
@@ -287,7 +301,9 @@ describe('LikeService', () => {
 
     describe('findByComment', () => {
         it('should find all likes for a comment with user info', async () => {
-            mockPrismaService.like.findMany.mockResolvedValue([mockLikeWithUser]);
+            mockPrismaService.like.findMany.mockResolvedValue([
+                mockLikeWithUser
+            ]);
 
             const result = await service.findByComment('comment-1');
 
@@ -351,7 +367,11 @@ describe('LikeService', () => {
         it('should return true when user has liked a project', async () => {
             mockPrismaService.like.findFirst.mockResolvedValue(mockLike);
 
-            const result = await service.hasUserLiked('user-1', 'project-1', 'project');
+            const result = await service.hasUserLiked(
+                'user-1',
+                'project-1',
+                'project'
+            );
 
             expect(result).toBe(true);
             expect(mockPrismaService.like.findFirst).toHaveBeenCalledWith({
@@ -365,7 +385,11 @@ describe('LikeService', () => {
         it('should return false when user has not liked a post', async () => {
             mockPrismaService.like.findFirst.mockResolvedValue(null);
 
-            const result = await service.hasUserLiked('user-1', 'post-1', 'post');
+            const result = await service.hasUserLiked(
+                'user-1',
+                'post-1',
+                'post'
+            );
 
             expect(result).toBe(false);
             expect(mockPrismaService.like.findFirst).toHaveBeenCalledWith({
@@ -379,7 +403,11 @@ describe('LikeService', () => {
         it('should return true when user has liked a comment', async () => {
             mockPrismaService.like.findFirst.mockResolvedValue(mockLike);
 
-            const result = await service.hasUserLiked('user-1', 'comment-1', 'comment');
+            const result = await service.hasUserLiked(
+                'user-1',
+                'comment-1',
+                'comment'
+            );
 
             expect(result).toBe(true);
             expect(mockPrismaService.like.findFirst).toHaveBeenCalledWith({

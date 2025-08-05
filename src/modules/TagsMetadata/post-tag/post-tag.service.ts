@@ -1,4 +1,8 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import {
+    Injectable,
+    ConflictException,
+    NotFoundException
+} from '@nestjs/common';
 import { PostTag, PrismaClient } from '@prisma/client';
 import { BaseCrudServiceImpl } from '../../../core/common/services/base-crud.service';
 import { CreatePostTagDto } from './dto/create-post-tag.dto';
@@ -30,7 +34,10 @@ export class PostTagService extends BaseCrudServiceImpl<
     /**
      * Vérifie si une association post-tag existe déjà
      */
-    async hasPostTagAssociation(postId: string, tagId: string): Promise<boolean> {
+    async hasPostTagAssociation(
+        postId: string,
+        tagId: string
+    ): Promise<boolean> {
         const existingAssociation = await this.prisma.postTag.findFirst({
             where: {
                 postId,
@@ -43,13 +50,17 @@ export class PostTagService extends BaseCrudServiceImpl<
     /**
      * Crée une association post-tag avec vérification d'unicité
      */
-    async createAssociation(createPostTagDto: CreatePostTagDto): Promise<PostTag> {
+    async createAssociation(
+        createPostTagDto: CreatePostTagDto
+    ): Promise<PostTag> {
         const { postId, tagId } = createPostTagDto;
 
         // Vérifier si l'association existe déjà
         const alreadyExists = await this.hasPostTagAssociation(postId, tagId);
         if (alreadyExists) {
-            throw new ConflictException('This post is already associated with this tag');
+            throw new ConflictException(
+                'This post is already associated with this tag'
+            );
         }
 
         // Vérifier que le post existe
@@ -159,7 +170,10 @@ export class PostTagService extends BaseCrudServiceImpl<
     /**
      * Ajoute plusieurs tags à un post
      */
-    async addMultipleTagsToPost(postId: string, tagIds: string[]): Promise<PostTag[]> {
+    async addMultipleTagsToPost(
+        postId: string,
+        tagIds: string[]
+    ): Promise<PostTag[]> {
         // Vérifier que le post existe
         const post = await this.prisma.post.findUnique({
             where: { id: postId }
@@ -229,7 +243,7 @@ export class PostTagService extends BaseCrudServiceImpl<
         });
 
         // Récupérer les détails des tags
-        const tagIds = tagCounts.map(item => item.tagId);
+        const tagIds = tagCounts.map((item) => item.tagId);
         const tags = await this.prisma.tag.findMany({
             where: {
                 id: {
@@ -239,8 +253,8 @@ export class PostTagService extends BaseCrudServiceImpl<
         });
 
         // Combiner les données
-        return tagCounts.map(count => {
-            const tag = tags.find(t => t.id === count.tagId);
+        return tagCounts.map((count) => {
+            const tag = tags.find((t) => t.id === count.tagId);
             return {
                 ...tag,
                 postCount: count._count.postId
@@ -254,7 +268,7 @@ export class PostTagService extends BaseCrudServiceImpl<
     async findSimilarPosts(postId: string, limit: number = 5): Promise<any[]> {
         // Récupérer les tags du post
         const postTags = await this.findByPost(postId);
-        const tagIds = postTags.map(pt => pt.tagId);
+        const tagIds = postTags.map((pt) => pt.tagId);
 
         if (tagIds.length === 0) {
             return [];
@@ -293,7 +307,9 @@ export class PostTagService extends BaseCrudServiceImpl<
 
         // Éliminer les doublons et limiter les résultats
         const uniquePosts = Array.from(
-            new Map(similarPosts.map(item => [item.postId, item.post])).values()
+            new Map(
+                similarPosts.map((item) => [item.postId, item.post])
+            ).values()
         ).slice(0, limit);
 
         return uniquePosts;

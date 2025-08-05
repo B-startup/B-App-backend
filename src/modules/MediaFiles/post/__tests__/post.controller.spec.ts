@@ -111,7 +111,10 @@ describe('PostController', () => {
 
             const result = await controller.findAll(false, '1', '20');
 
-            expect(service.findAllPaginated).toHaveBeenCalledWith({ page: 1, limit: 20 });
+            expect(service.findAllPaginated).toHaveBeenCalledWith({
+                page: 1,
+                limit: 20
+            });
             expect(result).toEqual(paginatedResult);
         });
 
@@ -119,12 +122,18 @@ describe('PostController', () => {
             const postsWithRelations = [
                 {
                     ...mockPost,
-                    user: { id: 'user-id', name: 'Test User', email: 'test@example.com' },
+                    user: {
+                        id: 'user-id',
+                        name: 'Test User',
+                        email: 'test@example.com'
+                    },
                     media: []
                 }
             ];
 
-            mockPostService.findAllWithRelations.mockResolvedValue(postsWithRelations);
+            mockPostService.findAllWithRelations.mockResolvedValue(
+                postsWithRelations
+            );
 
             const result = await controller.findAll(true);
 
@@ -157,11 +166,16 @@ describe('PostController', () => {
                 }
             };
 
-            mockPostService.findPublicPostsPaginated.mockResolvedValue(paginatedResult);
+            mockPostService.findPublicPostsPaginated.mockResolvedValue(
+                paginatedResult
+            );
 
             const result = await controller.findPublicPosts('1', '10');
 
-            expect(service.findPublicPostsPaginated).toHaveBeenCalledWith({ page: 1, limit: 10 });
+            expect(service.findPublicPostsPaginated).toHaveBeenCalledWith({
+                page: 1,
+                limit: 10
+            });
             expect(result).toEqual(paginatedResult);
         });
     });
@@ -191,15 +205,23 @@ describe('PostController', () => {
         it('should return a post with relations when withRelations is true', async () => {
             const postWithRelations = {
                 ...mockPost,
-                user: { id: 'user-id', name: 'Test User', email: 'test@example.com' },
+                user: {
+                    id: 'user-id',
+                    name: 'Test User',
+                    email: 'test@example.com'
+                },
                 media: []
             };
 
-            mockPostService.findOneWithRelations.mockResolvedValue(postWithRelations);
+            mockPostService.findOneWithRelations.mockResolvedValue(
+                postWithRelations
+            );
 
             const result = await controller.findOne('test-post-id', true);
 
-            expect(service.findOneWithRelations).toHaveBeenCalledWith('test-post-id');
+            expect(service.findOneWithRelations).toHaveBeenCalledWith(
+                'test-post-id'
+            );
             expect(result).toEqual(postWithRelations);
         });
     });
@@ -214,9 +236,15 @@ describe('PostController', () => {
             const updatedPost = { ...mockPost, ...updatePostDto };
             mockPostService.update.mockResolvedValue(updatedPost);
 
-            const result = await controller.update('test-post-id', updatePostDto);
+            const result = await controller.update(
+                'test-post-id',
+                updatePostDto
+            );
 
-            expect(service.update).toHaveBeenCalledWith('test-post-id', updatePostDto);
+            expect(service.update).toHaveBeenCalledWith(
+                'test-post-id',
+                updatePostDto
+            );
             expect(result).toEqual(updatedPost);
         });
     });
@@ -240,7 +268,9 @@ describe('PostController', () => {
 
                 const result = await controller.incrementLikes('test-post-id');
 
-                expect(service.incrementLikes).toHaveBeenCalledWith('test-post-id');
+                expect(service.incrementLikes).toHaveBeenCalledWith(
+                    'test-post-id'
+                );
                 expect(result).toEqual(updatedPost);
             });
         });
@@ -252,7 +282,9 @@ describe('PostController', () => {
 
                 const result = await controller.incrementViews('test-post-id');
 
-                expect(service.incrementViews).toHaveBeenCalledWith('test-post-id');
+                expect(service.incrementViews).toHaveBeenCalledWith(
+                    'test-post-id'
+                );
                 expect(result).toEqual(updatedPost);
             });
         });
@@ -260,11 +292,16 @@ describe('PostController', () => {
         describe('incrementComments', () => {
             it('should increment comments count', async () => {
                 const updatedPost = { ...mockPost, nbComments: 1 };
-                mockPostService.incrementComments.mockResolvedValue(updatedPost);
+                mockPostService.incrementComments.mockResolvedValue(
+                    updatedPost
+                );
 
-                const result = await controller.incrementComments('test-post-id');
+                const result =
+                    await controller.incrementComments('test-post-id');
 
-                expect(service.incrementComments).toHaveBeenCalledWith('test-post-id');
+                expect(service.incrementComments).toHaveBeenCalledWith(
+                    'test-post-id'
+                );
                 expect(result).toEqual(updatedPost);
             });
         });
@@ -276,7 +313,9 @@ describe('PostController', () => {
 
                 const result = await controller.incrementShares('test-post-id');
 
-                expect(service.incrementShares).toHaveBeenCalledWith('test-post-id');
+                expect(service.incrementShares).toHaveBeenCalledWith(
+                    'test-post-id'
+                );
                 expect(result).toEqual(updatedPost);
             });
         });

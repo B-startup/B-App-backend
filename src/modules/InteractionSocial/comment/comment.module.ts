@@ -10,7 +10,7 @@ import { SecurityModule } from '../../../core/common/security.module';
     imports: [LikeModule, SecurityModule],
     controllers: [CommentController],
     providers: [
-        CommentService, 
+        CommentService,
         PrismaService,
         {
             provide: CounterService,

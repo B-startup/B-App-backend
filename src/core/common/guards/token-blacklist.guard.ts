@@ -22,7 +22,7 @@ export class TokenBlacklistGuard implements CanActivate {
     async canActivate(context: ExecutionContext): Promise<boolean> {
         const request = context.switchToHttp().getRequest();
         const token = this.extractTokenFromHeader(request);
-        
+
         if (!token) {
             throw new UnauthorizedException('Access token is required');
         }
@@ -36,7 +36,8 @@ export class TokenBlacklistGuard implements CanActivate {
             });
 
             // 2. Vérification blacklist
-            const isBlacklisted = await this.tokenBlacklistService.isTokenBlacklisted(token);
+            const isBlacklisted =
+                await this.tokenBlacklistService.isTokenBlacklisted(token);
             if (isBlacklisted) {
                 throw new UnauthorizedException('Token has been revoked');
             }
@@ -50,14 +51,15 @@ export class TokenBlacklistGuard implements CanActivate {
             if (user?.lastLogoutAt) {
                 const tokenIssuedAt = new Date(payload.iat * 1000);
                 if (tokenIssuedAt <= user.lastLogoutAt) {
-                    throw new UnauthorizedException('Token was issued before last logout');
+                    throw new UnauthorizedException(
+                        'Token was issued before last logout'
+                    );
                 }
             }
 
             // 4. Ajout des données utilisateur à la requête
             request['user'] = payload;
             request['token'] = token;
-            
         } catch (error) {
             if (error instanceof UnauthorizedException) {
                 throw error;

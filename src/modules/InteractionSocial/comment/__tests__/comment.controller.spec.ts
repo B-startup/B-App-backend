@@ -1,3 +1,5 @@
+import { TokenBlacklistGuard } from '../../../../core/common/guards/token-blacklist.guard';
+import { ResourceOwnerGuard } from '../../../../core/common/guards/resource-owner.guard';
 import { Test, TestingModule } from '@nestjs/testing';
 import { CommentController } from '../comment.controller';
 import { CommentService } from '../comment.service';
@@ -104,7 +106,7 @@ describe('CommentController', () => {
                     useValue: mockPrismaService
                 },
                 {
-                    provide: 'TokenBlacklistService', 
+                    provide: 'TokenBlacklistService',
                     useValue: mockTokenBlacklistService
                 },
                 // Ajoutons les vrais noms des classes aussi
@@ -117,11 +119,16 @@ describe('CommentController', () => {
                     useValue: mockTokenBlacklistService
                 }
             ]
-        }).overrideGuard(require('../../../../core/common/guards/token-blacklist.guard').TokenBlacklistGuard).useValue({
-            canActivate: jest.fn(() => true)
-        }).overrideGuard(require('../../../../core/common/guards/resource-owner.guard').ResourceOwnerGuard).useValue({
-            canActivate: jest.fn(() => true)
-        }).compile();
+        })
+            .overrideGuard(TokenBlacklistGuard)
+            .useValue({
+                canActivate: jest.fn(() => true)
+            })
+            .overrideGuard(ResourceOwnerGuard)
+            .useValue({
+                canActivate: jest.fn(() => true)
+            })
+            .compile();
 
         controller = module.get<CommentController>(CommentController);
         mockCommentService = module.get(CommentService);
@@ -161,7 +168,11 @@ describe('CommentController', () => {
             };
 
             const mockUser = { sub: 'user-2' };
-            const reply = { ...mockComment, id: 'reply-1', parentId: 'comment-1' };
+            const reply = {
+                ...mockComment,
+                id: 'reply-1',
+                parentId: 'comment-1'
+            };
             mockCommentService.create.mockResolvedValue(reply);
 
             const result = await controller.create(createReplyDto, mockUser);
@@ -194,7 +205,9 @@ describe('CommentController', () => {
             const result = await controller.findByUser('user-1');
 
             expect(result).toEqual(comments);
-            expect(mockCommentService.findByUser).toHaveBeenCalledWith('user-1');
+            expect(mockCommentService.findByUser).toHaveBeenCalledWith(
+                'user-1'
+            );
         });
     });
 
@@ -206,7 +219,9 @@ describe('CommentController', () => {
             const result = await controller.findByProject('project-1');
 
             expect(result).toEqual(comments);
-            expect(mockCommentService.findByProject).toHaveBeenCalledWith('project-1');
+            expect(mockCommentService.findByProject).toHaveBeenCalledWith(
+                'project-1'
+            );
         });
     });
 
@@ -218,7 +233,9 @@ describe('CommentController', () => {
             const result = await controller.findByPost('post-1');
 
             expect(result).toEqual(comments);
-            expect(mockCommentService.findByPost).toHaveBeenCalledWith('post-1');
+            expect(mockCommentService.findByPost).toHaveBeenCalledWith(
+                'post-1'
+            );
         });
     });
 
@@ -230,7 +247,9 @@ describe('CommentController', () => {
             const result = await controller.findReplies('comment-1');
 
             expect(result).toEqual(replies);
-            expect(mockCommentService.findReplies).toHaveBeenCalledWith('comment-1');
+            expect(mockCommentService.findReplies).toHaveBeenCalledWith(
+                'comment-1'
+            );
         });
     });
 
@@ -246,7 +265,9 @@ describe('CommentController', () => {
             const result = await controller.getProjectCommentStats('project-1');
 
             expect(result).toEqual(stats);
-            expect(mockCommentService.getProjectCommentStats).toHaveBeenCalledWith('project-1');
+            expect(
+                mockCommentService.getProjectCommentStats
+            ).toHaveBeenCalledWith('project-1');
         });
     });
 
@@ -262,7 +283,9 @@ describe('CommentController', () => {
             const result = await controller.getPostCommentStats('post-1');
 
             expect(result).toEqual(stats);
-            expect(mockCommentService.getPostCommentStats).toHaveBeenCalledWith('post-1');
+            expect(mockCommentService.getPostCommentStats).toHaveBeenCalledWith(
+                'post-1'
+            );
         });
     });
 
@@ -274,7 +297,9 @@ describe('CommentController', () => {
             const result = await controller.search('test');
 
             expect(result).toEqual(searchResults);
-            expect(mockCommentService.search).toHaveBeenCalledWith('test', ['content']);
+            expect(mockCommentService.search).toHaveBeenCalledWith('test', [
+                'content'
+            ]);
         });
     });
 
@@ -307,7 +332,9 @@ describe('CommentController', () => {
             const result = await controller.findOne('comment-1');
 
             expect(result).toEqual(mockComment);
-            expect(mockCommentService.findOne).toHaveBeenCalledWith('comment-1');
+            expect(mockCommentService.findOne).toHaveBeenCalledWith(
+                'comment-1'
+            );
         });
     });
 
@@ -317,13 +344,23 @@ describe('CommentController', () => {
                 content: 'Updated comment content'
             };
             const mockUser = { sub: 'user-1' };
-            const updatedComment = { ...mockComment, content: 'Updated comment content' };
+            const updatedComment = {
+                ...mockComment,
+                content: 'Updated comment content'
+            };
             mockCommentService.update.mockResolvedValue(updatedComment);
 
-            const result = await controller.update('comment-1', updateCommentDto, mockUser);
+            const result = await controller.update(
+                'comment-1',
+                updateCommentDto,
+                mockUser
+            );
 
             expect(result).toEqual(updatedComment);
-            expect(mockCommentService.update).toHaveBeenCalledWith('comment-1', updateCommentDto);
+            expect(mockCommentService.update).toHaveBeenCalledWith(
+                'comment-1',
+                updateCommentDto
+            );
         });
     });
 
@@ -336,7 +373,11 @@ describe('CommentController', () => {
             const toggleResult = { liked: true, like: mockLike };
             mockLikeService.toggleLike.mockResolvedValue(toggleResult);
 
-            const result = await controller.toggleLike('comment-1', toggleLikeDto, mockUser);
+            const result = await controller.toggleLike(
+                'comment-1',
+                toggleLikeDto,
+                mockUser
+            );
 
             expect(result).toEqual(toggleResult);
             expect(mockLikeService.toggleLike).toHaveBeenCalledWith({
@@ -353,7 +394,11 @@ describe('CommentController', () => {
             const toggleResult = { liked: false };
             mockLikeService.toggleLike.mockResolvedValue(toggleResult);
 
-            const result = await controller.toggleLike('comment-1', toggleLikeDto, mockUser);
+            const result = await controller.toggleLike(
+                'comment-1',
+                toggleLikeDto,
+                mockUser
+            );
 
             expect(result).toEqual(toggleResult);
             expect(mockLikeService.toggleLike).toHaveBeenCalledWith({
@@ -371,7 +416,9 @@ describe('CommentController', () => {
             const result = await controller.getCommentLikes('comment-1');
 
             expect(result).toEqual(likes);
-            expect(mockLikeService.findByComment).toHaveBeenCalledWith('comment-1');
+            expect(mockLikeService.findByComment).toHaveBeenCalledWith(
+                'comment-1'
+            );
         });
     });
 
@@ -383,7 +430,9 @@ describe('CommentController', () => {
             const result = await controller.getCommentLikeCount('comment-1');
 
             expect(result).toEqual({ count });
-            expect(mockLikeService.countCommentLikes).toHaveBeenCalledWith('comment-1');
+            expect(mockLikeService.countCommentLikes).toHaveBeenCalledWith(
+                'comment-1'
+            );
         });
     });
 

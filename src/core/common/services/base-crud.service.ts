@@ -85,8 +85,8 @@ export abstract class BaseCrudServiceImpl<
     }
 
     async paginate(skip = 0, take = 10): Promise<T[]> {
-        return this.model.findMany({ 
-            skip, 
+        return this.model.findMany({
+            skip,
             take,
             orderBy: { createdAt: 'desc' }
         });
@@ -99,7 +99,7 @@ export abstract class BaseCrudServiceImpl<
                 mode: 'insensitive'
             }
         }));
-        return this.model.findMany({ 
+        return this.model.findMany({
             where: { OR },
             orderBy: { createdAt: 'desc' }
         });

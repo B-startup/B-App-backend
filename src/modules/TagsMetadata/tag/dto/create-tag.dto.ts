@@ -11,11 +11,14 @@ export class CreateTagDto {
     @IsString()
     @IsNotEmpty()
     @MaxLength(100)
-    @Transform(({ value }) => typeof value === 'string' ? value.trim() : value)
+    @Transform(({ value }) =>
+        typeof value === 'string' ? value.trim() : value
+    )
     name: string;
 
     @ApiProperty({
-        description: 'Optional description explaining the context or usage of the tag',
+        description:
+            'Optional description explaining the context or usage of the tag',
         example: 'Financial technology related posts and projects',
         required: false,
         maxLength: 500
@@ -23,6 +26,8 @@ export class CreateTagDto {
     @IsOptional()
     @IsString()
     @MaxLength(500)
-    @Transform(({ value }) => value && typeof value === 'string' ? value.trim() : value)
+    @Transform(({ value }) =>
+        value && typeof value === 'string' ? value.trim() : value
+    )
     description?: string;
 }

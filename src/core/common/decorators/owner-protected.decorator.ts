@@ -8,7 +8,8 @@ const RESOURCE_TYPE_KEY = 'resourceType';
 /**
  * Métadonnée pour spécifier le type de ressource à vérifier
  */
-export const ResourceType = (type: string) => SetMetadata(RESOURCE_TYPE_KEY, type);
+export const ResourceType = (type: string) =>
+    SetMetadata(RESOURCE_TYPE_KEY, type);
 
 /**
  * Décorateur combiné pour protéger les endpoints qui nécessitent :
@@ -25,7 +26,8 @@ export function OwnerProtected(resourceType: 'comment' | 'post' | 'project') {
         }),
         ApiResponse({
             status: 403,
-            description: 'Accès refusé - vous n\'êtes pas le propriétaire de cette ressource'
+            description:
+                "Accès refusé - vous n'êtes pas le propriétaire de cette ressource"
         }),
         ApiResponse({
             status: 404,

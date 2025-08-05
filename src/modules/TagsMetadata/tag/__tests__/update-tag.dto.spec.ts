@@ -62,7 +62,7 @@ describe('UpdateTagDto', () => {
         it('should trim whitespace from name when provided', () => {
             const name = '  Updated Fintech  ';
             const dtoObject = plainToClass(UpdateTagDto, { name });
-            
+
             expect(dtoObject.name).toBe('Updated Fintech');
         });
     });
@@ -110,7 +110,7 @@ describe('UpdateTagDto', () => {
         it('should trim whitespace from description when provided', () => {
             const description = '  Updated financial technology  ';
             const dtoObject = plainToClass(UpdateTagDto, { description });
-            
+
             expect(dtoObject.description).toBe('Updated financial technology');
         });
     });
@@ -127,7 +127,9 @@ describe('UpdateTagDto', () => {
 
             expect(errors).toHaveLength(0);
             expect(dtoObject.name).toBe('Updated Fintech');
-            expect(dtoObject.description).toBe('Updated financial technology description');
+            expect(dtoObject.description).toBe(
+                'Updated financial technology description'
+            );
         });
 
         it('should pass validation with only name', async () => {

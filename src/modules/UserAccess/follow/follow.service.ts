@@ -4,7 +4,7 @@ import { UpdateFollowDto } from './dto/update-follow.dto';
 
 @Injectable()
 export class FollowService {
-    create(createFollowDto: CreateFollowDto) {
+    create(_createFollowDto: CreateFollowDto) {
         return 'This action adds a new follow';
     }
 
@@ -16,7 +16,7 @@ export class FollowService {
         return `This action returns a #${id} follow`;
     }
 
-    update(id: number, updateFollowDto: UpdateFollowDto) {
+    update(id: number, _updateFollowDto: UpdateFollowDto) {
         return `This action updates a #${id} follow`;
     }
 

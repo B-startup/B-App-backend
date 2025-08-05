@@ -67,7 +67,9 @@ describe('PostSharedController', () => {
             const result = await controller.create(createPostSharedDto);
 
             expect(result).toEqual(mockPostShared);
-            expect(mockPostSharedService.sharePost).toHaveBeenCalledWith(createPostSharedDto);
+            expect(mockPostSharedService.sharePost).toHaveBeenCalledWith(
+                createPostSharedDto
+            );
         });
     });
 
@@ -91,8 +93,12 @@ describe('PostSharedController', () => {
             const result = await controller.findByPost('test-post-id', false);
 
             expect(result).toEqual(shares);
-            expect(mockPostSharedService.findByPost).toHaveBeenCalledWith('test-post-id');
-            expect(mockPostSharedService.findByPostWithUsers).not.toHaveBeenCalled();
+            expect(mockPostSharedService.findByPost).toHaveBeenCalledWith(
+                'test-post-id'
+            );
+            expect(
+                mockPostSharedService.findByPostWithUsers
+            ).not.toHaveBeenCalled();
         });
 
         it('should return shares for a specific post with users', async () => {
@@ -106,12 +112,16 @@ describe('PostSharedController', () => {
                     }
                 }
             ];
-            mockPostSharedService.findByPostWithUsers.mockResolvedValue(sharesWithUsers);
+            mockPostSharedService.findByPostWithUsers.mockResolvedValue(
+                sharesWithUsers
+            );
 
             const result = await controller.findByPost('test-post-id', true);
 
             expect(result).toEqual(sharesWithUsers);
-            expect(mockPostSharedService.findByPostWithUsers).toHaveBeenCalledWith('test-post-id');
+            expect(
+                mockPostSharedService.findByPostWithUsers
+            ).toHaveBeenCalledWith('test-post-id');
             expect(mockPostSharedService.findByPost).not.toHaveBeenCalled();
         });
     });
@@ -124,8 +134,12 @@ describe('PostSharedController', () => {
             const result = await controller.findByUser('test-user-id', false);
 
             expect(result).toEqual(userShares);
-            expect(mockPostSharedService.findByUser).toHaveBeenCalledWith('test-user-id');
-            expect(mockPostSharedService.findUserSharesWithPosts).not.toHaveBeenCalled();
+            expect(mockPostSharedService.findByUser).toHaveBeenCalledWith(
+                'test-user-id'
+            );
+            expect(
+                mockPostSharedService.findUserSharesWithPosts
+            ).not.toHaveBeenCalled();
         });
 
         it('should return user shares with posts', async () => {
@@ -145,12 +159,16 @@ describe('PostSharedController', () => {
                     }
                 }
             ];
-            mockPostSharedService.findUserSharesWithPosts.mockResolvedValue(sharesWithPosts);
+            mockPostSharedService.findUserSharesWithPosts.mockResolvedValue(
+                sharesWithPosts
+            );
 
             const result = await controller.findByUser('test-user-id', true);
 
             expect(result).toEqual(sharesWithPosts);
-            expect(mockPostSharedService.findUserSharesWithPosts).toHaveBeenCalledWith('test-user-id');
+            expect(
+                mockPostSharedService.findUserSharesWithPosts
+            ).toHaveBeenCalledWith('test-user-id');
             expect(mockPostSharedService.findByUser).not.toHaveBeenCalled();
         });
     });
@@ -162,7 +180,9 @@ describe('PostSharedController', () => {
             const result = await controller.countByPost('test-post-id');
 
             expect(result).toEqual({ count: 5 });
-            expect(mockPostSharedService.countSharesByPost).toHaveBeenCalledWith('test-post-id');
+            expect(
+                mockPostSharedService.countSharesByPost
+            ).toHaveBeenCalledWith('test-post-id');
         });
     });
 
@@ -173,7 +193,9 @@ describe('PostSharedController', () => {
             const result = await controller.countByUser('test-user-id');
 
             expect(result).toEqual({ count: 3 });
-            expect(mockPostSharedService.countSharesByUser).toHaveBeenCalledWith('test-user-id');
+            expect(
+                mockPostSharedService.countSharesByUser
+            ).toHaveBeenCalledWith('test-user-id');
         });
     });
 
@@ -184,7 +206,9 @@ describe('PostSharedController', () => {
             const result = await controller.findOne('test-share-id');
 
             expect(result).toEqual(mockPostShared);
-            expect(mockPostSharedService.findOne).toHaveBeenCalledWith('test-share-id');
+            expect(mockPostSharedService.findOne).toHaveBeenCalledWith(
+                'test-share-id'
+            );
         });
     });
 
@@ -196,10 +220,16 @@ describe('PostSharedController', () => {
             const updatedShare = { ...mockPostShared, ...updatePostSharedDto };
             mockPostSharedService.update.mockResolvedValue(updatedShare);
 
-            const result = await controller.update('test-share-id', updatePostSharedDto);
+            const result = await controller.update(
+                'test-share-id',
+                updatePostSharedDto
+            );
 
             expect(result).toEqual(updatedShare);
-            expect(mockPostSharedService.update).toHaveBeenCalledWith('test-share-id', updatePostSharedDto);
+            expect(mockPostSharedService.update).toHaveBeenCalledWith(
+                'test-share-id',
+                updatePostSharedDto
+            );
         });
     });
 
@@ -210,7 +240,9 @@ describe('PostSharedController', () => {
             const result = await controller.remove('test-share-id');
 
             expect(result).toEqual(mockPostShared);
-            expect(mockPostSharedService.remove).toHaveBeenCalledWith('test-share-id');
+            expect(mockPostSharedService.remove).toHaveBeenCalledWith(
+                'test-share-id'
+            );
         });
     });
 
@@ -218,10 +250,16 @@ describe('PostSharedController', () => {
         it('should unshare a post', async () => {
             mockPostSharedService.unsharePost.mockResolvedValue(mockPostShared);
 
-            const result = await controller.unshare('test-user-id', 'test-post-id');
+            const result = await controller.unshare(
+                'test-user-id',
+                'test-post-id'
+            );
 
             expect(result).toEqual(mockPostShared);
-            expect(mockPostSharedService.unsharePost).toHaveBeenCalledWith('test-user-id', 'test-post-id');
+            expect(mockPostSharedService.unsharePost).toHaveBeenCalledWith(
+                'test-user-id',
+                'test-post-id'
+            );
         });
     });
 });

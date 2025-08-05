@@ -180,11 +180,15 @@ export class ProjectTagController {
         }
     })
     async findPopularTags(@Query('limit') limit?: number) {
-        return this.projectTagService.findPopularTags(limit ? Number(limit) : 10);
+        return this.projectTagService.findPopularTags(
+            limit ? Number(limit) : 10
+        );
     }
 
     @Get('similar/:id')
-    @ApiOperation({ summary: 'Find projects similar to a given project based on shared tags' })
+    @ApiOperation({
+        summary: 'Find projects similar to a given project based on shared tags'
+    })
     @ApiParam({ name: 'id', description: 'Project ID' })
     @ApiQuery({
         name: 'limit',

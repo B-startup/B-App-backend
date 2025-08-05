@@ -34,8 +34,8 @@ export class PostTagController {
         type: CreatePostTagDto,
         schema: {
             example: {
-                postId: "post-uuid-string",
-                tagId: "tag-uuid-string"
+                postId: 'post-uuid-string',
+                tagId: 'tag-uuid-string'
             }
         }
     })
@@ -45,18 +45,20 @@ export class PostTagController {
         type: PostTagResponseDto,
         schema: {
             example: {
-                id: "uuid-string",
-                postId: "post-uuid-string",
-                tagId: "tag-uuid-string",
-                createdAt: "2025-07-30T10:30:00.000Z",
-                updatedAt: "2025-07-30T10:30:00.000Z"
+                id: 'uuid-string',
+                postId: 'post-uuid-string',
+                tagId: 'tag-uuid-string',
+                createdAt: '2025-07-30T10:30:00.000Z',
+                updatedAt: '2025-07-30T10:30:00.000Z'
             }
         }
     })
     @ApiResponse({ status: 400, description: 'Bad Request' })
     @ApiResponse({ status: 404, description: 'Post or Tag not found' })
     @ApiResponse({ status: 409, description: 'Association already exists' })
-    async create(@Body() createPostTagDto: CreatePostTagDto): Promise<PostTagResponseDto> {
+    async create(
+        @Body() createPostTagDto: CreatePostTagDto
+    ): Promise<PostTagResponseDto> {
         return await this.postTagService.createAssociation(createPostTagDto);
     }
 
@@ -70,7 +72,7 @@ export class PostTagController {
                 tagIds: {
                     type: 'array',
                     items: { type: 'string' },
-                    example: ["tag-id-1", "tag-id-2", "tag-id-3"]
+                    example: ['tag-id-1', 'tag-id-2', 'tag-id-3']
                 }
             }
         }
@@ -80,7 +82,10 @@ export class PostTagController {
         description: 'Tags added to post successfully',
         type: [PostTagResponseDto]
     })
-    @ApiResponse({ status: 404, description: 'Post or one or more tags not found' })
+    @ApiResponse({
+        status: 404,
+        description: 'Post or one or more tags not found'
+    })
     async addMultipleTagsToPost(
         @Param('postId') postId: string,
         @Body('tagIds') tagIds: string[]
@@ -96,7 +101,7 @@ export class PostTagController {
         type: [PostTagResponseDto]
     })
     async findAll(): Promise<PostTagResponseDto[]> {
-        return  this.postTagService.findAll();
+        return this.postTagService.findAll();
     }
 
     @Get('popular-tags')
@@ -111,9 +116,7 @@ export class PostTagController {
         status: 200,
         description: 'Popular tags retrieved successfully'
     })
-    async findPopularTags(
-        @Query('limit') limit?: string
-    ) {
+    async findPopularTags(@Query('limit') limit?: string) {
         const limitNumber = limit ? parseInt(limit, 10) : 10;
         return await this.postTagService.findPopularTags(limitNumber);
     }
@@ -253,7 +256,10 @@ export class PostTagController {
     @HttpCode(HttpStatus.NO_CONTENT)
     @ApiOperation({ summary: 'Delete post-tag association by ID' })
     @ApiParam({ name: 'id', description: 'Post-tag association ID' })
-    @ApiResponse({ status: 204, description: 'Association deleted successfully' })
+    @ApiResponse({
+        status: 204,
+        description: 'Association deleted successfully'
+    })
     @ApiResponse({ status: 404, description: 'Association not found' })
     async remove(@Param('id') id: string): Promise<void> {
         await this.postTagService.remove(id);
@@ -264,7 +270,10 @@ export class PostTagController {
     @ApiOperation({ summary: 'Delete specific post-tag association' })
     @ApiParam({ name: 'postId', description: 'Post ID' })
     @ApiParam({ name: 'tagId', description: 'Tag ID' })
-    @ApiResponse({ status: 204, description: 'Association deleted successfully' })
+    @ApiResponse({
+        status: 204,
+        description: 'Association deleted successfully'
+    })
     @ApiResponse({ status: 404, description: 'Association not found' })
     async removeAssociation(
         @Param('postId') postId: string,

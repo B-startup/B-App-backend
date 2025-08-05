@@ -1,8 +1,10 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { FileUploadService } from 'src/modules/ProjectManagement/file-upload/file-upload.service';
 import { TokenProtected } from '../../../core/common/decorators/token-protected.decorator';
-import { CurrentUser, CurrentToken } from '../../../core/common/decorators/current-user.decorator';
+import {
+    CurrentUser,
+    CurrentToken
+} from '../../../core/common/decorators/current-user.decorator';
 import { AuthService } from './auth.service';
 import { ForgetPasswordDto } from './dto/forget-password.dto';
 import { LoginDto } from './dto/login.dto';
@@ -14,10 +16,7 @@ import { VerifyOtpDto } from './dto/verify-otp.dto';
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
-    constructor(
-        private readonly authService: AuthService,
-        private readonly fileUploadService: FileUploadService
-    ) {}
+    constructor(private readonly authService: AuthService) {}
 
     @Post('sign-in')
     @ApiOperation({ summary: 'User login' })
@@ -78,7 +77,10 @@ export class AuthController {
     @TokenProtected()
     @ApiOperation({ summary: 'Logout user with token blacklist verification' })
     @ApiResponse({ status: 200, description: 'Logout successful' })
-    @ApiResponse({ status: 401, description: 'Token invalid or user not found' })
+    @ApiResponse({
+        status: 401,
+        description: 'Token invalid or user not found'
+    })
     async logout(
         @CurrentUser() user: any,
         @CurrentToken() token: string,
@@ -86,7 +88,7 @@ export class AuthController {
     ) {
         return this.authService.logout(
             user.sub, // userId from JWT payload
-            token,    // token from request header
+            token, // token from request header
             logoutDto?.logoutFromAllDevices || false
         );
     }
@@ -96,7 +98,10 @@ export class AuthController {
     @ApiOperation({ summary: 'Validate current token (requires valid token)' })
     @ApiResponse({ status: 200, description: 'Token is valid' })
     @ApiResponse({ status: 401, description: 'Token is invalid or revoked' })
-    async validateToken(@CurrentUser() user: any, @CurrentToken() token: string) {
+    async validateToken(
+        @CurrentUser() user: any,
+        @CurrentToken() _token: string
+    ) {
         // Si on arrive ici, le token est déjà validé par TokenBlacklistGuard
         return {
             valid: true,

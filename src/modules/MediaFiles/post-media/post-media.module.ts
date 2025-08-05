@@ -8,11 +8,7 @@ import { PrismaClient } from '@prisma/client';
 @Module({
     imports: [ConfigModule],
     controllers: [PostMediaController],
-    providers: [
-        PostMediaService, 
-        PostMediaFileService, 
-        PrismaClient
-    ],
+    providers: [PostMediaService, PostMediaFileService, PrismaClient],
     exports: [PostMediaService, PostMediaFileService]
 })
 export class PostMediaModule {}

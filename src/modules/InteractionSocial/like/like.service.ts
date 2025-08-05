@@ -32,10 +32,10 @@ export class LikeService extends BaseCrudServiceImpl<
         }
 
         const like = await super.create(data);
-        
+
         // Incrémenter le compteur de likes dans l'entité cible
         await this.updateTargetLikeCounter(data, true);
-        
+
         return like;
     }
 
@@ -45,9 +45,9 @@ export class LikeService extends BaseCrudServiceImpl<
     async remove(id: string): Promise<Like> {
         // Récupérer le like avant suppression pour connaître l'entité cible
         const likeToDelete = await this.findOne(id);
-        
+
         const deletedLike = await super.remove(id);
-        
+
         // Décrémenter le compteur de likes dans l'entité cible
         const likeData: CreateLikeDto = {
             userId: likeToDelete.userId,
@@ -56,16 +56,18 @@ export class LikeService extends BaseCrudServiceImpl<
             commentId: likeToDelete.commentId || undefined
         };
         await this.updateTargetLikeCounter(likeData, false);
-        
+
         return deletedLike;
     }
 
     /**
      * Toggle like (like/unlike) with counter updates
      */
-    async toggleLike(data: CreateLikeDto): Promise<{ liked: boolean; like?: Like }> {
+    async toggleLike(
+        data: CreateLikeDto
+    ): Promise<{ liked: boolean; like?: Like }> {
         const existingLike = await this.findExistingLike(data);
-        
+
         if (existingLike) {
             // Unlike: remove the like
             await this.remove(existingLike.id);
@@ -80,13 +82,28 @@ export class LikeService extends BaseCrudServiceImpl<
     /**
      * Met à jour le compteur de likes de l'entité cible
      */
-    private async updateTargetLikeCounter(data: CreateLikeDto, increment: boolean): Promise<void> {
+    private async updateTargetLikeCounter(
+        data: CreateLikeDto,
+        increment: boolean
+    ): Promise<void> {
         if (data.projectId) {
-            await this.counterService.updateLikeCount('project', data.projectId, increment);
+            await this.counterService.updateLikeCount(
+                'project',
+                data.projectId,
+                increment
+            );
         } else if (data.postId) {
-            await this.counterService.updateLikeCount('post', data.postId, increment);
+            await this.counterService.updateLikeCount(
+                'post',
+                data.postId,
+                increment
+            );
         } else if (data.commentId) {
-            await this.counterService.updateLikeCount('comment', data.commentId, increment);
+            await this.counterService.updateLikeCount(
+                'comment',
+                data.commentId,
+                increment
+            );
         }
     }
 
@@ -217,9 +234,13 @@ export class LikeService extends BaseCrudServiceImpl<
     /**
      * Check if a user has liked a specific item
      */
-    async hasUserLiked(userId: string, targetId: string, targetType: 'project' | 'post' | 'comment'): Promise<boolean> {
+    async hasUserLiked(
+        userId: string,
+        targetId: string,
+        targetType: 'project' | 'post' | 'comment'
+    ): Promise<boolean> {
         const whereClause: any = { userId };
-        
+
         switch (targetType) {
             case 'project':
                 whereClause.projectId = targetId;

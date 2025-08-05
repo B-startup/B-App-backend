@@ -41,11 +41,13 @@ export class TagService extends BaseCrudServiceImpl<
      */
     async createTag(createTagDto: CreateTagDto): Promise<Tag> {
         const { name } = createTagDto;
-        
+
         // Vérifier si un tag avec ce nom existe déjà
         const existingTag = await this.findByName(name);
         if (existingTag) {
-            throw new ConflictException(`Tag with name "${name}" already exists`);
+            throw new ConflictException(
+                `Tag with name "${name}" already exists`
+            );
         }
 
         return this.create(createTagDto);
@@ -62,7 +64,9 @@ export class TagService extends BaseCrudServiceImpl<
         if (updateTagDto.name) {
             const existingTag = await this.findByName(updateTagDto.name);
             if (existingTag && existingTag.id !== id) {
-                throw new ConflictException(`Tag with name "${updateTagDto.name}" already exists`);
+                throw new ConflictException(
+                    `Tag with name "${updateTagDto.name}" already exists`
+                );
             }
         }
 
@@ -118,7 +122,7 @@ export class TagService extends BaseCrudServiceImpl<
 
         // Trier par nombre total d'utilisations (projets + posts)
         return tags
-            .map(tag => ({
+            .map((tag) => ({
                 ...tag,
                 totalUsage: tag._count.projectTags + tag._count.PostTag
             }))

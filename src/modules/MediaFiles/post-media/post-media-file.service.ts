@@ -26,7 +26,12 @@ export class PostMediaFileService {
 
     private ensureDirectories() {
         // Créer les dossiers s'ils n'existent pas
-        [this.uploadDir, this.postMediaDir, this.imagesDir, this.videosDir].forEach(dir => {
+        [
+            this.uploadDir,
+            this.postMediaDir,
+            this.imagesDir,
+            this.videosDir
+        ].forEach((dir) => {
             if (!fs.existsSync(dir)) {
                 fs.mkdirSync(dir, { recursive: true });
             }
@@ -42,7 +47,10 @@ export class PostMediaFileService {
         }
 
         // Validation de la taille (10MB max pour vidéos, 5MB pour images)
-        const maxSize = mediaType === PostMediaType.VIDEO ? 10 * 1024 * 1024 : 5 * 1024 * 1024;
+        const maxSize =
+            mediaType === PostMediaType.VIDEO
+                ? 10 * 1024 * 1024
+                : 5 * 1024 * 1024;
         if (file.size > maxSize) {
             throw new BadRequestException(
                 `File too large. Max size: ${maxSize / (1024 * 1024)}MB for ${mediaType.toLowerCase()}s`
@@ -57,7 +65,8 @@ export class PostMediaFileService {
         const uniqueFilename = `${timestamp}-${this.sanitizeFilename(file.originalname)}`;
 
         // Déterminer le dossier de destination
-        const targetDir = mediaType === PostMediaType.IMAGE ? this.imagesDir : this.videosDir;
+        const targetDir =
+            mediaType === PostMediaType.IMAGE ? this.imagesDir : this.videosDir;
         const filePath = path.join(targetDir, uniqueFilename);
 
         try {
@@ -72,14 +81,19 @@ export class PostMediaFileService {
                 filename: uniqueFilename
             };
         } catch (error) {
-            throw new BadRequestException(`Failed to save file: ${error.message}`);
+            throw new BadRequestException(
+                `Failed to save file: ${error.message}`
+            );
         }
     }
 
-    private validateMimeType(file: Express.Multer.File, mediaType: PostMediaType) {
+    private validateMimeType(
+        file: Express.Multer.File,
+        mediaType: PostMediaType
+    ) {
         const allowedImageTypes = [
             'image/jpeg',
-            'image/jpg', 
+            'image/jpg',
             'image/png',
             'image/gif',
             'image/webp'
@@ -93,13 +107,19 @@ export class PostMediaFileService {
             'video/webm'
         ];
 
-        if (mediaType === PostMediaType.IMAGE && !allowedImageTypes.includes(file.mimetype)) {
+        if (
+            mediaType === PostMediaType.IMAGE &&
+            !allowedImageTypes.includes(file.mimetype)
+        ) {
             throw new BadRequestException(
                 `Invalid image type. Allowed: ${allowedImageTypes.join(', ')}`
             );
         }
 
-        if (mediaType === PostMediaType.VIDEO && !allowedVideoTypes.includes(file.mimetype)) {
+        if (
+            mediaType === PostMediaType.VIDEO &&
+            !allowedVideoTypes.includes(file.mimetype)
+        ) {
             throw new BadRequestException(
                 `Invalid video type. Allowed: ${allowedVideoTypes.join(', ')}`
             );
@@ -126,7 +146,11 @@ export class PostMediaFileService {
         }
     }
 
-    getFileStats(mediaUrl: string): { exists: boolean; size?: number; mtime?: Date } {
+    getFileStats(mediaUrl: string): {
+        exists: boolean;
+        size?: number;
+        mtime?: Date;
+    } {
         try {
             const relativePath = mediaUrl.replace('/uploads/', '');
             const filePath = path.join(this.uploadDir, relativePath);

@@ -1,4 +1,8 @@
-import { Injectable, NestMiddleware, UnauthorizedException } from '@nestjs/common';
+import {
+    Injectable,
+    NestMiddleware,
+    UnauthorizedException
+} from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 import { JwtService } from '@nestjs/jwt';
 import { TokenBlacklistService } from '../services/token-blacklist.service';
@@ -13,8 +17,8 @@ export class TokenValidationMiddleware implements NestMiddleware {
     async use(req: Request, res: Response, next: NextFunction) {
         // Extraire le token de l'en-tête Authorization
         const authHeader = req.headers.authorization;
-        
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+
+        if (!authHeader?.startsWith('Bearer ')) {
             return next(); // Pas de token, laisser les guards s'en occuper
         }
 
@@ -22,8 +26,9 @@ export class TokenValidationMiddleware implements NestMiddleware {
 
         try {
             // Vérifier si le token est blacklisté
-            const isBlacklisted = await this.tokenBlacklistService.isTokenBlacklisted(token);
-            
+            const isBlacklisted =
+                await this.tokenBlacklistService.isTokenBlacklisted(token);
+
             if (isBlacklisted) {
                 throw new UnauthorizedException('Token has been revoked');
             }
@@ -32,7 +37,10 @@ export class TokenValidationMiddleware implements NestMiddleware {
             const decoded = this.jwtService.decode(token);
             if (decoded && typeof decoded === 'object' && 'id' in decoded) {
                 // Vérifier avec lastLogoutAt
-                const isValid = await this.isTokenValidByTimestamp(token, decoded.id);
+                const isValid = await this.isTokenValidByTimestamp(
+                    token,
+                    decoded.id
+                );
                 if (!isValid) {
                     throw new UnauthorizedException('Token is no longer valid');
                 }
@@ -48,12 +56,16 @@ export class TokenValidationMiddleware implements NestMiddleware {
         }
     }
 
-    private async isTokenValidByTimestamp(token: string, userId: string): Promise<boolean> {
+    private async isTokenValidByTimestamp(
+        token: string,
+        _userId: string
+    ): Promise<boolean> {
         try {
             const decoded = this.jwtService.decode(token);
-            const tokenIssuedAt = decoded && typeof decoded === 'object' && 'iat' in decoded 
-                ? new Date(decoded.iat * 1000) 
-                : null;
+            const tokenIssuedAt =
+                decoded && typeof decoded === 'object' && 'iat' in decoded
+                    ? new Date(decoded.iat * 1000)
+                    : null;
 
             if (!tokenIssuedAt) {
                 return false;

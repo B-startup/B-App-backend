@@ -21,15 +21,15 @@ export class TokenBlacklistService {
      * Add a token to the blacklist
      */
     async blacklistToken(
-        token: string, 
-        userId?: string, 
+        token: string,
+        userId?: string,
         reason: string = 'logout'
     ): Promise<void> {
         try {
             // Decode token to get expiration
-            const decoded = this.jwtService.decode(token) as any;
-            const expiresAt = decoded?.exp 
-                ? new Date(decoded.exp * 1000) 
+            const decoded = this.jwtService.decode(token);
+            const expiresAt = decoded?.exp
+                ? new Date(decoded.exp * 1000)
                 : new Date(Date.now() + 24 * 60 * 60 * 1000); // Default 24h
 
             const tokenHash = this.hashToken(token);
@@ -66,7 +66,7 @@ export class TokenBlacklistService {
      */
     async isTokenBlacklisted(token: string): Promise<boolean> {
         const tokenHash = this.hashToken(token);
-        
+
         const blacklistedToken = await this.prisma.tokenBlacklist.findUnique({
             where: { tokenHash }
         });
@@ -77,7 +77,10 @@ export class TokenBlacklistService {
     /**
      * Blacklist all tokens for a specific user (logout from all devices)
      */
-    async blacklistAllUserTokens(userId: string, reason: string = 'logout_all'): Promise<void> {
+    async blacklistAllUserTokens(
+        userId: string,
+        _reason: string = 'logout_all'
+    ): Promise<void> {
         // Cette méthode nécessiterait de stocker tous les tokens actifs
         // Pour l'instant, on met à jour lastLogoutAt qui invalidera tous les anciens tokens
         await this.prisma.user.update({
@@ -112,7 +115,7 @@ export class TokenBlacklistService {
         active: number;
     }> {
         const now = new Date();
-        
+
         const [total, expired] = await Promise.all([
             this.prisma.tokenBlacklist.count(),
             this.prisma.tokenBlacklist.count({

@@ -55,7 +55,9 @@ describe('TagService', () => {
     describe('findAll', () => {
         it('should return an array of tags', async () => {
             const tags = [mockTag];
-            (mockPrismaService.tag.findMany as jest.Mock).mockResolvedValue(tags);
+            (mockPrismaService.tag.findMany as jest.Mock).mockResolvedValue(
+                tags
+            );
 
             const result = await service.findAll();
 
@@ -66,7 +68,9 @@ describe('TagService', () => {
 
     describe('findOne', () => {
         it('should return a tag when found', async () => {
-            (mockPrismaService.tag.findUnique as jest.Mock).mockResolvedValue(mockTag);
+            (mockPrismaService.tag.findUnique as jest.Mock).mockResolvedValue(
+                mockTag
+            );
 
             const result = await service.findOne('test-tag-id');
 
@@ -77,7 +81,9 @@ describe('TagService', () => {
         });
 
         it('should throw NotFoundException when tag not found', async () => {
-            (mockPrismaService.tag.findUnique as jest.Mock).mockResolvedValue(null);
+            (mockPrismaService.tag.findUnique as jest.Mock).mockResolvedValue(
+                null
+            );
 
             await expect(service.findOne('non-existent-id')).rejects.toThrow(
                 NotFoundException
@@ -87,7 +93,9 @@ describe('TagService', () => {
 
     describe('findByName', () => {
         it('should return a tag when found by name', async () => {
-            (mockPrismaService.tag.findUnique as jest.Mock).mockResolvedValue(mockTag);
+            (mockPrismaService.tag.findUnique as jest.Mock).mockResolvedValue(
+                mockTag
+            );
 
             const result = await service.findByName('Fintech');
 
@@ -98,7 +106,9 @@ describe('TagService', () => {
         });
 
         it('should return null when tag not found by name', async () => {
-            (mockPrismaService.tag.findUnique as jest.Mock).mockResolvedValue(null);
+            (mockPrismaService.tag.findUnique as jest.Mock).mockResolvedValue(
+                null
+            );
 
             const result = await service.findByName('NonExistent');
 
@@ -106,7 +116,9 @@ describe('TagService', () => {
         });
 
         it('should trim the name before searching', async () => {
-            (mockPrismaService.tag.findUnique as jest.Mock).mockResolvedValue(mockTag);
+            (mockPrismaService.tag.findUnique as jest.Mock).mockResolvedValue(
+                mockTag
+            );
 
             await service.findByName('  Fintech  ');
 
@@ -123,8 +135,12 @@ describe('TagService', () => {
         };
 
         it('should create a tag successfully', async () => {
-            (mockPrismaService.tag.findUnique as jest.Mock).mockResolvedValue(null); // No existing tag
-            (mockPrismaService.tag.create as jest.Mock).mockResolvedValue(mockTag);
+            (mockPrismaService.tag.findUnique as jest.Mock).mockResolvedValue(
+                null
+            ); // No existing tag
+            (mockPrismaService.tag.create as jest.Mock).mockResolvedValue(
+                mockTag
+            );
 
             const result = await service.createTag(createTagDto);
 
@@ -138,7 +154,9 @@ describe('TagService', () => {
         });
 
         it('should throw ConflictException when tag name already exists', async () => {
-            (mockPrismaService.tag.findUnique as jest.Mock).mockResolvedValue(mockTag); // Existing tag
+            (mockPrismaService.tag.findUnique as jest.Mock).mockResolvedValue(
+                mockTag
+            ); // Existing tag
 
             await expect(service.createTag(createTagDto)).rejects.toThrow(
                 ConflictException
@@ -175,27 +193,30 @@ describe('TagService', () => {
         it('should throw NotFoundException when tag does not exist', async () => {
             mockPrismaService.tag.findUnique.mockResolvedValue(null);
 
-            await expect(service.updateTag('non-existent-id', updateTagDto)).rejects.toThrow(
-                NotFoundException
-            );
+            await expect(
+                service.updateTag('non-existent-id', updateTagDto)
+            ).rejects.toThrow(NotFoundException);
         });
 
         it('should throw ConflictException when new name already exists for different tag', async () => {
             const otherTag = { ...mockTag, id: 'other-id' };
-            
+
             mockPrismaService.tag.findUnique
                 .mockResolvedValueOnce(mockTag) // findOneOrFail
                 .mockResolvedValueOnce(otherTag); // findByName check
 
-            await expect(service.updateTag('test-tag-id', updateTagDto)).rejects.toThrow(
-                ConflictException
-            );
+            await expect(
+                service.updateTag('test-tag-id', updateTagDto)
+            ).rejects.toThrow(ConflictException);
             expect(mockPrismaService.tag.update).not.toHaveBeenCalled();
         });
 
         it('should allow updating with same name', async () => {
-            const updateDto = { name: 'Fintech', description: 'Updated description' };
-            
+            const updateDto = {
+                name: 'Fintech',
+                description: 'Updated description'
+            };
+
             mockPrismaService.tag.findUnique
                 .mockResolvedValueOnce(mockTag) // findOneOrFail
                 .mockResolvedValueOnce(mockTag); // findByName check - same tag
@@ -313,7 +334,7 @@ describe('TagService', () => {
 
             expect(result).toHaveLength(2);
             expect(result[0].totalUsage).toBe(15); // AI: 10 + 5
-            expect(result[1].totalUsage).toBe(5);  // Fintech: 3 + 2
+            expect(result[1].totalUsage).toBe(5); // Fintech: 3 + 2
             expect(result[0].name).toBe('AI');
         });
 

@@ -4,7 +4,7 @@ import { UpdateVideoDto } from './dto/update-video.dto';
 
 @Injectable()
 export class VideoService {
-    create(createVideoDto: CreateVideoDto) {
+    create(_createVideoDto: CreateVideoDto) {
         return 'This action adds a new video';
     }
 
@@ -16,7 +16,7 @@ export class VideoService {
         return `This action returns a #${id} video`;
     }
 
-    update(id: number, updateVideoDto: UpdateVideoDto) {
+    update(id: number, _updateVideoDto: UpdateVideoDto) {
         return `This action updates a #${id} video`;
     }
 

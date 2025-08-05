@@ -12,7 +12,7 @@ import {
     cryptPassword,
     handleOtpOperation
 } from '../../../core/utils/auth';
-   
+
 import { LoginDto } from './dto/login.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { UserService } from '../user/user.service';
@@ -205,12 +205,12 @@ export class AuthService {
      * Cette implémentation révoque réellement les tokens côté serveur
      */
     async logout(
-        userId?: string, 
+        userId?: string,
         token?: string,
         logoutFromAllDevices: boolean = false
-    ): Promise<{ 
-        message: string; 
-        instructions: string[] 
+    ): Promise<{
+        message: string;
+        instructions: string[];
     }> {
         // Vérifier que l'utilisateur existe si userId fourni
         if (userId) {
@@ -232,13 +232,20 @@ export class AuthService {
 
             // Si logout de tous les appareils
             if (logoutFromAllDevices) {
-                await this.tokenBlacklistService.blacklistAllUserTokens(userId, 'logout_all_devices');
+                await this.tokenBlacklistService.blacklistAllUserTokens(
+                    userId,
+                    'logout_all_devices'
+                );
             }
         }
 
         // Ajouter le token actuel à la blacklist s'il est fourni
         if (token) {
-            await this.tokenBlacklistService.blacklistToken(token, userId, 'logout');
+            await this.tokenBlacklistService.blacklistToken(
+                token,
+                userId,
+                'logout'
+            );
         }
 
         return {
@@ -257,7 +264,8 @@ export class AuthService {
      */
     async isTokenValid(token: string, userId?: string): Promise<boolean> {
         // Vérifier si le token est blacklisté
-        const isBlacklisted = await this.tokenBlacklistService.isTokenBlacklisted(token);
+        const isBlacklisted =
+            await this.tokenBlacklistService.isTokenBlacklisted(token);
         if (isBlacklisted) {
             return false;
         }
@@ -266,9 +274,10 @@ export class AuthService {
         if (userId) {
             try {
                 const decoded = this.jwtService.decode(token);
-                const tokenIssuedAt = decoded && typeof decoded === 'object' && 'iat' in decoded 
-                    ? new Date(decoded.iat * 1000) 
-                    : null;
+                const tokenIssuedAt =
+                    decoded && typeof decoded === 'object' && 'iat' in decoded
+                        ? new Date(decoded.iat * 1000)
+                        : null;
 
                 if (tokenIssuedAt) {
                     const user = await this.prisma.user.findUnique({
@@ -277,7 +286,10 @@ export class AuthService {
                     });
 
                     // Si lastLogoutAt est après l'émission du token, le token est invalide
-                    if (user?.lastLogoutAt && user.lastLogoutAt > tokenIssuedAt) {
+                    if (
+                        user?.lastLogoutAt &&
+                        user.lastLogoutAt > tokenIssuedAt
+                    ) {
                         return false;
                     }
                 }
