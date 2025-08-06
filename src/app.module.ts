@@ -31,12 +31,12 @@ import { ConnectModule } from './modules/ProjectManagement/connect/connect.modul
 import { AttemptLogModule } from './modules/UserAccess/attempt_log/attempt_log.module';
 import { NotificationModule } from './modules/UserAccess/notification/notification.module';
 import { VisitorProfileProjectModule } from './modules/ProjectManagement/visitor-profile-project/visitor-profile-project.module';
-import { PostModule } from './modules/MediaFiles/post/post.module';
-import { PostMediaModule } from './modules/MediaFiles/post-media/post-media.module';
-import { PostSharedModule } from './modules/MediaFiles/post-shared/post-shared.module';
+import { PostModule } from './modules/PostManagement/post/post.module';
+import { PostMediaModule } from './modules/PostManagement/post-media/post-media.module';
+import { PostSharedModule } from './modules/PostManagement/post-shared/post-shared.module';
 import { DiscussionModule } from './modules/InteractionSocial/discussion/discussion.module';
 import { MessageModule } from './modules/InteractionSocial/message/message.module';
-import { VideoModule } from './modules/MediaFiles/video/video.module';
+import { VideoModule } from './modules/ProjectManagement/video/video.module';
 import { OfferModule } from './modules/ProjectManagement/offer/offer.module';
 import { BlockModule } from './modules/UserAccess/block/block.module';
 

@@ -85,6 +85,14 @@ class EnvironmentVariables {
 
     @IsString()
     UPLOAD_DIRECTORY: string;
+
+    @IsString()
+    @IsOptional()
+    PROJECT_VIDEOS_DIR: string;
+
+    @IsNumber()
+    @IsOptional()
+    PROJECT_VIDEOS_MAX_SIZE: number;
 }
 
 export function validate(config: Record<string, unknown>) {

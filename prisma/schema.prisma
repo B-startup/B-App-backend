@@ -776,7 +776,7 @@ model Video {
   id String @id @default(uuid())
 
   /// ID of the user who uploaded the video
-  userId String
+  userId String?
 
   /// ID of the project this video is associated with
   projectId String
@@ -784,11 +784,26 @@ model Video {
   /// URL or path to the video file
   videoUrl String
 
+  /// File path on the server
+  filePath String @default("")
+
+  /// File size in bytes
+  fileSize Int @default(0)
+
+  /// MIME type of the video file
+  mimeType String @default("video/mp4")
+
   /// Title of the video (descriptive label)
   title String
 
   /// Optional description providing context or details about the video
   description String?
+
+  /// Duration of the video in seconds (optional)
+  duration Int?
+
+  /// URL to the video thumbnail (optional)
+  thumbnailUrl String?
 
   /// Number of times this video has been viewed
   nbViews Int @default(0)
