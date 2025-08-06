@@ -14,17 +14,21 @@ import {
     ApiOperation,
     ApiResponse,
     ApiParam,
-    ApiQuery
+    ApiQuery,
+    ApiBearerAuth
 } from '@nestjs/swagger';
 import { LikeService } from './like.service';
 import { CreateLikeDto } from './dto/create-like.dto';
 import { UpdateLikeDto } from './dto/update-like.dto';
+import { TokenProtected } from '../../../core/common/decorators/token-protected.decorator';
 
 @ApiTags('Likes')
+@ApiBearerAuth()
 @Controller('likes')
 export class LikeController {
     constructor(private readonly likeService: LikeService) {}
 
+    @TokenProtected()
     @Post()
     @ApiOperation({ summary: 'Create a new like' })
     @ApiResponse({ status: 201, description: 'Like created successfully' })
@@ -37,6 +41,7 @@ export class LikeController {
         return this.likeService.create(createLikeDto);
     }
 
+    @TokenProtected()
     @Post('toggle')
     @ApiOperation({ summary: 'Toggle like (like/unlike)' })
     @ApiResponse({ status: 200, description: 'Like toggled successfully' })
@@ -45,6 +50,7 @@ export class LikeController {
         return this.likeService.toggleLike(createLikeDto);
     }
 
+    @TokenProtected()
     @Get()
     @ApiOperation({ summary: 'Get all likes' })
     @ApiResponse({ status: 200, description: 'Likes retrieved successfully' })
@@ -52,6 +58,7 @@ export class LikeController {
         return this.likeService.findAll();
     }
 
+    @TokenProtected()
     @Get('user/:userId')
     @ApiOperation({ summary: 'Get likes by user' })
     @ApiParam({ name: 'userId', description: 'User ID' })
@@ -63,6 +70,7 @@ export class LikeController {
         return this.likeService.findByUser(userId);
     }
 
+    @TokenProtected()
     @Get('user/:userId/activity')
     @ApiOperation({ summary: 'Get user like activity statistics' })
     @ApiParam({ name: 'userId', description: 'User ID' })
@@ -74,6 +82,7 @@ export class LikeController {
         return this.likeService.getUserLikeActivity(userId);
     }
 
+    @TokenProtected()
     @Get('project/:projectId')
     @ApiOperation({ summary: 'Get likes for a specific project' })
     @ApiParam({ name: 'projectId', description: 'Project ID' })
@@ -85,6 +94,7 @@ export class LikeController {
         return this.likeService.findByProject(projectId);
     }
 
+    @TokenProtected()
     @Get('project/:projectId/count')
     @ApiOperation({ summary: 'Count likes for a project' })
     @ApiParam({ name: 'projectId', description: 'Project ID' })
@@ -99,6 +109,7 @@ export class LikeController {
         return { count };
     }
 
+    @TokenProtected()
     @Get('post/:postId')
     @ApiOperation({ summary: 'Get likes for a specific post' })
     @ApiParam({ name: 'postId', description: 'Post ID' })
@@ -110,6 +121,7 @@ export class LikeController {
         return this.likeService.findByPost(postId);
     }
 
+    @TokenProtected()
     @Get('post/:postId/count')
     @ApiOperation({ summary: 'Count likes for a post' })
     @ApiParam({ name: 'postId', description: 'Post ID' })
@@ -122,6 +134,7 @@ export class LikeController {
         return { count };
     }
 
+    @TokenProtected()
     @Get('comment/:commentId')
     @ApiOperation({ summary: 'Get likes for a specific comment' })
     @ApiParam({ name: 'commentId', description: 'Comment ID' })
@@ -133,6 +146,7 @@ export class LikeController {
         return this.likeService.findByComment(commentId);
     }
 
+    @TokenProtected()
     @Get('comment/:commentId/count')
     @ApiOperation({ summary: 'Count likes for a comment' })
     @ApiParam({ name: 'commentId', description: 'Comment ID' })
@@ -147,6 +161,7 @@ export class LikeController {
         return { count };
     }
 
+    @TokenProtected()
     @Get('check/:userId/:targetId')
     @ApiOperation({ summary: 'Check if user has liked a specific item' })
     @ApiParam({ name: 'userId', description: 'User ID' })
@@ -173,6 +188,7 @@ export class LikeController {
         return { hasLiked };
     }
 
+    @TokenProtected()
     @Get('paginate')
     @ApiOperation({ summary: 'Get paginated likes' })
     @ApiQuery({
@@ -195,6 +211,7 @@ export class LikeController {
         return this.likeService.paginate(skipNum, takeNum);
     }
 
+    @TokenProtected()
     @Get(':id')
     @ApiOperation({ summary: 'Get a like by ID' })
     @ApiParam({ name: 'id', description: 'Like ID' })
@@ -204,6 +221,7 @@ export class LikeController {
         return this.likeService.findOne(id);
     }
 
+    @TokenProtected()
     @Patch(':id')
     @ApiOperation({ summary: 'Update a like' })
     @ApiParam({ name: 'id', description: 'Like ID' })
@@ -216,6 +234,7 @@ export class LikeController {
         return this.likeService.update(id, updateLikeDto);
     }
 
+    @TokenProtected()
     @Delete(':id')
     @ApiOperation({ summary: 'Delete a like' })
     @ApiParam({ name: 'id', description: 'Like ID' })

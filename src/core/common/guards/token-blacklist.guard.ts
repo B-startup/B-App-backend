@@ -44,7 +44,7 @@ export class TokenBlacklistGuard implements CanActivate {
 
             // 3. Vérification lastLogoutAt
             const user = await this.prismaService.user.findUnique({
-                where: { id: payload.sub },
+                where: { id: payload.id || payload.sub },  // Support pour id ET sub
                 select: { lastLogoutAt: true }
             });
 

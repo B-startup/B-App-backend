@@ -14,18 +14,22 @@ import {
     ApiResponse,
     ApiParam,
     ApiQuery,
-    ApiBody
+    ApiBody,
+    ApiBearerAuth
 } from '@nestjs/swagger';
 import { PostSharedService } from './post-shared.service';
 import { CreatePostSharedDto } from './dto/create-post-shared.dto';
 import { UpdatePostSharedDto } from './dto/update-post-shared.dto';
 import { PostSharedResponseDto } from './dto/post-shared-response.dto';
+import { TokenProtected } from '../../../core/common/decorators/token-protected.decorator';
 
 @ApiTags('Post Shares')
+@ApiBearerAuth()
 @Controller('post-shared')
 export class PostSharedController {
     constructor(private readonly postSharedService: PostSharedService) {}
 
+    @TokenProtected()
     @Post()
     @ApiOperation({ summary: 'Share a post' })
     @ApiBody({
@@ -65,6 +69,7 @@ export class PostSharedController {
         return await this.postSharedService.sharePost(createPostSharedDto);
     }
 
+    @TokenProtected()
     @Get()
     @ApiOperation({ summary: 'Get all post shares' })
     @ApiResponse({
@@ -76,6 +81,7 @@ export class PostSharedController {
         return await this.postSharedService.findAll();
     }
 
+    @TokenProtected()
     @Get('post/:postId')
     @ApiOperation({ summary: 'Get all shares of a specific post' })
     @ApiParam({ name: 'postId', description: 'Post ID' })
@@ -101,6 +107,7 @@ export class PostSharedController {
         return await this.postSharedService.findByPost(postId);
     }
 
+    @TokenProtected()
     @Get('user/:userId')
     @ApiOperation({ summary: 'Get all posts shared by a user' })
     @ApiParam({ name: 'userId', description: 'User ID' })
@@ -126,6 +133,7 @@ export class PostSharedController {
         return await this.postSharedService.findByUser(userId);
     }
 
+    @TokenProtected()
     @Get('post/:postId/count')
     @ApiOperation({ summary: 'Count shares of a specific post' })
     @ApiParam({ name: 'postId', description: 'Post ID' })
@@ -141,6 +149,7 @@ export class PostSharedController {
         return { count };
     }
 
+    @TokenProtected()
     @Get('user/:userId/count')
     @ApiOperation({ summary: 'Count posts shared by a user' })
     @ApiParam({ name: 'userId', description: 'User ID' })
@@ -156,6 +165,7 @@ export class PostSharedController {
         return { count };
     }
 
+    @TokenProtected()
     @Get(':id')
     @ApiOperation({ summary: 'Get a post share by ID' })
     @ApiParam({ name: 'id', description: 'Post Share ID' })
@@ -169,6 +179,7 @@ export class PostSharedController {
         return await this.postSharedService.findOne(id);
     }
 
+    @TokenProtected()
     @Patch(':id')
     @ApiOperation({ summary: 'Update a post share' })
     @ApiParam({ name: 'id', description: 'Post Share ID' })
@@ -185,6 +196,7 @@ export class PostSharedController {
         return await this.postSharedService.update(id, updatePostSharedDto);
     }
 
+    @TokenProtected()
     @Delete(':id')
     @ApiOperation({ summary: 'Delete a post share by ID' })
     @ApiParam({ name: 'id', description: 'Post Share ID' })
@@ -198,6 +210,7 @@ export class PostSharedController {
         return await this.postSharedService.remove(id);
     }
 
+    @TokenProtected()
     @Delete('unshare/:userId/:postId')
     @ApiOperation({ summary: 'Unshare a post (remove share by user and post)' })
     @ApiParam({ name: 'userId', description: 'User ID' })

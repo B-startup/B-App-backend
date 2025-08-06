@@ -10,17 +10,20 @@ import {
     HttpCode,
     HttpStatus
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
 import { ViewService } from './view.service';
 import { CreateViewDto } from './dto/create-view.dto';
 import { UpdateViewDto } from './dto/update-view.dto';
 import { ViewResponseDto } from './dto/view-response.dto';
+import { TokenProtected } from '../../../core/common/decorators/token-protected.decorator';
 
 @ApiTags('Views')
+@ApiBearerAuth()
 @Controller('view')
 export class ViewController {
     constructor(private readonly viewService: ViewService) {}
 
+    @TokenProtected()
     @Post()
     @HttpCode(HttpStatus.CREATED)
     @ApiOperation({ summary: 'Create a new view record' })
@@ -34,6 +37,7 @@ export class ViewController {
         return this.viewService.create(createViewDto);
     }
 
+    @TokenProtected()
     @Get()
     @ApiOperation({ summary: 'Get all view records' })
     @ApiResponse({
@@ -45,6 +49,7 @@ export class ViewController {
         return this.viewService.findAll();
     }
 
+    @TokenProtected()
     @Get('user/:userId')
     @ApiOperation({ summary: 'Get all views by a specific user' })
     @ApiParam({ name: 'userId', description: 'User ID', type: 'string' })
@@ -57,6 +62,7 @@ export class ViewController {
         return this.viewService.findByUser(userId);
     }
 
+    @TokenProtected()
     @Get('video/:videoId')
     @ApiOperation({ summary: 'Get all views for a specific video' })
     @ApiParam({ name: 'videoId', description: 'Video ID', type: 'string' })
@@ -69,6 +75,7 @@ export class ViewController {
         return this.viewService.findByVideo(videoId);
     }
 
+    @TokenProtected()
     @Get('video/:videoId/count')
     @ApiOperation({ summary: 'Get total view count for a video' })
     @ApiParam({ name: 'videoId', description: 'Video ID', type: 'string' })
@@ -86,6 +93,7 @@ export class ViewController {
         return this.viewService.countVideoViews(videoId);
     }
 
+    @TokenProtected()
     @Get('video/:videoId/total-time')
     @ApiOperation({ summary: 'Get total time spent viewing a video' })
     @ApiParam({ name: 'videoId', description: 'Video ID', type: 'string' })
@@ -103,6 +111,7 @@ export class ViewController {
         return this.viewService.getTotalTimeSpent(videoId);
     }
 
+    @TokenProtected()
     @Get('check/:userId/:videoId')
     @ApiOperation({ summary: 'Check if user has viewed a video' })
     @ApiParam({ name: 'userId', description: 'User ID', type: 'string' })
@@ -124,6 +133,7 @@ export class ViewController {
         return this.viewService.hasUserViewed(userId, videoId);
     }
 
+    @TokenProtected()
     @Get('user/:userId/stats')
     @ApiOperation({ summary: 'Get viewing statistics for a user' })
     @ApiParam({ name: 'userId', description: 'User ID', type: 'string' })
@@ -143,6 +153,7 @@ export class ViewController {
         return this.viewService.getUserViewingStats(userId);
     }
 
+    @TokenProtected()
     @Get(':id')
     @ApiOperation({ summary: 'Get a specific view by ID' })
     @ApiParam({ name: 'id', description: 'View ID', type: 'string' })
@@ -156,6 +167,7 @@ export class ViewController {
         return this.viewService.findOne(id);
     }
 
+    @TokenProtected()
     @Patch(':id')
     @ApiOperation({ summary: 'Update a view record' })
     @ApiParam({ name: 'id', description: 'View ID', type: 'string' })
@@ -172,6 +184,7 @@ export class ViewController {
         return this.viewService.update(id, updateViewDto);
     }
 
+    @TokenProtected()
     @Delete(':id')
     @HttpCode(HttpStatus.NO_CONTENT)
     @ApiOperation({ summary: 'Delete a view record' })

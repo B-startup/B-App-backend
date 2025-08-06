@@ -16,18 +16,22 @@ import {
     ApiResponse,
     ApiParam,
     ApiQuery,
-    ApiBody
+    ApiBody,
+    ApiBearerAuth
 } from '@nestjs/swagger';
 import { TagService } from './tag.service';
 import { CreateTagDto } from './dto/create-tag.dto';
 import { UpdateTagDto } from './dto/update-tag.dto';
 import { TagResponseDto } from './dto/tag-response.dto';
+import { TokenProtected } from '../../../core/common/decorators/token-protected.decorator';
 
 @ApiTags('Tags')
+@ApiBearerAuth()
 @Controller('tag')
 export class TagController {
     constructor(private readonly tagService: TagService) {}
 
+    @TokenProtected()
     @Post()
     @ApiOperation({ summary: 'Create a new tag' })
     @ApiBody({
@@ -59,6 +63,7 @@ export class TagController {
         return await this.tagService.createTag(createTagDto);
     }
 
+    @TokenProtected()
     @Get()
     @ApiOperation({ summary: 'Get all tags' })
     @ApiQuery({
@@ -93,6 +98,7 @@ export class TagController {
         return await this.tagService.findAll();
     }
 
+    @TokenProtected()
     @Get('most-used')
     @ApiOperation({ summary: 'Get most used tags' })
     @ApiQuery({
@@ -110,6 +116,7 @@ export class TagController {
         return await this.tagService.findMostUsedTags(limitNumber);
     }
 
+    @TokenProtected()
     @Get('project-tags')
     @ApiOperation({ summary: 'Get all tags used in projects' })
     @ApiResponse({
@@ -121,6 +128,7 @@ export class TagController {
         return await this.tagService.findProjectTags();
     }
 
+    @TokenProtected()
     @Get('post-tags')
     @ApiOperation({ summary: 'Get all tags used in posts' })
     @ApiResponse({
@@ -132,6 +140,7 @@ export class TagController {
         return await this.tagService.findPostTags();
     }
 
+    @TokenProtected()
     @Get(':id')
     @ApiOperation({ summary: 'Get tag by ID' })
     @ApiParam({ name: 'id', description: 'Tag ID' })
@@ -145,6 +154,7 @@ export class TagController {
         return await this.tagService.findOne(id);
     }
 
+    @TokenProtected()
     @Patch(':id')
     @ApiOperation({ summary: 'Update tag by ID' })
     @ApiParam({ name: 'id', description: 'Tag ID' })
@@ -163,6 +173,7 @@ export class TagController {
         return await this.tagService.updateTag(id, updateTagDto);
     }
 
+    @TokenProtected()
     @Delete(':id')
     @HttpCode(HttpStatus.NO_CONTENT)
     @ApiOperation({ summary: 'Delete tag by ID' })

@@ -24,27 +24,27 @@ import {
     ApiBody,
     ApiParam,
     ApiQuery,
-    //ApiBearerAuth
+    ApiBearerAuth
 } from '@nestjs/swagger';
 import { FileService } from './file.service';
 import { CreateFileDto } from './dto/create-file.dto';
 import { UpdateFileDto } from './dto/update-file.dto';
 import { UploadFileDto } from './dto/upload-file.dto';
 import { File, FileType, User } from '@prisma/client';
-//import { TokenBlacklistGuard } from '../../../core/common/guards/token-blacklist.guard';
+import { TokenProtected } from '../../../core/common/decorators/token-protected.decorator';
 import { ResourceOwnerGuard } from '../../../core/common/guards/resource-owner.guard';
 import { CurrentUser } from '../../../core/common/decorators/current-user.decorator';
 
 import * as fs from 'fs';
 
 @ApiTags('Files')
-//@ApiBearerAuth()
-//@UseGuards(TokenBlacklistGuard)
+@ApiBearerAuth()
 @Controller('files')
 export class FileController {
     constructor(private readonly fileService: FileService) {}
 
     @Post()
+    @TokenProtected()
     @ApiOperation({ summary: 'Create a new file record' })
     @ApiResponse({
         status: 201,
@@ -61,6 +61,7 @@ export class FileController {
     }
 
     @Post('upload')
+    @TokenProtected()
     @UseInterceptors(FileInterceptor('file'))
     @ApiOperation({ summary: 'Upload a file and create record' })
     @ApiConsumes('multipart/form-data')
@@ -109,6 +110,7 @@ export class FileController {
     }
 
     @Get()
+    @TokenProtected()
     @ApiOperation({ summary: 'Get all files' })
     @ApiQuery({
         name: 'projectId',
@@ -127,6 +129,7 @@ export class FileController {
     }
 
     @Get('project/:projectId')
+    @TokenProtected()
     @ApiOperation({ summary: 'Get all files for a specific project' })
     @ApiParam({ name: 'projectId', description: 'Project ID' })
     @ApiResponse({
@@ -142,6 +145,7 @@ export class FileController {
     }
 
     @Get('project/:projectId/stats')
+    @TokenProtected()
     @ApiOperation({ summary: 'Get file statistics for a project' })
     @ApiParam({ name: 'projectId', description: 'Project ID' })
     @ApiResponse({
@@ -161,6 +165,7 @@ export class FileController {
     }
 
     @Get(':id')
+    @TokenProtected()
     @ApiOperation({ summary: 'Get a file by ID' })
     @ApiParam({ name: 'id', description: 'File ID' })
     @ApiResponse({ status: 200, description: 'File retrieved successfully' })
@@ -173,6 +178,7 @@ export class FileController {
     }
 
     @Get(':id/download')
+    @TokenProtected()
     @ApiOperation({ summary: 'Download a file' })
     @ApiParam({ name: 'id', description: 'File ID' })
     @ApiResponse({ status: 200, description: 'File downloaded successfully' })
@@ -195,6 +201,7 @@ export class FileController {
     }
 
     @Patch(':id')
+    @TokenProtected()
     @UseGuards(ResourceOwnerGuard)
     @ApiOperation({ summary: 'Update a file record' })
     @ApiParam({ name: 'id', description: 'File ID' })
@@ -210,6 +217,7 @@ export class FileController {
     }
 
     @Delete(':id')
+    @TokenProtected()
     @UseGuards(ResourceOwnerGuard)
     @ApiOperation({ summary: 'Delete a file record and physical file' })
     @ApiParam({ name: 'id', description: 'File ID' })

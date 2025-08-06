@@ -16,18 +16,22 @@ import {
     ApiResponse,
     ApiParam,
     ApiQuery,
-    ApiBody
+    ApiBody,
+    ApiBearerAuth
 } from '@nestjs/swagger';
 import { PostTagService } from './post-tag.service';
 import { CreatePostTagDto } from './dto/create-post-tag.dto';
 import { UpdatePostTagDto } from './dto/update-post-tag.dto';
 import { PostTagResponseDto } from './dto/post-tag-response.dto';
+import { TokenProtected } from '../../../core/common/decorators/token-protected.decorator';
 
 @ApiTags('Post Tags')
+@ApiBearerAuth()
 @Controller('post-tag')
 export class PostTagController {
     constructor(private readonly postTagService: PostTagService) {}
 
+    @TokenProtected()
     @Post()
     @ApiOperation({ summary: 'Create a new post-tag association' })
     @ApiBody({
@@ -62,6 +66,7 @@ export class PostTagController {
         return await this.postTagService.createAssociation(createPostTagDto);
     }
 
+    @TokenProtected()
     @Post('bulk/:postId')
     @ApiOperation({ summary: 'Add multiple tags to a post' })
     @ApiParam({ name: 'postId', description: 'Post ID' })
@@ -93,6 +98,7 @@ export class PostTagController {
         return await this.postTagService.addMultipleTagsToPost(postId, tagIds);
     }
 
+    @TokenProtected()
     @Get()
     @ApiOperation({ summary: 'Get all post-tag associations' })
     @ApiResponse({
@@ -104,6 +110,7 @@ export class PostTagController {
         return this.postTagService.findAll();
     }
 
+    @TokenProtected()
     @Get('popular-tags')
     @ApiOperation({ summary: 'Get popular tags by post count' })
     @ApiQuery({
@@ -121,6 +128,7 @@ export class PostTagController {
         return await this.postTagService.findPopularTags(limitNumber);
     }
 
+    @TokenProtected()
     @Get('post/:postId')
     @ApiOperation({ summary: 'Get all tags associated with a post' })
     @ApiParam({ name: 'postId', description: 'Post ID' })
@@ -146,6 +154,7 @@ export class PostTagController {
         return await this.postTagService.findByPost(postId);
     }
 
+    @TokenProtected()
     @Get('tag/:tagId')
     @ApiOperation({ summary: 'Get all posts associated with a tag' })
     @ApiParam({ name: 'tagId', description: 'Tag ID' })
@@ -171,6 +180,7 @@ export class PostTagController {
         return await this.postTagService.findByTag(tagId);
     }
 
+    @TokenProtected()
     @Get('similar/:postId')
     @ApiOperation({ summary: 'Find similar posts based on shared tags' })
     @ApiParam({ name: 'postId', description: 'Post ID' })
@@ -192,6 +202,7 @@ export class PostTagController {
         return await this.postTagService.findSimilarPosts(postId, limitNumber);
     }
 
+    @TokenProtected()
     @Get('count/post/:postId')
     @ApiOperation({ summary: 'Count tags associated with a post' })
     @ApiParam({ name: 'postId', description: 'Post ID' })
@@ -207,6 +218,7 @@ export class PostTagController {
         return { count };
     }
 
+    @TokenProtected()
     @Get('count/tag/:tagId')
     @ApiOperation({ summary: 'Count posts associated with a tag' })
     @ApiParam({ name: 'tagId', description: 'Tag ID' })
@@ -222,6 +234,7 @@ export class PostTagController {
         return { count };
     }
 
+    @TokenProtected()
     @Get(':id')
     @ApiOperation({ summary: 'Get post-tag association by ID' })
     @ApiParam({ name: 'id', description: 'Post-tag association ID' })
@@ -235,6 +248,7 @@ export class PostTagController {
         return await this.postTagService.findOne(id);
     }
 
+    @TokenProtected()
     @Patch(':id')
     @ApiOperation({ summary: 'Update post-tag association by ID' })
     @ApiParam({ name: 'id', description: 'Post-tag association ID' })
@@ -252,6 +266,7 @@ export class PostTagController {
         return await this.postTagService.update(id, updatePostTagDto);
     }
 
+    @TokenProtected()
     @Delete(':id')
     @HttpCode(HttpStatus.NO_CONTENT)
     @ApiOperation({ summary: 'Delete post-tag association by ID' })
@@ -265,6 +280,7 @@ export class PostTagController {
         await this.postTagService.remove(id);
     }
 
+    @TokenProtected()
     @Delete('association/:postId/:tagId')
     @HttpCode(HttpStatus.NO_CONTENT)
     @ApiOperation({ summary: 'Delete specific post-tag association' })

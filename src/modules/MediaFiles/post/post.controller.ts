@@ -16,20 +16,24 @@ import {
     ApiResponse,
     ApiParam,
     ApiQuery,
-    ApiBody
+    ApiBody,
+    ApiBearerAuth
 } from '@nestjs/swagger';
 import { PostService } from './post.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PostResponseDto } from './dto/post-response.dto';
 import { PaginatedPostResponseDto } from './dto/pagination.dto';
+import { TokenProtected } from '../../../core/common/decorators/token-protected.decorator';
 
 @ApiTags('Posts')
+@ApiBearerAuth()
 @Controller('posts')
 export class PostController {
     constructor(private readonly postService: PostService) {}
 
     @Post()
+    @TokenProtected()
     @ApiOperation({ summary: 'Create a new post' })
     @ApiBody({
         type: CreatePostDto,
@@ -71,6 +75,7 @@ export class PostController {
         return await this.postService.create(createPostDto);
     }
 
+    @TokenProtected()
     @Get()
     @ApiOperation({ summary: 'Get all posts' })
     @ApiQuery({
@@ -154,6 +159,7 @@ export class PostController {
         return await this.postService.findPublicPosts();
     }
 
+    @TokenProtected()
     @Get('user/:userId')
     @ApiOperation({ summary: 'Get all posts by a specific user' })
     @ApiParam({ name: 'userId', description: 'User ID' })
@@ -169,6 +175,7 @@ export class PostController {
         return await this.postService.findByUser(userId);
     }
 
+    @TokenProtected()
     @Get(':id')
     @ApiOperation({ summary: 'Get a post by ID' })
     @ApiParam({ name: 'id', description: 'Post ID' })
@@ -194,6 +201,7 @@ export class PostController {
         return await this.postService.findOne(id);
     }
 
+    @TokenProtected()
     @Patch(':id')
     @ApiOperation({ summary: 'Update a post' })
     @ApiParam({ name: 'id', description: 'Post ID' })
@@ -211,6 +219,7 @@ export class PostController {
         return await this.postService.update(id, updatePostDto);
     }
 
+    @TokenProtected()
     @Delete(':id')
     @ApiOperation({ summary: 'Delete a post' })
     @ApiParam({ name: 'id', description: 'Post ID' })
@@ -226,6 +235,7 @@ export class PostController {
 
     // Actions spécifiques pour les interactions
 
+    @TokenProtected()
     @Patch(':id/like')
     @ApiOperation({ summary: 'Increment likes count for a post' })
     @ApiParam({ name: 'id', description: 'Post ID' })
@@ -240,6 +250,7 @@ export class PostController {
         return await this.postService.incrementLikes(id);
     }
 
+    @TokenProtected()
     @Patch(':id/view')
     @ApiOperation({ summary: 'Increment views count for a post' })
     @ApiParam({ name: 'id', description: 'Post ID' })
@@ -254,6 +265,7 @@ export class PostController {
         return await this.postService.incrementViews(id);
     }
 
+    @TokenProtected()
     @Patch(':id/comment')
     @ApiOperation({ summary: 'Increment comments count for a post' })
     @ApiParam({ name: 'id', description: 'Post ID' })
@@ -268,6 +280,7 @@ export class PostController {
         return await this.postService.incrementComments(id);
     }
 
+    @TokenProtected()
     @Patch(':id/share')
     @ApiOperation({ summary: 'Increment shares count for a post' })
     @ApiParam({ name: 'id', description: 'Post ID' })

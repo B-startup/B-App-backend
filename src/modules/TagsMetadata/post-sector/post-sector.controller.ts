@@ -16,18 +16,22 @@ import {
     ApiResponse,
     ApiParam,
     ApiQuery,
-    ApiBody
+    ApiBody,
+    ApiBearerAuth
 } from '@nestjs/swagger';
 import { PostSectorService } from './post-sector.service';
 import { CreatePostSectorDto } from './dto/create-post-sector.dto';
 import { UpdatePostSectorDto } from './dto/update-post-sector.dto';
 import { PostSectorResponseDto } from './dto/post-sector-response.dto';
+import { TokenProtected } from '../../../core/common/decorators/token-protected.decorator';
 
 @ApiTags('Post Sectors')
+@ApiBearerAuth()
 @Controller('post-sector')
 export class PostSectorController {
     constructor(private readonly postSectorService: PostSectorService) {}
 
+    @TokenProtected()
     @Post()
     @ApiOperation({ summary: 'Create a new post-sector association' })
     @ApiBody({
@@ -64,6 +68,7 @@ export class PostSectorController {
         );
     }
 
+    @TokenProtected()
     @Get()
     @ApiOperation({ summary: 'Get all post-sector associations' })
     @ApiResponse({
@@ -75,6 +80,7 @@ export class PostSectorController {
         return this.postSectorService.findAll();
     }
 
+    @TokenProtected()
     @Get('popular-sectors')
     @ApiOperation({ summary: 'Get popular sectors by post count' })
     @ApiQuery({
@@ -92,6 +98,7 @@ export class PostSectorController {
         return await this.postSectorService.findPopularSectors(limitNumber);
     }
 
+    @TokenProtected()
     @Get('post/:postId')
     @ApiOperation({ summary: 'Get all sectors associated with a post' })
     @ApiParam({ name: 'postId', description: 'Post ID' })
@@ -117,6 +124,7 @@ export class PostSectorController {
         return await this.postSectorService.findByPost(postId);
     }
 
+    @TokenProtected()
     @Get('sector/:sectorId')
     @ApiOperation({ summary: 'Get all posts associated with a sector' })
     @ApiParam({ name: 'sectorId', description: 'Sector ID' })
@@ -142,6 +150,7 @@ export class PostSectorController {
         return await this.postSectorService.findBySector(sectorId);
     }
 
+    @TokenProtected()
     @Get('count/post/:postId')
     @ApiOperation({ summary: 'Count sectors associated with a post' })
     @ApiParam({ name: 'postId', description: 'Post ID' })
@@ -157,6 +166,7 @@ export class PostSectorController {
         return { count };
     }
 
+    @TokenProtected()
     @Get('count/sector/:sectorId')
     @ApiOperation({ summary: 'Count posts associated with a sector' })
     @ApiParam({ name: 'sectorId', description: 'Sector ID' })
@@ -172,6 +182,7 @@ export class PostSectorController {
         return { count };
     }
 
+    @TokenProtected()
     @Get(':id')
     @ApiOperation({ summary: 'Get post-sector association by ID' })
     @ApiParam({ name: 'id', description: 'Post-sector association ID' })
@@ -185,6 +196,7 @@ export class PostSectorController {
         return await this.postSectorService.findOne(id);
     }
 
+    @TokenProtected()
     @Patch(':id')
     @ApiOperation({ summary: 'Update post-sector association by ID' })
     @ApiParam({ name: 'id', description: 'Post-sector association ID' })
@@ -202,6 +214,7 @@ export class PostSectorController {
         return this.postSectorService.update(id, updatePostSectorDto);
     }
 
+    @TokenProtected()
     @Delete(':id')
     @HttpCode(HttpStatus.NO_CONTENT)
     @ApiOperation({ summary: 'Delete post-sector association by ID' })
@@ -215,6 +228,7 @@ export class PostSectorController {
         await this.postSectorService.remove(id);
     }
 
+    @TokenProtected()
     @Delete('association/:postId/:sectorId')
     @HttpCode(HttpStatus.NO_CONTENT)
     @ApiOperation({ summary: 'Delete specific post-sector association' })

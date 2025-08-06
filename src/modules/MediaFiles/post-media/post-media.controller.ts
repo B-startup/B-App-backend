@@ -21,7 +21,8 @@ import {
     ApiParam,
     ApiQuery,
     ApiConsumes,
-    ApiBody
+    ApiBody,
+    ApiBearerAuth
 } from '@nestjs/swagger';
 import { PostMediaType } from '@prisma/client';
 import { PostMediaService } from './post-media.service';
@@ -31,12 +32,15 @@ import {
     PostMediaResponseDto,
     UploadPostMediaDto
 } from './dto';
+import { TokenProtected } from '../../../core/common/decorators/token-protected.decorator';
 
 @ApiTags('Post Media')
+@ApiBearerAuth()
 @Controller('post-media')
 export class PostMediaController {
     constructor(private readonly postMediaService: PostMediaService) {}
 
+    @TokenProtected()
     @Post()
     @ApiOperation({ summary: 'Create a new post media record' })
     @ApiResponse({
@@ -52,6 +56,7 @@ export class PostMediaController {
         return await this.postMediaService.create(createPostMediaDto);
     }
 
+    @TokenProtected()
     @Post('upload')
     @UseInterceptors(FileInterceptor('file'))
     @ApiOperation({ summary: 'Upload a media file for a post' })
@@ -96,6 +101,7 @@ export class PostMediaController {
         return await this.postMediaService.uploadAndCreate(file, uploadDto);
     }
 
+    @TokenProtected()
     @Get()
     @ApiOperation({ summary: 'Get all post media' })
     @ApiQuery({
@@ -116,6 +122,7 @@ export class PostMediaController {
         return await this.postMediaService.findAll();
     }
 
+    @TokenProtected()
     @Get('post/:postId')
     @ApiOperation({ summary: 'Get all media for a specific post' })
     @ApiParam({ name: 'postId', description: 'Post ID' })
@@ -140,6 +147,7 @@ export class PostMediaController {
         return await this.postMediaService.findByPost(postId);
     }
 
+    @TokenProtected()
     @Get('type/:type')
     @ApiOperation({ summary: 'Get all media by type' })
     @ApiParam({
@@ -158,6 +166,7 @@ export class PostMediaController {
         return await this.postMediaService.findByType(type);
     }
 
+    @TokenProtected()
     @Get('post/:postId/count')
     @ApiOperation({ summary: 'Count media for a specific post' })
     @ApiParam({ name: 'postId', description: 'Post ID' })
@@ -188,6 +197,7 @@ export class PostMediaController {
         return { count };
     }
 
+    @TokenProtected()
     @Get('integrity/check')
     @ApiOperation({
         summary: 'Check file integrity (admin only)',
@@ -218,6 +228,7 @@ export class PostMediaController {
         };
     }
 
+    @TokenProtected()
     @Get(':id')
     @ApiOperation({ summary: 'Get a post media by ID' })
     @ApiParam({ name: 'id', description: 'Post Media ID' })
@@ -231,6 +242,7 @@ export class PostMediaController {
         return await this.postMediaService.findOne(id);
     }
 
+    @TokenProtected()
     @Patch(':id')
     @ApiOperation({ summary: 'Update a post media' })
     @ApiParam({ name: 'id', description: 'Post Media ID' })
@@ -248,6 +260,7 @@ export class PostMediaController {
         return await this.postMediaService.update(id, updatePostMediaDto);
     }
 
+    @TokenProtected()
     @Delete(':id')
     @ApiOperation({ summary: 'Delete a post media and its file' })
     @ApiParam({ name: 'id', description: 'Post Media ID' })

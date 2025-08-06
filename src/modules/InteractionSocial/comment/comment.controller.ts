@@ -14,7 +14,8 @@ import {
     ApiOperation,
     ApiResponse,
     ApiParam,
-    ApiQuery
+    ApiQuery,
+    ApiBearerAuth
 } from '@nestjs/swagger';
 import { TokenProtected } from '../../../core/common/decorators/token-protected.decorator';
 import { OwnerProtected } from '../../../core/common/decorators/owner-protected.decorator';
@@ -27,6 +28,7 @@ import { CreateLikeDto } from '../like/dto/create-like.dto';
 import { ToggleLikeDto } from './dto/toggle-like.dto';
 
 @ApiTags('Comments')
+@ApiBearerAuth()
 @Controller('comments')
 export class CommentController {
     constructor(
@@ -34,6 +36,7 @@ export class CommentController {
         private readonly likeService: LikeService
     ) {}
 
+     @TokenProtected()
      @Post()
     @ApiOperation({ summary: 'Create a new comment' })
     @ApiResponse({ status: 201, description: 'Comment created successfully' })
@@ -42,6 +45,7 @@ export class CommentController {
         return this.commentService.create(createCommentDto);
     }
 
+    @TokenProtected()
     @Get()
     @ApiOperation({ summary: 'Get all comments' })
     @ApiResponse({
@@ -52,6 +56,7 @@ export class CommentController {
         return this.commentService.findAll();
     }
 
+    @TokenProtected()
     @Get('user/:userId')
     @ApiOperation({ summary: 'Get comments by user' })
     @ApiParam({ name: 'userId', description: 'User ID' })
@@ -63,6 +68,7 @@ export class CommentController {
         return this.commentService.findByUser(userId);
     }
 
+    @TokenProtected()
     @Get('project/:projectId')
     @ApiOperation({ summary: 'Get comments for a specific project' })
     @ApiParam({ name: 'projectId', description: 'Project ID' })
@@ -74,6 +80,7 @@ export class CommentController {
         return this.commentService.findByProject(projectId);
     }
 
+    @TokenProtected()
     @Get('post/:postId')
     @ApiOperation({ summary: 'Get comments for a specific post' })
     @ApiParam({ name: 'postId', description: 'Post ID' })
@@ -85,6 +92,7 @@ export class CommentController {
         return this.commentService.findByPost(postId);
     }
 
+    @TokenProtected()
     @Get('replies/:parentId')
     @ApiOperation({ summary: 'Get replies for a specific comment' })
     @ApiParam({ name: 'parentId', description: 'Parent comment ID' })
@@ -96,6 +104,7 @@ export class CommentController {
         return this.commentService.findReplies(parentId);
     }
 
+    @TokenProtected()
     @Get('project/:projectId/stats')
     @ApiOperation({ summary: 'Get comment statistics for a project' })
     @ApiParam({ name: 'projectId', description: 'Project ID' })
@@ -109,6 +118,7 @@ export class CommentController {
         return this.commentService.getProjectCommentStats(projectId);
     }
 
+    @TokenProtected()
     @Get('post/:postId/stats')
     @ApiOperation({ summary: 'Get comment statistics for a post' })
     @ApiParam({ name: 'postId', description: 'Post ID' })
@@ -120,6 +130,7 @@ export class CommentController {
         return this.commentService.getPostCommentStats(postId);
     }
 
+    @TokenProtected()
     @Get('search')
     @ApiOperation({ summary: 'Search comments by keyword' })
     @ApiQuery({ name: 'keyword', description: 'Search keyword' })
@@ -131,6 +142,7 @@ export class CommentController {
         return this.commentService.search(keyword, ['content']);
     }
 
+    @TokenProtected()
     @Get('paginate')
     @ApiOperation({ summary: 'Get paginated comments' })
     @ApiQuery({
@@ -153,6 +165,7 @@ export class CommentController {
         return this.commentService.paginate(skipNum, takeNum);
     }
 
+    @TokenProtected()
     @Get(':id')
     @ApiOperation({ summary: 'Get a comment by ID' })
     @ApiParam({ name: 'id', description: 'Comment ID' })
@@ -162,6 +175,7 @@ export class CommentController {
         return this.commentService.findOne(id);
     }
 
+    @TokenProtected()
     @Patch(':id')
     @OwnerProtected('comment')
     @ApiOperation({ summary: 'Update a comment (owner only)' })
@@ -199,6 +213,7 @@ export class CommentController {
         return this.likeService.toggleLike(createLikeDto);
     }
 
+    @TokenProtected()
     @Get(':id/likes')
     @ApiOperation({ summary: 'Get likes for a comment' })
     @ApiParam({ name: 'id', description: 'Comment ID' })
@@ -211,6 +226,7 @@ export class CommentController {
         return this.likeService.findByComment(commentId);
     }
 
+    @TokenProtected()
     @Get(':id/likes/count')
     @ApiOperation({ summary: 'Count likes for a comment' })
     @ApiParam({ name: 'id', description: 'Comment ID' })
@@ -224,6 +240,7 @@ export class CommentController {
         return { count };
     }
 
+    @TokenProtected()
     @Delete(':id')
     @OwnerProtected('comment')
     @ApiOperation({ summary: 'Delete a comment (owner only)' })
