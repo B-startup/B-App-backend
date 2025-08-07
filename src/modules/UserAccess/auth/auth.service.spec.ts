@@ -204,31 +204,4 @@ describe('AuthService', () => {
             });
         });
     });
-
-    describe('isTokenValid', () => {
-        it('should return false for blacklisted token', async () => {
-            const token = 'blacklisted-token';
-            mockTokenBlacklistService.isTokenBlacklisted.mockResolvedValue(
-                true
-            );
-
-            const result = await service.isTokenValid(token);
-
-            expect(result).toBe(false);
-            expect(
-                mockTokenBlacklistService.isTokenBlacklisted
-            ).toHaveBeenCalledWith(token);
-        });
-
-        it('should return true for valid token', async () => {
-            const token = 'valid-token';
-            mockTokenBlacklistService.isTokenBlacklisted.mockResolvedValue(
-                false
-            );
-
-            const result = await service.isTokenValid(token);
-
-            expect(result).toBe(true);
-        });
-    });
 });

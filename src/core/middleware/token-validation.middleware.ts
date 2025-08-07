@@ -35,11 +35,11 @@ export class TokenValidationMiddleware implements NestMiddleware {
 
             // Décoder le token pour obtenir l'userId
             const decoded = this.jwtService.decode(token);
-            if (decoded && typeof decoded === 'object' && 'id' in decoded) {
+            if (decoded && typeof decoded === 'object' && 'sub' in decoded) {
                 // Vérifier avec lastLogoutAt
                 const isValid = await this.isTokenValidByTimestamp(
                     token,
-                    decoded.id
+                    decoded.sub
                 );
                 if (!isValid) {
                     throw new UnauthorizedException('Token is no longer valid');

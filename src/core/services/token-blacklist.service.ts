@@ -63,12 +63,17 @@ export class TokenBlacklistService {
 
     /**
      * Check if a token is blacklisted
+     * Only checks active (non-expired) blacklisted tokens
      */
     async isTokenBlacklisted(token: string): Promise<boolean> {
         const tokenHash = this.hashToken(token);
+        const now = new Date();
 
-        const blacklistedToken = await this.prisma.tokenBlacklist.findUnique({
-            where: { tokenHash }
+        const blacklistedToken = await this.prisma.tokenBlacklist.findFirst({
+            where: { 
+                tokenHash,
+                expiresAt: { gt: now } // Only check non-expired blacklisted tokens
+            }
         });
 
         return !!blacklistedToken;
@@ -93,12 +98,33 @@ export class TokenBlacklistService {
 
     /**
      * Clean up expired tokens from blacklist
+     * Keeps tokens for 30 days after expiration for audit purposes
      */
     async cleanupExpiredTokens(): Promise<number> {
+        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        
         const result = await this.prisma.tokenBlacklist.deleteMany({
             where: {
                 expiresAt: {
-                    lt: new Date()
+                    lt: thirtyDaysAgo // Delete tokens that expired more than 30 days ago
+                }
+            }
+        });
+
+        return result.count;
+    }
+
+    /**
+     * 🧪 TEST METHOD - Clean up ALL expired tokens immediately (no 30-day grace period)
+     * ⚠️ Use ONLY for testing purposes!
+     */
+    async testCleanupAllExpiredTokens(): Promise<number> {
+        const now = new Date();
+        
+        const result = await this.prisma.tokenBlacklist.deleteMany({
+            where: {
+                expiresAt: {
+                    lt: now // Delete ALL expired tokens immediately
                 }
             }
         });
@@ -129,6 +155,86 @@ export class TokenBlacklistService {
             total,
             expired,
             active: total - expired
+        };
+    }
+
+    /**
+     * Get blacklist history for audit purposes
+     * Returns tokens blacklisted in the last N days
+     */
+    async getBlacklistHistory(days: number = 7): Promise<Array<{
+        tokenHash: string;
+        userId?: string;
+        reason: string;
+        blacklistedAt: Date;
+        expiresAt: Date;
+        status: 'active' | 'expired';
+    }>> {
+        const daysAgo = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+        const now = new Date();
+
+        const tokens = await this.prisma.tokenBlacklist.findMany({
+            where: {
+                blacklistedAt: {
+                    gte: daysAgo
+                }
+            },
+            select: {
+                tokenHash: true,
+                userId: true,
+                reason: true,
+                blacklistedAt: true,
+                expiresAt: true
+            },
+            orderBy: {
+                blacklistedAt: 'desc'
+            }
+        });
+
+        return tokens.map(token => ({
+            ...token,
+            status: token.expiresAt > now ? 'active' : 'expired' as const
+        }));
+    }
+
+    /**
+     * Count blacklisted tokens by user
+     */
+    async getBlacklistStatsByUser(userId: string): Promise<{
+        total: number;
+        active: number;
+        expired: number;
+        reasons: Record<string, number>;
+    }> {
+        const now = new Date();
+
+        const [total, active, reasonStats] = await Promise.all([
+            this.prisma.tokenBlacklist.count({
+                where: { userId }
+            }),
+            this.prisma.tokenBlacklist.count({
+                where: { 
+                    userId,
+                    expiresAt: { gt: now }
+                }
+            }),
+            this.prisma.tokenBlacklist.groupBy({
+                by: ['reason'],
+                where: { userId },
+                _count: { reason: true }
+            })
+        ]);
+
+        const reasons = reasonStats.reduce((acc, stat) => {
+            acc[stat.reason] = stat._count.reason;
+            return acc;
+        }, {} as Record<string, number>);
+
+        return {
+            total,
+            active,
+            expired: total - active,
+            reasons
         };
     }
 }

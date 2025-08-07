@@ -76,7 +76,7 @@ export class AuthController {
     @Post('logout')
     @TokenProtected()
     @ApiOperation({ summary: 'Logout user with token blacklist verification' })
-    @ApiResponse({ status: 200, description: 'Logout successful' })
+    @ApiResponse({ status: 201, description: 'Logout successful' })
     @ApiResponse({
         status: 401,
         description: 'Token invalid or user not found'
@@ -87,7 +87,7 @@ export class AuthController {
         @Body() logoutDto?: LogoutDto
     ) {
         return this.authService.logout(
-            user.sub, // userId from JWT payload
+            user.sub, // Standard JWT subject
             token, // token from request header
             logoutDto?.logoutFromAllDevices || false
         );
@@ -96,7 +96,7 @@ export class AuthController {
     @Post('validate-token')
     @TokenProtected()
     @ApiOperation({ summary: 'Validate current token (requires valid token)' })
-    @ApiResponse({ status: 200, description: 'Token is valid' })
+    @ApiResponse({ status: 201, description: 'Token is valid' })
     @ApiResponse({ status: 401, description: 'Token is invalid or revoked' })
     async validateToken(
         @CurrentUser() user: any,
@@ -105,7 +105,7 @@ export class AuthController {
         // Si on arrive ici, le token est déjà validé par TokenBlacklistGuard
         return {
             valid: true,
-            userId: user.sub,
+            userId: user.sub, // Standard JWT subject
             email: user.email,
             message: 'Token is valid and not blacklisted'
         };

@@ -3,8 +3,10 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PrismaService } from '../services/prisma.service';
 import { TokenBlacklistService } from '../services/token-blacklist.service';
+import { TokenCleanupService } from '../services/token-cleanup.service';
 import { TokenBlacklistGuard } from './guards/token-blacklist.guard';
 import { ResourceOwnerGuard } from './guards/resource-owner.guard';
+import { AdminController } from './controllers/admin.controller';
 
 /**
  * Module contenant les guards et services communs de sécurité
@@ -22,9 +24,11 @@ import { ResourceOwnerGuard } from './guards/resource-owner.guard';
             })
         })
     ],
+    controllers: [AdminController],
     providers: [
         PrismaService,
         TokenBlacklistService,
+        TokenCleanupService,
         TokenBlacklistGuard,
         ResourceOwnerGuard
     ],
@@ -33,6 +37,7 @@ import { ResourceOwnerGuard } from './guards/resource-owner.guard';
         TokenBlacklistGuard, // ✅ Disponible pour injection
         ResourceOwnerGuard,  // ✅ Disponible pour injection
         TokenBlacklistService,
+        TokenCleanupService,
         PrismaService
     ]
 })
