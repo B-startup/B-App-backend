@@ -207,7 +207,7 @@ export class CommentController {
         @CurrentUser() user: any
     ) {
         const createLikeDto: CreateLikeDto = {
-            userId: user.sub, // Utiliser l'ID de l'utilisateur connecté
+            userId: user.sub, // Standard JWT subject
             commentId
         };
         return this.likeService.toggleLike(createLikeDto);

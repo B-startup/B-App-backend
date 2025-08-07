@@ -42,7 +42,7 @@ export class ResourceOwnerGuard implements CanActivate {
         const isOwner = await this.checkResourceOwnership(
             resourceType,
             resourceId,
-            user.sub
+            user.sub // Standard JWT subject
         );
 
         if (!isOwner) {

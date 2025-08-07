@@ -44,25 +44,25 @@ export class AuthService {
 
         const token = this.jwtService.sign(
             {
-                id: user.id,
+                sub: user.id, // Standard JWT subject
                 name: user.name,
                 email: user.email,
                 image: user.profilePicture
             },
             {
-                expiresIn: '1d'
+                expiresIn: '15m'
             }
         );
 
         const refreshToken = this.jwtService.sign(
             {
-                id: user.id,
+                sub: user.id, // Standard JWT subject
                 name: user.name,
                 email: user.email,
                 image: user.profilePicture
             },
             {
-                expiresIn: '7d'
+                expiresIn: '30m'
             }
         );
 
@@ -70,15 +70,17 @@ export class AuthService {
     }
 
     async refreshToken(refreshToken: string) {
-        const { id } = this.jwtService.verify(refreshToken);
-        const user = await this.prisma.user.findUnique({ where: { id } });
+        const { sub } = this.jwtService.verify(refreshToken); // Changed from id to sub
+        const user = await this.prisma.user.findUnique({ where: { id: sub } }); // Use sub as user ID
         if (!user) throw new UnauthorizedException('User not found');
 
         const token = this.jwtService.sign({
-            id: user.id,
+            sub: user.id, // Standard JWT subject
             name: user.name,
             email: user.email,
             image: user.profilePicture
+        }, {
+            expiresIn: '30m'
         });
         return { token, refreshToken };
     }
@@ -259,47 +261,5 @@ export class AuthService {
         };
     }
 
-    /**
-     * Vérifier si un token est valide (pas blacklisté)
-     */
-    async isTokenValid(token: string, userId?: string): Promise<boolean> {
-        // Vérifier si le token est blacklisté
-        const isBlacklisted =
-            await this.tokenBlacklistService.isTokenBlacklisted(token);
-        if (isBlacklisted) {
-            return false;
-        }
 
-        // Si userId fourni, vérifier lastLogoutAt
-        if (userId) {
-            try {
-                const decoded = this.jwtService.decode(token);
-                const tokenIssuedAt =
-                    decoded && typeof decoded === 'object' && 'iat' in decoded
-                        ? new Date(decoded.iat * 1000)
-                        : null;
-
-                if (tokenIssuedAt) {
-                    const user = await this.prisma.user.findUnique({
-                        where: { id: userId },
-                        select: { lastLogoutAt: true }
-                    });
-
-                    // Si lastLogoutAt est après l'émission du token, le token est invalide
-                    if (
-                        user?.lastLogoutAt &&
-                        user.lastLogoutAt > tokenIssuedAt
-                    ) {
-                        return false;
-                    }
-                }
-            } catch (error) {
-                // Token malformé ou erreur de décodage
-                console.error('Error decoding token:', error);
-                return false;
-            }
-        }
-
-        return true;
-    }
 }
