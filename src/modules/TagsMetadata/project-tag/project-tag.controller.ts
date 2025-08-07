@@ -15,17 +15,21 @@ import {
     ApiResponse,
     ApiParam,
     ApiQuery,
-    ApiBody
+    ApiBody,
+    ApiBearerAuth
 } from '@nestjs/swagger';
 import { ProjectTagService } from './project-tag.service';
 import { CreateProjectTagDto } from './dto/create-project-tag.dto';
 import { ProjectTagResponseDto } from './dto/project-tag-response.dto';
+import { TokenProtected } from '../../../core/common/decorators/token-protected.decorator';
 
 @ApiTags('Project Tags')
+@ApiBearerAuth()
 @Controller('project-tags')
 export class ProjectTagController {
     constructor(private readonly projectTagService: ProjectTagService) {}
 
+    @TokenProtected()
     @Post()
     @ApiOperation({ summary: 'Create a new project-tag association' })
     @ApiBody({ type: CreateProjectTagDto })
@@ -46,6 +50,7 @@ export class ProjectTagController {
         return this.projectTagService.createAssociation(createProjectTagDto);
     }
 
+    @TokenProtected()
     @Post('multiple')
     @ApiOperation({ summary: 'Add multiple tags to a project' })
     @ApiBody({
@@ -76,6 +81,7 @@ export class ProjectTagController {
         );
     }
 
+    @TokenProtected()
     @Get('project/:id')
     @ApiOperation({ summary: 'Get all tags for a specific project' })
     @ApiParam({ name: 'id', description: 'Project ID' })
@@ -100,6 +106,7 @@ export class ProjectTagController {
         return this.projectTagService.findByProject(projectId);
     }
 
+    @TokenProtected()
     @Get('tag/:id')
     @ApiOperation({ summary: 'Get all projects for a specific tag' })
     @ApiParam({ name: 'id', description: 'Tag ID' })
@@ -124,6 +131,7 @@ export class ProjectTagController {
         return this.projectTagService.findByTag(tagId);
     }
 
+    @TokenProtected()
     @Delete()
     @HttpCode(HttpStatus.NO_CONTENT)
     @ApiOperation({ summary: 'Remove a project-tag association' })
@@ -154,6 +162,7 @@ export class ProjectTagController {
         );
     }
 
+    @TokenProtected()
     @Get('popular')
     @ApiOperation({ summary: 'Get popular tags (most used in projects)' })
     @ApiQuery({
@@ -180,11 +189,16 @@ export class ProjectTagController {
         }
     })
     async findPopularTags(@Query('limit') limit?: number) {
-        return this.projectTagService.findPopularTags(limit ? Number(limit) : 10);
+        return this.projectTagService.findPopularTags(
+            limit ? Number(limit) : 10
+        );
     }
 
+    @TokenProtected()
     @Get('similar/:id')
-    @ApiOperation({ summary: 'Find projects similar to a given project based on shared tags' })
+    @ApiOperation({
+        summary: 'Find projects similar to a given project based on shared tags'
+    })
     @ApiParam({ name: 'id', description: 'Project ID' })
     @ApiQuery({
         name: 'limit',
@@ -234,6 +248,7 @@ export class ProjectTagController {
         );
     }
 
+    @TokenProtected()
     @Get('count/project/:id')
     @ApiOperation({ summary: 'Count tags for a specific project' })
     @ApiParam({ name: 'id', description: 'Project ID' })
@@ -252,6 +267,7 @@ export class ProjectTagController {
         return { count };
     }
 
+    @TokenProtected()
     @Get('count/tag/:id')
     @ApiOperation({ summary: 'Count projects for a specific tag' })
     @ApiParam({ name: 'id', description: 'Tag ID' })

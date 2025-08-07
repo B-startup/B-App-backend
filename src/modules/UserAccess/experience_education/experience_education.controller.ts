@@ -29,7 +29,9 @@ export class ExperienceEducationController {
     @ApiOperation({ summary: 'Create a new experience or education entry' })
     @ApiCreatedResponse({ description: 'Entry created successfully' })
     @ApiBadRequestResponse({ description: 'Invalid data' })
-    create(@Body() dto: CreateExperienceEducationDto): Promise<Experience_Education> {
+    create(
+        @Body() dto: CreateExperienceEducationDto
+    ): Promise<Experience_Education> {
         return this.service.create(dto);
     }
 
@@ -52,8 +54,8 @@ export class ExperienceEducationController {
     @ApiOperation({ summary: 'Update an entry' })
     @ApiOkResponse({ description: 'Entry updated' })
     update(
-      @Param('id') id: string,
-      @Body() dto: UpdateExperienceEducationDto
+        @Param('id') id: string,
+        @Body() dto: UpdateExperienceEducationDto
     ): Promise<Experience_Education> {
         return this.service.update(id, dto);
     }

@@ -86,11 +86,21 @@ describe('ViewService', () => {
         };
 
         it('should create a new view when no existing view found', async () => {
-            (mockPrismaService.view.findFirst as jest.Mock).mockResolvedValue(null);
-            (mockPrismaService.view.create as jest.Mock).mockResolvedValue(mockView);
-            (mockPrismaService.video.update as jest.Mock).mockResolvedValue(mockVideo);
-            (mockPrismaService.video.findUnique as jest.Mock).mockResolvedValue({ projectId: mockVideo.projectId });
-            (mockCounterService.updateViewCount as jest.Mock).mockResolvedValue(undefined);
+            (mockPrismaService.view.findFirst as jest.Mock).mockResolvedValue(
+                null
+            );
+            (mockPrismaService.view.create as jest.Mock).mockResolvedValue(
+                mockView
+            );
+            (mockPrismaService.video.update as jest.Mock).mockResolvedValue(
+                mockVideo
+            );
+            (mockPrismaService.video.findUnique as jest.Mock).mockResolvedValue(
+                { projectId: mockVideo.projectId }
+            );
+            (mockCounterService.updateViewCount as jest.Mock).mockResolvedValue(
+                undefined
+            );
 
             const result = await service.create(createViewDto);
 
@@ -126,9 +136,13 @@ describe('ViewService', () => {
         it('should update existing view when found', async () => {
             const existingView = { ...mockView, timespent: 60 };
             const updatedView = { ...mockView, timespent: 180 };
-            
-            (mockPrismaService.view.findFirst as jest.Mock).mockResolvedValue(existingView);
-            (mockPrismaService.view.update as jest.Mock).mockResolvedValue(updatedView);
+
+            (mockPrismaService.view.findFirst as jest.Mock).mockResolvedValue(
+                existingView
+            );
+            (mockPrismaService.view.update as jest.Mock).mockResolvedValue(
+                updatedView
+            );
 
             const result = await service.create(createViewDto);
 
@@ -144,24 +158,28 @@ describe('ViewService', () => {
 
     describe('findAll', () => {
         it('should return all views with user and video details', async () => {
-            const mockViewsWithRelations = [{
-                ...mockView,
-                user: {
-                    id: '123e4567-e89b-12d3-a456-426614174001',
-                    firstName: 'John',
-                    lastName: 'Doe',
-                    email: 'john.doe@example.com'
-                },
-                video: {
-                    id: '123e4567-e89b-12d3-a456-426614174002',
-                    title: 'Test Video',
-                    videoUrl: 'https://example.com/video.mp4',
-                    description: 'Test video description',
-                    nbViews: 5
+            const mockViewsWithRelations = [
+                {
+                    ...mockView,
+                    user: {
+                        id: '123e4567-e89b-12d3-a456-426614174001',
+                        firstName: 'John',
+                        lastName: 'Doe',
+                        email: 'john.doe@example.com'
+                    },
+                    video: {
+                        id: '123e4567-e89b-12d3-a456-426614174002',
+                        title: 'Test Video',
+                        videoUrl: 'https://example.com/video.mp4',
+                        description: 'Test video description',
+                        nbViews: 5
+                    }
                 }
-            }];
-            
-            (mockPrismaService.view.findMany as jest.Mock).mockResolvedValue(mockViewsWithRelations);
+            ];
+
+            (mockPrismaService.view.findMany as jest.Mock).mockResolvedValue(
+                mockViewsWithRelations
+            );
 
             const result = await service.findAll();
 
@@ -194,8 +212,10 @@ describe('ViewService', () => {
         it('should return views for a specific user', async () => {
             const userId = '123e4567-e89b-12d3-a456-426614174001';
             const mockUserViews = [mockView];
-            
-            (mockPrismaService.view.findMany as jest.Mock).mockResolvedValue(mockUserViews);
+
+            (mockPrismaService.view.findMany as jest.Mock).mockResolvedValue(
+                mockUserViews
+            );
 
             const result = await service.findByUser(userId);
 
@@ -222,8 +242,10 @@ describe('ViewService', () => {
         it('should return views for a specific video', async () => {
             const videoId = '123e4567-e89b-12d3-a456-426614174002';
             const mockVideoViews = [mockView];
-            
-            (mockPrismaService.view.findMany as jest.Mock).mockResolvedValue(mockVideoViews);
+
+            (mockPrismaService.view.findMany as jest.Mock).mockResolvedValue(
+                mockVideoViews
+            );
 
             const result = await service.findByVideo(videoId);
 
@@ -248,8 +270,10 @@ describe('ViewService', () => {
         it('should return view count for a video', async () => {
             const videoId = '123e4567-e89b-12d3-a456-426614174002';
             const count = 10;
-            
-            (mockPrismaService.view.count as jest.Mock).mockResolvedValue(count);
+
+            (mockPrismaService.view.count as jest.Mock).mockResolvedValue(
+                count
+            );
 
             const result = await service.countVideoViews(videoId);
 
@@ -264,7 +288,7 @@ describe('ViewService', () => {
         it('should return total time spent viewing a video', async () => {
             const videoId = '123e4567-e89b-12d3-a456-426614174002';
             const totalTime = 1800;
-            
+
             (mockPrismaService.view.aggregate as jest.Mock).mockResolvedValue({
                 _sum: { timespent: totalTime }
             });
@@ -282,7 +306,7 @@ describe('ViewService', () => {
 
         it('should return 0 when no views found', async () => {
             const videoId = '123e4567-e89b-12d3-a456-426614174002';
-            
+
             (mockPrismaService.view.aggregate as jest.Mock).mockResolvedValue({
                 _sum: { timespent: null }
             });
@@ -297,8 +321,10 @@ describe('ViewService', () => {
         it('should return true when user has viewed video', async () => {
             const userId = '123e4567-e89b-12d3-a456-426614174001';
             const videoId = '123e4567-e89b-12d3-a456-426614174002';
-            
-            (mockPrismaService.view.findFirst as jest.Mock).mockResolvedValue(mockView);
+
+            (mockPrismaService.view.findFirst as jest.Mock).mockResolvedValue(
+                mockView
+            );
 
             const result = await service.hasUserViewed(userId, videoId);
 
@@ -314,8 +340,10 @@ describe('ViewService', () => {
         it('should return false when user has not viewed video', async () => {
             const userId = '123e4567-e89b-12d3-a456-426614174001';
             const videoId = '123e4567-e89b-12d3-a456-426614174002';
-            
-            (mockPrismaService.view.findFirst as jest.Mock).mockResolvedValue(null);
+
+            (mockPrismaService.view.findFirst as jest.Mock).mockResolvedValue(
+                null
+            );
 
             const result = await service.hasUserViewed(userId, videoId);
 
@@ -328,8 +356,10 @@ describe('ViewService', () => {
             const viewId = '123e4567-e89b-12d3-a456-426614174000';
             const updateViewDto: UpdateViewDto = { timespent: 200 };
             const updatedView = { ...mockView, timespent: 200 };
-            
-            (mockPrismaService.view.update as jest.Mock).mockResolvedValue(updatedView);
+
+            (mockPrismaService.view.update as jest.Mock).mockResolvedValue(
+                updatedView
+            );
 
             const result = await service.update(viewId, updateViewDto);
 
@@ -346,12 +376,22 @@ describe('ViewService', () => {
     describe('remove', () => {
         it('should remove a view and decrement counters', async () => {
             const viewId = '123e4567-e89b-12d3-a456-426614174000';
-            
-            (mockPrismaService.view.findUnique as jest.Mock).mockResolvedValueOnce(mockView);
-            (mockPrismaService.video.update as jest.Mock).mockResolvedValue(mockVideo);
-            (mockPrismaService.video.findUnique as jest.Mock).mockResolvedValue({ projectId: mockVideo.projectId });
-            (mockPrismaService.view.delete as jest.Mock).mockResolvedValue(mockView);
-            (mockCounterService.updateViewCount as jest.Mock).mockResolvedValue(undefined);
+
+            (
+                mockPrismaService.view.findUnique as jest.Mock
+            ).mockResolvedValueOnce(mockView);
+            (mockPrismaService.video.update as jest.Mock).mockResolvedValue(
+                mockVideo
+            );
+            (mockPrismaService.video.findUnique as jest.Mock).mockResolvedValue(
+                { projectId: mockVideo.projectId }
+            );
+            (mockPrismaService.view.delete as jest.Mock).mockResolvedValue(
+                mockView
+            );
+            (mockCounterService.updateViewCount as jest.Mock).mockResolvedValue(
+                undefined
+            );
 
             const result = await service.remove(viewId);
 
@@ -387,9 +427,13 @@ describe('ViewService', () => {
                 { videoId: 'video2' },
                 { videoId: 'video3' }
             ];
-            
-            (mockPrismaService.view.aggregate as jest.Mock).mockResolvedValue(mockStats);
-            (mockPrismaService.view.groupBy as jest.Mock).mockResolvedValue(mockUniqueVideos);
+
+            (mockPrismaService.view.aggregate as jest.Mock).mockResolvedValue(
+                mockStats
+            );
+            (mockPrismaService.view.groupBy as jest.Mock).mockResolvedValue(
+                mockUniqueVideos
+            );
 
             const result = await service.getUserViewingStats(userId);
 
@@ -419,8 +463,10 @@ describe('ViewService', () => {
                 _count: { id: null },
                 _sum: { timespent: null }
             };
-            
-            (mockPrismaService.view.aggregate as jest.Mock).mockResolvedValue(mockStats);
+
+            (mockPrismaService.view.aggregate as jest.Mock).mockResolvedValue(
+                mockStats
+            );
             (mockPrismaService.view.groupBy as jest.Mock).mockResolvedValue([]);
 
             const result = await service.getUserViewingStats(userId);
@@ -437,7 +483,9 @@ describe('ViewService', () => {
         describe('findOne', () => {
             it('should return a view when found', async () => {
                 const viewId = '123e4567-e89b-12d3-a456-426614174000';
-                (mockPrismaService.view.findUnique as jest.Mock).mockResolvedValue(mockView);
+                (
+                    mockPrismaService.view.findUnique as jest.Mock
+                ).mockResolvedValue(mockView);
 
                 const result = await service.findOne(viewId);
 
@@ -449,16 +497,22 @@ describe('ViewService', () => {
 
             it('should throw NotFoundException when view not found', async () => {
                 const viewId = '123e4567-e89b-12d3-a456-426614174000';
-                (mockPrismaService.view.findUnique as jest.Mock).mockResolvedValue(null);
+                (
+                    mockPrismaService.view.findUnique as jest.Mock
+                ).mockResolvedValue(null);
 
-                await expect(service.findOne(viewId)).rejects.toThrow(NotFoundException);
+                await expect(service.findOne(viewId)).rejects.toThrow(
+                    NotFoundException
+                );
             });
         });
 
         describe('findOneOrFail', () => {
             it('should return a view when found', async () => {
                 const viewId = '123e4567-e89b-12d3-a456-426614174000';
-                (mockPrismaService.view.findUnique as jest.Mock).mockResolvedValue(mockView);
+                (
+                    mockPrismaService.view.findUnique as jest.Mock
+                ).mockResolvedValue(mockView);
 
                 const result = await service.findOneOrFail(viewId);
 
@@ -467,9 +521,13 @@ describe('ViewService', () => {
 
             it('should throw NotFoundException when view not found', async () => {
                 const viewId = '123e4567-e89b-12d3-a456-426614174000';
-                (mockPrismaService.view.findUnique as jest.Mock).mockResolvedValue(null);
+                (
+                    mockPrismaService.view.findUnique as jest.Mock
+                ).mockResolvedValue(null);
 
-                await expect(service.findOneOrFail(viewId)).rejects.toThrow(NotFoundException);
+                await expect(service.findOneOrFail(viewId)).rejects.toThrow(
+                    NotFoundException
+                );
             });
         });
     });

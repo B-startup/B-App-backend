@@ -33,7 +33,10 @@ export class LikeResponseDto {
     @ApiProperty({ description: 'Like last update timestamp' })
     updatedAt: Date;
 
-    @ApiPropertyOptional({ description: 'User who created the like', type: LikeUserDto })
+    @ApiPropertyOptional({
+        description: 'User who created the like',
+        type: LikeUserDto
+    })
     user?: LikeUserDto;
 }
 
@@ -41,7 +44,10 @@ export class LikeToggleResponseDto {
     @ApiProperty({ description: 'Whether the item is now liked' })
     liked: boolean;
 
-    @ApiPropertyOptional({ description: 'Like object if liked', type: LikeResponseDto })
+    @ApiPropertyOptional({
+        description: 'Like object if liked',
+        type: LikeResponseDto
+    })
     like?: LikeResponseDto;
 }
 

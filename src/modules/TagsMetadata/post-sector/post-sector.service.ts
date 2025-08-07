@@ -1,4 +1,8 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import {
+    Injectable,
+    ConflictException,
+    NotFoundException
+} from '@nestjs/common';
 import { PostSector, PrismaClient } from '@prisma/client';
 import { BaseCrudServiceImpl } from '../../../core/common/services/base-crud.service';
 import { CreatePostSectorDto } from './dto/create-post-sector.dto';
@@ -30,7 +34,10 @@ export class PostSectorService extends BaseCrudServiceImpl<
     /**
      * Vérifie si une association post-secteur existe déjà
      */
-    async hasPostSectorAssociation(postId: string, sectorId: string): Promise<boolean> {
+    async hasPostSectorAssociation(
+        postId: string,
+        sectorId: string
+    ): Promise<boolean> {
         const existingAssociation = await this.prisma.postSector.findFirst({
             where: {
                 postId,
@@ -43,13 +50,20 @@ export class PostSectorService extends BaseCrudServiceImpl<
     /**
      * Crée une association post-secteur avec vérification d'unicité
      */
-    async createAssociation(createPostSectorDto: CreatePostSectorDto): Promise<PostSector> {
+    async createAssociation(
+        createPostSectorDto: CreatePostSectorDto
+    ): Promise<PostSector> {
         const { postId, sectorId } = createPostSectorDto;
 
         // Vérifier si l'association existe déjà
-        const alreadyExists = await this.hasPostSectorAssociation(postId, sectorId);
+        const alreadyExists = await this.hasPostSectorAssociation(
+            postId,
+            sectorId
+        );
         if (alreadyExists) {
-            throw new ConflictException('This post is already associated with this sector');
+            throw new ConflictException(
+                'This post is already associated with this sector'
+            );
         }
 
         // Vérifier que le post existe
@@ -141,7 +155,10 @@ export class PostSectorService extends BaseCrudServiceImpl<
     /**
      * Supprime une association post-secteur spécifique
      */
-    async removeAssociation(postId: string, sectorId: string): Promise<PostSector> {
+    async removeAssociation(
+        postId: string,
+        sectorId: string
+    ): Promise<PostSector> {
         const existingAssociation = await this.prisma.postSector.findFirst({
             where: {
                 postId,
@@ -192,7 +209,7 @@ export class PostSectorService extends BaseCrudServiceImpl<
         });
 
         // Récupérer les détails des secteurs
-        const sectorIds = sectorCounts.map(item => item.sectorId);
+        const sectorIds = sectorCounts.map((item) => item.sectorId);
         const sectors = await this.prisma.sector.findMany({
             where: {
                 id: {
@@ -202,8 +219,8 @@ export class PostSectorService extends BaseCrudServiceImpl<
         });
 
         // Combiner les données
-        return sectorCounts.map(count => {
-            const sector = sectors.find(s => s.id === count.sectorId);
+        return sectorCounts.map((count) => {
+            const sector = sectors.find((s) => s.id === count.sectorId);
             return {
                 ...sector,
                 postCount: count._count.postId

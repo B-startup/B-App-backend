@@ -20,7 +20,9 @@ export class VisitorProfileProjectController {
 
     @Post()
     @ApiOperation({ summary: 'Create visitor record' })
-    create(@Body() dto: CreateVisitorProfileProjectDto): Promise<VisitorProfileProject> {
+    create(
+        @Body() dto: CreateVisitorProfileProjectDto
+    ): Promise<VisitorProfileProject> {
         return this.service.create(dto);
     }
 
@@ -38,7 +40,10 @@ export class VisitorProfileProjectController {
 
     @Patch(':id')
     @ApiOperation({ summary: 'Update a visitor record' })
-    update(@Param('id') id: string, @Body() dto: UpdateVisitorProfileProjectDto): Promise<VisitorProfileProject> {
+    update(
+        @Param('id') id: string,
+        @Body() dto: UpdateVisitorProfileProjectDto
+    ): Promise<VisitorProfileProject> {
         return this.service.update(id, dto);
     }
 

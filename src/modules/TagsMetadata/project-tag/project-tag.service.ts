@@ -1,4 +1,8 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import {
+    Injectable,
+    ConflictException,
+    NotFoundException
+} from '@nestjs/common';
 import { PrismaClient, ProjectTag } from '@prisma/client';
 import { BaseCrudServiceImpl } from '../../../core/common/services/base-crud.service';
 import { CreateProjectTagDto } from './dto/create-project-tag.dto';
@@ -19,7 +23,10 @@ export class ProjectTagService extends BaseCrudServiceImpl<
     /**
      * Vérifie si une association project-tag existe déjà
      */
-    async hasProjectTagAssociation(projectId: string, tagId: string): Promise<boolean> {
+    async hasProjectTagAssociation(
+        projectId: string,
+        tagId: string
+    ): Promise<boolean> {
         const existingAssociation = await this.prisma.projectTag.findFirst({
             where: {
                 projectId,
@@ -32,13 +39,20 @@ export class ProjectTagService extends BaseCrudServiceImpl<
     /**
      * Crée une association project-tag avec vérification d'unicité
      */
-    async createAssociation(createProjectTagDto: CreateProjectTagDto): Promise<ProjectTag> {
+    async createAssociation(
+        createProjectTagDto: CreateProjectTagDto
+    ): Promise<ProjectTag> {
         const { projectId, tagId } = createProjectTagDto;
 
         // Vérifier si l'association existe déjà
-        const alreadyExists = await this.hasProjectTagAssociation(projectId, tagId);
+        const alreadyExists = await this.hasProjectTagAssociation(
+            projectId,
+            tagId
+        );
         if (alreadyExists) {
-            throw new ConflictException('This project is already associated with this tag');
+            throw new ConflictException(
+                'This project is already associated with this tag'
+            );
         }
 
         // Vérifier que le projet existe
@@ -136,7 +150,10 @@ export class ProjectTagService extends BaseCrudServiceImpl<
     /**
      * Supprime une association project-tag spécifique
      */
-    async removeAssociation(projectId: string, tagId: string): Promise<ProjectTag> {
+    async removeAssociation(
+        projectId: string,
+        tagId: string
+    ): Promise<ProjectTag> {
         const existingAssociation = await this.prisma.projectTag.findFirst({
             where: {
                 projectId,
@@ -154,7 +171,10 @@ export class ProjectTagService extends BaseCrudServiceImpl<
     /**
      * Ajoute plusieurs tags à un projet
      */
-    async addMultipleTagsToProject(projectId: string, tagIds: string[]): Promise<ProjectTag[]> {
+    async addMultipleTagsToProject(
+        projectId: string,
+        tagIds: string[]
+    ): Promise<ProjectTag[]> {
         // Vérifier que le projet existe
         const project = await this.prisma.project.findUnique({
             where: { id: projectId }
@@ -178,7 +198,10 @@ export class ProjectTagService extends BaseCrudServiceImpl<
         // Créer les associations qui n'existent pas encore
         const results: ProjectTag[] = [];
         for (const tagId of tagIds) {
-            const exists = await this.hasProjectTagAssociation(projectId, tagId);
+            const exists = await this.hasProjectTagAssociation(
+                projectId,
+                tagId
+            );
             if (!exists) {
                 const association = await this.create({ projectId, tagId });
                 results.push(association);
@@ -224,7 +247,7 @@ export class ProjectTagService extends BaseCrudServiceImpl<
         });
 
         // Récupérer les détails des tags
-        const tagIds = tagCounts.map(item => item.tagId);
+        const tagIds = tagCounts.map((item) => item.tagId);
         const tags = await this.prisma.tag.findMany({
             where: {
                 id: {
@@ -234,8 +257,8 @@ export class ProjectTagService extends BaseCrudServiceImpl<
         });
 
         // Combiner les données
-        return tagCounts.map(count => {
-            const tag = tags.find(t => t.id === count.tagId);
+        return tagCounts.map((count) => {
+            const tag = tags.find((t) => t.id === count.tagId);
             return {
                 ...tag,
                 projectCount: count._count.projectId
@@ -246,10 +269,13 @@ export class ProjectTagService extends BaseCrudServiceImpl<
     /**
      * Trouve les projets similaires basés sur les tags partagés
      */
-    async findSimilarProjects(projectId: string, limit: number = 5): Promise<any[]> {
+    async findSimilarProjects(
+        projectId: string,
+        limit: number = 5
+    ): Promise<any[]> {
         // Récupérer les tags du projet
         const projectTags = await this.findByProject(projectId);
-        const tagIds = projectTags.map(pt => pt.tagId);
+        const tagIds = projectTags.map((pt) => pt.tagId);
 
         if (tagIds.length === 0) {
             return [];
@@ -294,7 +320,9 @@ export class ProjectTagService extends BaseCrudServiceImpl<
 
         // Éliminer les doublons et limiter les résultats
         const uniqueProjects = Array.from(
-            new Map(similarProjects.map(item => [item.projectId, item.project])).values()
+            new Map(
+                similarProjects.map((item) => [item.projectId, item.project])
+            ).values()
         ).slice(0, limit);
 
         return uniqueProjects;

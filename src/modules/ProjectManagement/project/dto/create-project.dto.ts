@@ -1,15 +1,15 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { 
-    IsString, 
-    IsInt, 
-    IsNumber, 
-    IsOptional, 
-    IsEnum, 
-    IsDateString, 
-    IsBoolean, 
-    Min, 
-    Max 
+import {
+    IsString,
+    IsInt,
+    IsNumber,
+    IsOptional,
+    IsEnum,
+    IsDateString,
+    IsBoolean,
+    Min,
+    Max
 } from 'class-validator';
 import { Status, ProjectStage } from '@prisma/client';
 
@@ -120,9 +120,9 @@ export class CreateProjectDto {
     @IsEnum(Status)
     status?: Status;
 
-    @ApiProperty({ 
-        example: '2025-12-31T00:00:00.000Z', 
-        description: 'Runway date in ISO-8601 format' 
+    @ApiProperty({
+        example: '2025-12-31T00:00:00.000Z',
+        description: 'Runway date in ISO-8601 format'
     })
     @IsDateString()
     @Transform(({ value }) => {

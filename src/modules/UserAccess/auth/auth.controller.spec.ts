@@ -2,7 +2,6 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaService } from '../../../core/services/prisma.service';
-import { FileUploadService } from '../../file-upload/file-upload.service';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 
@@ -26,10 +25,6 @@ describe('AuthController', () => {
         sendMail: jest.fn()
     };
 
-    const mockFileUploadService = {
-        uploadFile: jest.fn()
-    };
-
     const mockAuthService = {
         signIn: jest.fn()
     };
@@ -50,10 +45,6 @@ describe('AuthController', () => {
                 {
                     provide: MailerService,
                     useValue: mockMailerService
-                },
-                {
-                    provide: FileUploadService,
-                    useValue: mockFileUploadService
                 },
                 {
                     provide: AuthService,

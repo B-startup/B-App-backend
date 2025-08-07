@@ -151,6 +151,9 @@ model User {
   /// Timestamp when the user record was last updated
   updatedAt DateTime @updatedAt
 
+  /// Timestamp when the user last logged out (for token invalidation)
+  lastLogoutAt DateTime?
+
   // ---------------------- Relations ----------------------
 
   /// Projects created by the user (founders)
@@ -218,6 +221,9 @@ model User {
 
   /// Users who are following this user
   followers Follow[] @relation("UserFollowed")
+
+  /// Blacklisted tokens for this user
+  blacklistedTokens TokenBlacklist[]
 
   // Create an index on id for faster queries (explicit index)
   @@index([id])
@@ -770,7 +776,7 @@ model Video {
   id String @id @default(uuid())
 
   /// ID of the user who uploaded the video
-  userId String
+  userId String?
 
   /// ID of the project this video is associated with
   projectId String
@@ -778,11 +784,26 @@ model Video {
   /// URL or path to the video file
   videoUrl String
 
+  /// File path on the server
+  filePath String @default("")
+
+  /// File size in bytes
+  fileSize Int @default(0)
+
+  /// MIME type of the video file
+  mimeType String @default("video/mp4")
+
   /// Title of the video (descriptive label)
   title String
 
   /// Optional description providing context or details about the video
   description String?
+
+  /// Duration of the video in seconds (optional)
+  duration Int?
+
+  /// URL to the video thumbnail (optional)
+  thumbnailUrl String?
 
   /// Number of times this video has been viewed
   nbViews Int @default(0)
@@ -1684,5 +1705,38 @@ model PostShared {
   @@index([userId])
   // Map to table name "post_shared" in the database
   @@map("post_shared")
+}
+
+////////////////////////////////////////////////////////////
+//  TOKEN BLACKLIST SECTION
+////////////////////////////////////////////////////////////
+
+/// Model for blacklisted tokens (logout/revocation)
+model TokenBlacklist {
+  /// Primary identifier (UUID) for the blacklist entry
+  id String @id @default(uuid())
+
+  /// Hash of the blacklisted token (for security)
+  tokenHash String @unique
+
+  /// User ID who owned the token (optional for tracking)
+  userId String?
+
+  /// Reason for blacklisting (logout, revocation, etc.)
+  reason String @default("logout")
+
+  /// Timestamp when token was blacklisted
+  blacklistedAt DateTime @default(now())
+
+  /// Timestamp when token expires (for cleanup)
+  expiresAt DateTime
+
+  /// Reference to the user (optional)
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Index for fast token lookup
+  @@index([tokenHash])
+  @@index([expiresAt])
+  @@map("token_blacklist")
 
 }

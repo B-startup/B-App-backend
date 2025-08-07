@@ -10,7 +10,7 @@ export interface BaseCrudService<T, CreateDto, UpdateDto> {
     findManyBy<K extends keyof T>(key: K, value: T[K]): Promise<T[]>;
     paginate(skip: number, take: number): Promise<T[]>;
     search(keyword: string, fields: (keyof T)[]): Promise<T[]>;
-    
+
     // Méthodes supplémentaires de BaseService
     findByUser(userId: string): Promise<T[]>;
     findOneOrFail(id: string): Promise<T>;

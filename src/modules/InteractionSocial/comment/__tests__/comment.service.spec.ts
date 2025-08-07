@@ -115,7 +115,11 @@ describe('CommentService', () => {
                 postId: 'post-1'
             };
 
-            const postComment = { ...mockComment, postId: 'post-1', projectId: null };
+            const postComment = {
+                ...mockComment,
+                postId: 'post-1',
+                projectId: null
+            };
             mockPrismaService.comment.create.mockResolvedValue(postComment);
 
             const result = await service.create(createCommentDto);
@@ -136,7 +140,11 @@ describe('CommentService', () => {
                 projectId: 'project-1'
             };
 
-            const reply = { ...mockComment, id: 'reply-1', parentId: 'comment-1' };
+            const reply = {
+                ...mockComment,
+                id: 'reply-1',
+                parentId: 'comment-1'
+            };
             mockPrismaService.comment.create.mockResolvedValue(reply);
 
             const result = await service.create(createReplyDto);
@@ -169,7 +177,11 @@ describe('CommentService', () => {
         });
 
         it('should remove a comment and update post counter', async () => {
-            const postComment = { ...mockComment, postId: 'post-1', projectId: null };
+            const postComment = {
+                ...mockComment,
+                postId: 'post-1',
+                projectId: null
+            };
             mockPrismaService.comment.findUnique.mockResolvedValue(postComment);
             mockPrismaService.comment.delete.mockResolvedValue(postComment);
 
@@ -186,7 +198,9 @@ describe('CommentService', () => {
 
     describe('findByProject', () => {
         it('should find all comments for a project with user info and replies', async () => {
-            mockPrismaService.comment.findMany.mockResolvedValue([mockCommentWithReplies]);
+            mockPrismaService.comment.findMany.mockResolvedValue([
+                mockCommentWithReplies
+            ]);
 
             const result = await service.findByProject('project-1');
 
@@ -221,7 +235,9 @@ describe('CommentService', () => {
 
     describe('findByPost', () => {
         it('should find all comments for a post with user info and replies', async () => {
-            mockPrismaService.comment.findMany.mockResolvedValue([mockCommentWithReplies]);
+            mockPrismaService.comment.findMany.mockResolvedValue([
+                mockCommentWithReplies
+            ]);
 
             const result = await service.findByPost('post-1');
 
@@ -297,9 +313,9 @@ describe('CommentService', () => {
                 where: { projectId: 'project-1' }
             });
             expect(mockPrismaService.comment.count).toHaveBeenNthCalledWith(2, {
-                where: { 
+                where: {
                     projectId: 'project-1',
-                    parentId: null 
+                    parentId: null
                 }
             });
         });
@@ -324,47 +340,9 @@ describe('CommentService', () => {
                 where: { postId: 'post-1' }
             });
             expect(mockPrismaService.comment.count).toHaveBeenNthCalledWith(2, {
-                where: { 
+                where: {
                     postId: 'post-1',
-                    parentId: null 
-                }
-            });
-        });
-    });
-
-    describe('incrementLikes (deprecated)', () => {
-        it('should increment the like count for a comment', async () => {
-            const updatedComment = { ...mockComment, nbLikes: 1 };
-            mockPrismaService.comment.update.mockResolvedValue(updatedComment);
-
-            const result = await service.incrementLikes('comment-1');
-
-            expect(result).toEqual(updatedComment);
-            expect(mockPrismaService.comment.update).toHaveBeenCalledWith({
-                where: { id: 'comment-1' },
-                data: {
-                    nbLikes: {
-                        increment: 1
-                    }
-                }
-            });
-        });
-    });
-
-    describe('decrementLikes (deprecated)', () => {
-        it('should decrement the like count for a comment', async () => {
-            const updatedComment = { ...mockComment, nbLikes: -1 };
-            mockPrismaService.comment.update.mockResolvedValue(updatedComment);
-
-            const result = await service.decrementLikes('comment-1');
-
-            expect(result).toEqual(updatedComment);
-            expect(mockPrismaService.comment.update).toHaveBeenCalledWith({
-                where: { id: 'comment-1' },
-                data: {
-                    nbLikes: {
-                        decrement: 1
-                    }
+                    parentId: null
                 }
             });
         });

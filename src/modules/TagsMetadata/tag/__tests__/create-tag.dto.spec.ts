@@ -54,7 +54,7 @@ describe('CreateTagDto', () => {
         it('should trim whitespace from name', () => {
             const name = '  Fintech  ';
             const dtoObject = plainToClass(CreateTagDto, { name });
-            
+
             expect(dtoObject.name).toBe('Fintech');
         });
     });
@@ -104,11 +104,11 @@ describe('CreateTagDto', () => {
 
         it('should trim whitespace from description', () => {
             const description = '  Financial technology  ';
-            const dtoObject = plainToClass(CreateTagDto, { 
-                name: 'Fintech', 
-                description 
+            const dtoObject = plainToClass(CreateTagDto, {
+                name: 'Fintech',
+                description
             });
-            
+
             expect(dtoObject.description).toBe('Financial technology');
         });
     });
@@ -125,7 +125,9 @@ describe('CreateTagDto', () => {
 
             expect(errors).toHaveLength(0);
             expect(dtoObject.name).toBe('Fintech');
-            expect(dtoObject.description).toBe('Financial technology related posts and projects');
+            expect(dtoObject.description).toBe(
+                'Financial technology related posts and projects'
+            );
         });
 
         it('should pass validation with only required fields', async () => {

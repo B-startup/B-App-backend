@@ -5,7 +5,7 @@ import { PrismaClient } from '@prisma/client';
  * Synchronise les compteurs (likes, comments, views, etc.) entre les entités
  */
 export class CounterService {
-    private prisma: PrismaClient;
+    private readonly prisma: PrismaClient;
 
     constructor(prisma: PrismaClient) {
         this.prisma = prisma;
@@ -20,7 +20,7 @@ export class CounterService {
         increment: boolean = true
     ): Promise<void> {
         const operation = increment ? 'increment' : 'decrement';
-        
+
         switch (entityType) {
             case 'project':
                 await this.prisma.project.update({
@@ -32,7 +32,7 @@ export class CounterService {
                     }
                 });
                 break;
-                
+
             case 'post':
                 await this.prisma.post.update({
                     where: { id: entityId },
@@ -43,7 +43,7 @@ export class CounterService {
                     }
                 });
                 break;
-                
+
             case 'comment':
                 await this.prisma.comment.update({
                     where: { id: entityId },
@@ -66,7 +66,7 @@ export class CounterService {
         increment: boolean = true
     ): Promise<void> {
         const operation = increment ? 'increment' : 'decrement';
-        
+
         switch (entityType) {
             case 'project':
                 await this.prisma.project.update({
@@ -78,7 +78,7 @@ export class CounterService {
                     }
                 });
                 break;
-                
+
             case 'post':
                 await this.prisma.post.update({
                     where: { id: entityId },
@@ -101,7 +101,7 @@ export class CounterService {
         increment: boolean = true
     ): Promise<void> {
         const operation = increment ? 'increment' : 'decrement';
-        
+
         switch (entityType) {
             case 'project':
                 await this.prisma.project.update({
@@ -113,7 +113,7 @@ export class CounterService {
                     }
                 });
                 break;
-                
+
             case 'post':
                 await this.prisma.post.update({
                     where: { id: entityId },
@@ -135,7 +135,7 @@ export class CounterService {
         increment: boolean = true
     ): Promise<void> {
         const operation = increment ? 'increment' : 'decrement';
-        
+
         await this.prisma.post.update({
             where: { id: postId },
             data: {
@@ -154,7 +154,7 @@ export class CounterService {
         increment: boolean = true
     ): Promise<void> {
         const operation = increment ? 'increment' : 'decrement';
-        
+
         await this.prisma.project.update({
             where: { id: projectId },
             data: {
@@ -175,12 +175,19 @@ export class CounterService {
     ): Promise<void> {
         switch (entityType) {
             case 'project': {
-                const [projectLikes, projectComments, projectConnects] = await Promise.all([
-                    this.prisma.like.count({ where: { projectId: entityId } }),
-                    this.prisma.comment.count({ where: { projectId: entityId } }),
-                    this.prisma.connect.count({ where: { projectId: entityId } })
-                ]);
-                
+                const [projectLikes, projectComments, projectConnects] =
+                    await Promise.all([
+                        this.prisma.like.count({
+                            where: { projectId: entityId }
+                        }),
+                        this.prisma.comment.count({
+                            where: { projectId: entityId }
+                        }),
+                        this.prisma.connect.count({
+                            where: { projectId: entityId }
+                        })
+                    ]);
+
                 await this.prisma.project.update({
                     where: { id: entityId },
                     data: {
@@ -192,14 +199,20 @@ export class CounterService {
                 });
                 break;
             }
-                
+
             case 'post': {
-                const [postLikes, postComments, postShares] = await Promise.all([
-                    this.prisma.like.count({ where: { postId: entityId } }),
-                    this.prisma.comment.count({ where: { postId: entityId } }),
-                    this.prisma.postShared.count({ where: { postId: entityId } })
-                ]);
-                
+                const [postLikes, postComments, postShares] = await Promise.all(
+                    [
+                        this.prisma.like.count({ where: { postId: entityId } }),
+                        this.prisma.comment.count({
+                            where: { postId: entityId }
+                        }),
+                        this.prisma.postShared.count({
+                            where: { postId: entityId }
+                        })
+                    ]
+                );
+
                 await this.prisma.post.update({
                     where: { id: entityId },
                     data: {
@@ -211,12 +224,12 @@ export class CounterService {
                 });
                 break;
             }
-                
+
             case 'comment': {
-                const commentLikes = await this.prisma.like.count({ 
-                    where: { commentId: entityId } 
+                const commentLikes = await this.prisma.like.count({
+                    where: { commentId: entityId }
                 });
-                
+
                 await this.prisma.comment.update({
                     where: { id: entityId },
                     data: {
@@ -231,19 +244,27 @@ export class CounterService {
     /**
      * Méthode utilitaire pour détecter automatiquement le type d'entité
      */
-    private async detectEntityType(entityId: string): Promise<'project' | 'post' | 'comment' | null> {
+    private async detectEntityType(
+        entityId: string
+    ): Promise<'project' | 'post' | 'comment' | null> {
         // Chercher dans les projets
-        const project = await this.prisma.project.findUnique({ where: { id: entityId } });
+        const project = await this.prisma.project.findUnique({
+            where: { id: entityId }
+        });
         if (project) return 'project';
-        
+
         // Chercher dans les posts
-        const post = await this.prisma.post.findUnique({ where: { id: entityId } });
+        const post = await this.prisma.post.findUnique({
+            where: { id: entityId }
+        });
         if (post) return 'post';
-        
+
         // Chercher dans les commentaires
-        const comment = await this.prisma.comment.findUnique({ where: { id: entityId } });
+        const comment = await this.prisma.comment.findUnique({
+            where: { id: entityId }
+        });
         if (comment) return 'comment';
-        
+
         return null;
     }
 }

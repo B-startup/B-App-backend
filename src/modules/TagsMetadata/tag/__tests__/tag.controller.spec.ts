@@ -108,7 +108,9 @@ describe('TagController', () => {
                     _count: { projectTags: 5, PostTag: 3 }
                 }
             ];
-            mockTagService.findAllWithUsageCount.mockResolvedValue(tagsWithCount);
+            mockTagService.findAllWithUsageCount.mockResolvedValue(
+                tagsWithCount
+            );
 
             const result = await controller.findAll(true);
 
@@ -132,9 +134,7 @@ describe('TagController', () => {
 
     describe('findMostUsed', () => {
         it('should return most used tags with default limit', async () => {
-            const mostUsedTags = [
-                { ...mockTag, totalUsage: 10 }
-            ];
+            const mostUsedTags = [{ ...mockTag, totalUsage: 10 }];
             mockTagService.findMostUsedTags.mockResolvedValue(mostUsedTags);
 
             const result = await controller.findMostUsed();
@@ -144,9 +144,7 @@ describe('TagController', () => {
         });
 
         it('should return most used tags with custom limit', async () => {
-            const mostUsedTags = [
-                { ...mockTag, totalUsage: 10 }
-            ];
+            const mostUsedTags = [{ ...mockTag, totalUsage: 10 }];
             mockTagService.findMostUsedTags.mockResolvedValue(mostUsedTags);
 
             const result = await controller.findMostUsed('5');
@@ -213,7 +211,10 @@ describe('TagController', () => {
 
             const result = await controller.update('test-tag-id', updateTagDto);
 
-            expect(mockTagService.updateTag).toHaveBeenCalledWith('test-tag-id', updateTagDto);
+            expect(mockTagService.updateTag).toHaveBeenCalledWith(
+                'test-tag-id',
+                updateTagDto
+            );
             expect(result).toEqual(updatedTag);
         });
 
@@ -222,9 +223,9 @@ describe('TagController', () => {
                 new NotFoundException('Tag not found')
             );
 
-            await expect(controller.update('non-existent-id', updateTagDto)).rejects.toThrow(
-                NotFoundException
-            );
+            await expect(
+                controller.update('non-existent-id', updateTagDto)
+            ).rejects.toThrow(NotFoundException);
         });
 
         it('should handle ConflictException from service', async () => {
@@ -232,9 +233,9 @@ describe('TagController', () => {
                 new ConflictException('Tag name already exists')
             );
 
-            await expect(controller.update('test-tag-id', updateTagDto)).rejects.toThrow(
-                ConflictException
-            );
+            await expect(
+                controller.update('test-tag-id', updateTagDto)
+            ).rejects.toThrow(ConflictException);
         });
     });
 

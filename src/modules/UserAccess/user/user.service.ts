@@ -1,6 +1,6 @@
 import { Injectable, ConflictException } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
-import { User,PrismaClient } from '@prisma/client';
+import { User, PrismaClient } from '@prisma/client';
 
 import { BaseCrudServiceImpl } from '../../../core/common/services/base-crud.service';
 import { cryptPassword, handleOtpOperation } from '../../../core/utils/auth';

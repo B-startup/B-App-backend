@@ -2,6 +2,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { join } from 'path';
 import { LoggerMiddleware } from './core/common/middleware/logger.middleware';
@@ -16,7 +17,7 @@ import { SocialMediaModule } from './modules/UserAccess/social-media/social-medi
 import { ExperienceEducationModule } from './modules/UserAccess/experience_education/experience_education.module';
 import { InterestsModule } from './modules/ProjectManagement/interests/interests.module';
 import { TeamUsersModule } from './modules/UserAccess/team-users/team-users.module';
-import { FileModule } from './modules/MediaFiles/file/file.module';
+import { FileModule } from './modules/ProjectManagement/file/file.module';
 import { ProjectTagModule } from './modules/TagsMetadata/project-tag/project-tag.module';
 import { PostTagModule } from './modules/TagsMetadata/post-tag/post-tag.module';
 import { PostSectorModule } from './modules/TagsMetadata/post-sector/post-sector.module';
@@ -30,12 +31,12 @@ import { ConnectModule } from './modules/ProjectManagement/connect/connect.modul
 import { AttemptLogModule } from './modules/UserAccess/attempt_log/attempt_log.module';
 import { NotificationModule } from './modules/UserAccess/notification/notification.module';
 import { VisitorProfileProjectModule } from './modules/ProjectManagement/visitor-profile-project/visitor-profile-project.module';
-import { PostModule } from './modules/MediaFiles/post/post.module';
-import { PostMediaModule } from './modules/MediaFiles/post-media/post-media.module';
-import { PostSharedModule } from './modules/MediaFiles/post-shared/post-shared.module';
+import { PostModule } from './modules/PostManagement/post/post.module';
+import { PostMediaModule } from './modules/PostManagement/post-media/post-media.module';
+import { PostSharedModule } from './modules/PostManagement/post-shared/post-shared.module';
 import { DiscussionModule } from './modules/InteractionSocial/discussion/discussion.module';
 import { MessageModule } from './modules/InteractionSocial/message/message.module';
-import { VideoModule } from './modules/MediaFiles/video/video.module';
+import { VideoModule } from './modules/ProjectManagement/video/video.module';
 import { OfferModule } from './modules/ProjectManagement/offer/offer.module';
 import { BlockModule } from './modules/UserAccess/block/block.module';
 
@@ -46,6 +47,9 @@ import { BlockModule } from './modules/UserAccess/block/block.module';
             isGlobal: true,
             cache: true
         }),
+
+        // Task Scheduling
+        ScheduleModule.forRoot(),
 
         // Rate Limiting
         ThrottlerModule.forRootAsync({
@@ -114,7 +118,7 @@ import { BlockModule } from './modules/UserAccess/block/block.module';
         MessageModule,
         VideoModule,
         OfferModule,
-        BlockModule,
+        BlockModule
     ],
     controllers: [],
     providers: [PrismaService]

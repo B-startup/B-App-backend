@@ -64,11 +64,13 @@ describe('View Integration Tests', () => {
             .compile();
 
         app = module.createNestApplication();
-        app.useGlobalPipes(new ValidationPipe({
-            whitelist: true,
-            forbidNonWhitelisted: true,
-            transform: true
-        }));
+        app.useGlobalPipes(
+            new ValidationPipe({
+                whitelist: true,
+                forbidNonWhitelisted: true,
+                transform: true
+            })
+        );
 
         prismaService = module.get<PrismaService>(PrismaService);
         counterService = module.get<CounterService>(CounterService);
@@ -89,10 +91,18 @@ describe('View Integration Tests', () => {
 
         it('should create a new view', async () => {
             (prismaService.view.findFirst as jest.Mock).mockResolvedValue(null);
-            (prismaService.view.create as jest.Mock).mockResolvedValue(mockView);
-            (prismaService.video.update as jest.Mock).mockResolvedValue(mockVideo);
-            (prismaService.video.findUnique as jest.Mock).mockResolvedValue({ projectId: mockVideo.projectId });
-            (counterService.updateViewCount as jest.Mock).mockResolvedValue(undefined);
+            (prismaService.view.create as jest.Mock).mockResolvedValue(
+                mockView
+            );
+            (prismaService.video.update as jest.Mock).mockResolvedValue(
+                mockVideo
+            );
+            (prismaService.video.findUnique as jest.Mock).mockResolvedValue({
+                projectId: mockVideo.projectId
+            });
+            (counterService.updateViewCount as jest.Mock).mockResolvedValue(
+                undefined
+            );
 
             const response = await request(app.getHttpServer())
                 .post('/view')
@@ -125,10 +135,18 @@ describe('View Integration Tests', () => {
             // This test expects the application to validate UUIDs at the DTO level
             // Since we're not using UUID validation in CreateViewDto, this test should pass
             (prismaService.view.findFirst as jest.Mock).mockResolvedValue(null);
-            (prismaService.view.create as jest.Mock).mockResolvedValue(mockView);
-            (prismaService.video.update as jest.Mock).mockResolvedValue(mockVideo);
-            (prismaService.video.findUnique as jest.Mock).mockResolvedValue({ projectId: mockVideo.projectId });
-            (counterService.updateViewCount as jest.Mock).mockResolvedValue(undefined);
+            (prismaService.view.create as jest.Mock).mockResolvedValue(
+                mockView
+            );
+            (prismaService.video.update as jest.Mock).mockResolvedValue(
+                mockVideo
+            );
+            (prismaService.video.findUnique as jest.Mock).mockResolvedValue({
+                projectId: mockVideo.projectId
+            });
+            (counterService.updateViewCount as jest.Mock).mockResolvedValue(
+                undefined
+            );
 
             await request(app.getHttpServer())
                 .post('/view')
@@ -163,24 +181,28 @@ describe('View Integration Tests', () => {
 
     describe('GET /view', () => {
         it('should return all views', async () => {
-            const mockViewsWithRelations = [{
-                ...mockView,
-                user: {
-                    id: '123e4567-e89b-12d3-a456-426614174001',
-                    firstName: 'John',
-                    lastName: 'Doe',
-                    email: 'john.doe@example.com'
-                },
-                video: {
-                    id: '123e4567-e89b-12d3-a456-426614174002',
-                    title: 'Test Video',
-                    videoUrl: 'https://example.com/video.mp4',
-                    description: 'Test video description',
-                    nbViews: 5
+            const mockViewsWithRelations = [
+                {
+                    ...mockView,
+                    user: {
+                        id: '123e4567-e89b-12d3-a456-426614174001',
+                        firstName: 'John',
+                        lastName: 'Doe',
+                        email: 'john.doe@example.com'
+                    },
+                    video: {
+                        id: '123e4567-e89b-12d3-a456-426614174002',
+                        title: 'Test Video',
+                        videoUrl: 'https://example.com/video.mp4',
+                        description: 'Test video description',
+                        nbViews: 5
+                    }
                 }
-            }];
+            ];
 
-            (prismaService.view.findMany as jest.Mock).mockResolvedValue(mockViewsWithRelations);
+            (prismaService.view.findMany as jest.Mock).mockResolvedValue(
+                mockViewsWithRelations
+            );
 
             const response = await request(app.getHttpServer())
                 .get('/view')
@@ -216,7 +238,9 @@ describe('View Integration Tests', () => {
             const userId = '123e4567-e89b-12d3-a456-426614174001';
             const mockUserViews = [mockView];
 
-            (prismaService.view.findMany as jest.Mock).mockResolvedValue(mockUserViews);
+            (prismaService.view.findMany as jest.Mock).mockResolvedValue(
+                mockUserViews
+            );
 
             const response = await request(app.getHttpServer())
                 .get(`/view/user/${userId}`)
@@ -252,7 +276,9 @@ describe('View Integration Tests', () => {
             const videoId = '123e4567-e89b-12d3-a456-426614174002';
             const mockVideoViews = [mockView];
 
-            (prismaService.view.findMany as jest.Mock).mockResolvedValue(mockVideoViews);
+            (prismaService.view.findMany as jest.Mock).mockResolvedValue(
+                mockVideoViews
+            );
 
             const response = await request(app.getHttpServer())
                 .get(`/view/video/${videoId}`)
@@ -302,7 +328,9 @@ describe('View Integration Tests', () => {
             const userId = '123e4567-e89b-12d3-a456-426614174001';
             const videoId = '123e4567-e89b-12d3-a456-426614174002';
 
-            (prismaService.view.findFirst as jest.Mock).mockResolvedValue(mockView);
+            (prismaService.view.findFirst as jest.Mock).mockResolvedValue(
+                mockView
+            );
 
             const response = await request(app.getHttpServer())
                 .get(`/view/check/${userId}/${videoId}`)
@@ -338,8 +366,12 @@ describe('View Integration Tests', () => {
                 { videoId: 'video3' }
             ];
 
-            (prismaService.view.aggregate as jest.Mock).mockResolvedValue(mockStats);
-            (prismaService.view.groupBy as jest.Mock).mockResolvedValue(mockUniqueVideos);
+            (prismaService.view.aggregate as jest.Mock).mockResolvedValue(
+                mockStats
+            );
+            (prismaService.view.groupBy as jest.Mock).mockResolvedValue(
+                mockUniqueVideos
+            );
 
             const response = await request(app.getHttpServer())
                 .get(`/view/user/${userId}/stats`)
@@ -357,7 +389,9 @@ describe('View Integration Tests', () => {
         it('should return a specific view', async () => {
             const viewId = '123e4567-e89b-12d3-a456-426614174000';
 
-            (prismaService.view.findUnique as jest.Mock).mockResolvedValue(mockView);
+            (prismaService.view.findUnique as jest.Mock).mockResolvedValue(
+                mockView
+            );
 
             const response = await request(app.getHttpServer())
                 .get(`/view/${viewId}`)
@@ -372,7 +406,9 @@ describe('View Integration Tests', () => {
         it('should return 404 when view not found', async () => {
             const viewId = '123e4567-e89b-12d3-a456-426614174000';
 
-            (prismaService.view.findUnique as jest.Mock).mockResolvedValue(null);
+            (prismaService.view.findUnique as jest.Mock).mockResolvedValue(
+                null
+            );
 
             await request(app.getHttpServer())
                 .get(`/view/${viewId}`)
@@ -386,7 +422,9 @@ describe('View Integration Tests', () => {
             const updateDto = { timespent: 200 };
             const updatedView = { ...mockView, timespent: 200 };
 
-            (prismaService.view.update as jest.Mock).mockResolvedValue(updatedView);
+            (prismaService.view.update as jest.Mock).mockResolvedValue(
+                updatedView
+            );
 
             const response = await request(app.getHttpServer())
                 .patch(`/view/${viewId}`)
@@ -417,11 +455,21 @@ describe('View Integration Tests', () => {
         it('should delete a view and decrement counters', async () => {
             const viewId = '123e4567-e89b-12d3-a456-426614174000';
 
-            (prismaService.view.findUnique as jest.Mock).mockResolvedValueOnce(mockView);
-            (prismaService.video.update as jest.Mock).mockResolvedValue(mockVideo);
-            (prismaService.video.findUnique as jest.Mock).mockResolvedValue({ projectId: mockVideo.projectId });
-            (prismaService.view.delete as jest.Mock).mockResolvedValue(mockView);
-            (counterService.updateViewCount as jest.Mock).mockResolvedValue(undefined);
+            (prismaService.view.findUnique as jest.Mock).mockResolvedValueOnce(
+                mockView
+            );
+            (prismaService.video.update as jest.Mock).mockResolvedValue(
+                mockVideo
+            );
+            (prismaService.video.findUnique as jest.Mock).mockResolvedValue({
+                projectId: mockVideo.projectId
+            });
+            (prismaService.view.delete as jest.Mock).mockResolvedValue(
+                mockView
+            );
+            (counterService.updateViewCount as jest.Mock).mockResolvedValue(
+                undefined
+            );
 
             await request(app.getHttpServer())
                 .delete(`/view/${viewId}`)
@@ -440,7 +488,9 @@ describe('View Integration Tests', () => {
         it('should return 404 when view not found', async () => {
             const viewId = '123e4567-e89b-12d3-a456-426614174000';
 
-            (prismaService.view.findUnique as jest.Mock).mockResolvedValue(null);
+            (prismaService.view.findUnique as jest.Mock).mockResolvedValue(
+                null
+            );
 
             await request(app.getHttpServer())
                 .delete(`/view/${viewId}`)

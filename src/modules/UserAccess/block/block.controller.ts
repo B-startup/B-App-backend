@@ -5,7 +5,7 @@ import {
     Get,
     Param,
     Patch,
-    Post,
+    Post
 } from '@nestjs/common';
 import {
     ApiTags,
@@ -13,7 +13,7 @@ import {
     ApiCreatedResponse,
     ApiOkResponse,
     ApiBadRequestResponse,
-    ApiNotFoundResponse,
+    ApiNotFoundResponse
 } from '@nestjs/swagger';
 import { Block } from '@prisma/client';
 import { BlockService } from './block.service';
@@ -51,7 +51,10 @@ export class BlockController {
     @Patch(':id')
     @ApiOperation({ summary: 'Update block' })
     @ApiOkResponse({ description: 'Block updated' })
-    update(@Param('id') id: string, @Body() dto: UpdateBlockDto): Promise<Block> {
+    update(
+        @Param('id') id: string,
+        @Body() dto: UpdateBlockDto
+    ): Promise<Block> {
         return this.blockService.update(id, dto);
     }
 

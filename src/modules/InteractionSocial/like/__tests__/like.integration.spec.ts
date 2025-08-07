@@ -8,7 +8,6 @@ import { CounterService } from '../../../../core/common/services/counter.service
 describe('LikeController (Integration)', () => {
     let app: INestApplication;
     let prismaService: PrismaService;
-    let counterService: CounterService;
 
     const mockLike = {
         id: 'like-1',
@@ -22,28 +21,28 @@ describe('LikeController (Integration)', () => {
 
     beforeAll(async () => {
         const moduleFixture: TestingModule = await Test.createTestingModule({
-            imports: [LikeModule],
+            imports: [LikeModule]
         })
-        .overrideProvider(PrismaService)
-        .useValue({
-            like: {
-                create: jest.fn().mockResolvedValue(mockLike),
-                findMany: jest.fn().mockResolvedValue([mockLike]),
-                findUnique: jest.fn().mockResolvedValue(mockLike),
-                findFirst: jest.fn().mockResolvedValue(null),
-                update: jest.fn().mockResolvedValue(mockLike),
-                delete: jest.fn().mockResolvedValue(mockLike),
-                count: jest.fn().mockResolvedValue(1)
-            }
-        })
-        .overrideProvider(CounterService)
-        .useValue({
-            updateCommentCount: jest.fn().mockResolvedValue(undefined),
-            updateLikeCount: jest.fn().mockResolvedValue(undefined),
-            updateViewCount: jest.fn().mockResolvedValue(undefined),
-            recalculateCounters: jest.fn().mockResolvedValue(undefined)
-        })
-        .compile();
+            .overrideProvider(PrismaService)
+            .useValue({
+                like: {
+                    create: jest.fn().mockResolvedValue(mockLike),
+                    findMany: jest.fn().mockResolvedValue([mockLike]),
+                    findUnique: jest.fn().mockResolvedValue(mockLike),
+                    findFirst: jest.fn().mockResolvedValue(null),
+                    update: jest.fn().mockResolvedValue(mockLike),
+                    delete: jest.fn().mockResolvedValue(mockLike),
+                    count: jest.fn().mockResolvedValue(1)
+                }
+            })
+            .overrideProvider(CounterService)
+            .useValue({
+                updateCommentCount: jest.fn().mockResolvedValue(undefined),
+                updateLikeCount: jest.fn().mockResolvedValue(undefined),
+                updateViewCount: jest.fn().mockResolvedValue(undefined),
+                recalculateCounters: jest.fn().mockResolvedValue(undefined)
+            })
+            .compile();
 
         app = moduleFixture.createNestApplication();
         await app.init();
@@ -87,7 +86,9 @@ describe('LikeController (Integration)', () => {
 
         it('should return 409 when like already exists', async () => {
             // Mock existing like
-            prismaService.like.findFirst = jest.fn().mockResolvedValue(mockLike);
+            prismaService.like.findFirst = jest
+                .fn()
+                .mockResolvedValue(mockLike);
 
             const createLikeDto = {
                 userId: 'user-1',
@@ -126,8 +127,12 @@ describe('LikeController (Integration)', () => {
             };
 
             // Mock existing like
-            prismaService.like.findFirst = jest.fn().mockResolvedValue(mockLike);
-            prismaService.like.findUnique = jest.fn().mockResolvedValue(mockLike);
+            prismaService.like.findFirst = jest
+                .fn()
+                .mockResolvedValue(mockLike);
+            prismaService.like.findUnique = jest
+                .fn()
+                .mockResolvedValue(mockLike);
 
             const response = await request(app.getHttpServer())
                 .post('/likes/toggle')
@@ -199,7 +204,9 @@ describe('LikeController (Integration)', () => {
 
     describe('GET /likes/check/:userId/:targetId', () => {
         it('should check if user has liked an item', async () => {
-            prismaService.like.findFirst = jest.fn().mockResolvedValue(mockLike);
+            prismaService.like.findFirst = jest
+                .fn()
+                .mockResolvedValue(mockLike);
 
             const response = await request(app.getHttpServer())
                 .get('/likes/check/user-1/project-1?type=project')
@@ -228,8 +235,9 @@ describe('LikeController (Integration)', () => {
                 commentLikes: 3
             };
 
-            prismaService.like.count = jest.fn()
-                .mockResolvedValueOnce(5)  // project likes
+            prismaService.like.count = jest
+                .fn()
+                .mockResolvedValueOnce(5) // project likes
                 .mockResolvedValueOnce(10) // post likes
                 .mockResolvedValueOnce(3); // comment likes
 

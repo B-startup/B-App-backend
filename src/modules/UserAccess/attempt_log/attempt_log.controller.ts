@@ -38,7 +38,10 @@ export class AttemptLogController {
 
     @Patch(':id')
     @ApiOperation({ summary: 'Update a log entry' })
-    update(@Param('id') id: string, @Body() dto: UpdateAttemptLogDto): Promise<Attempt_log> {
+    update(
+        @Param('id') id: string,
+        @Body() dto: UpdateAttemptLogDto
+    ): Promise<Attempt_log> {
         return this.service.update(id, dto);
     }
 
