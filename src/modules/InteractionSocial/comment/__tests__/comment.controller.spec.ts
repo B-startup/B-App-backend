@@ -150,13 +150,10 @@ describe('CommentController', () => {
             const mockUser = { sub: 'user-1' };
             mockCommentService.create.mockResolvedValue(mockComment);
 
-            const result = await controller.create(createCommentDto, mockUser);
+            const result = await controller.create(createCommentDto);
 
             expect(result).toEqual(mockComment);
-            expect(mockCommentService.create).toHaveBeenCalledWith({
-                ...createCommentDto,
-                userId: 'user-1'
-            });
+            expect(mockCommentService.create).toHaveBeenCalledWith(createCommentDto);
         });
 
         it('should create a reply comment', async () => {
@@ -175,13 +172,10 @@ describe('CommentController', () => {
             };
             mockCommentService.create.mockResolvedValue(reply);
 
-            const result = await controller.create(createReplyDto, mockUser);
+            const result = await controller.create(createReplyDto);
 
             expect(result).toEqual(reply);
-            expect(mockCommentService.create).toHaveBeenCalledWith({
-                ...createReplyDto,
-                userId: 'user-2'
-            });
+            expect(mockCommentService.create).toHaveBeenCalledWith(createReplyDto);
         });
     });
 
