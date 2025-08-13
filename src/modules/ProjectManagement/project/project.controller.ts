@@ -16,14 +16,18 @@ import {
     ApiOperation,
     ApiResponse,
     ApiNotFoundResponse,
-    ApiBadRequestResponse
+    ApiBadRequestResponse,
+    ApiBearerAuth
 } from '@nestjs/swagger';
+import { TokenProtected } from '../../../core/common/decorators/token-protected.decorator';
 
 @ApiTags('Projects')
+@ApiBearerAuth()
 @Controller('projects')
 export class ProjectController {
     constructor(private readonly projectService: ProjectService) {}
 
+    @TokenProtected()
     @Post()
     @ApiOperation({ summary: 'Create a new project' })
     @ApiResponse({ status: 201, description: 'Project created successfully' })
@@ -61,6 +65,7 @@ export class ProjectController {
         return this.projectService.findOne(id);
     }
 
+    @TokenProtected()
     @Patch(':id')
     @ApiOperation({ summary: 'Update project by ID' })
     @ApiResponse({ status: 200, description: 'Project updated successfully' })
@@ -70,6 +75,7 @@ export class ProjectController {
         return this.projectService.update(id, dto);
     }
 
+    @TokenProtected()
     @Delete(':id')
     @ApiOperation({ summary: 'Delete project by ID' })
     @ApiResponse({ status: 204, description: 'Project deleted successfully' })

@@ -13,18 +13,22 @@ import {
     ApiCreatedResponse,
     ApiOkResponse,
     ApiBadRequestResponse,
-    ApiNotFoundResponse
+    ApiNotFoundResponse,
+    ApiBearerAuth
 } from '@nestjs/swagger';
 import { ExperienceEducationService } from './experience_education.service';
 import { CreateExperienceEducationDto } from './dto/create-experience_education.dto';
 import { UpdateExperienceEducationDto } from './dto/update-experience_education.dto';
 import { Experience_Education } from '@prisma/client';
+import { TokenProtected } from '../../../core/common/decorators/token-protected.decorator';
 
 @ApiTags('ExperienceEducation')
+@ApiBearerAuth()
 @Controller('experience-education')
 export class ExperienceEducationController {
     constructor(private readonly service: ExperienceEducationService) {}
 
+    @TokenProtected()
     @Post()
     @ApiOperation({ summary: 'Create a new experience or education entry' })
     @ApiCreatedResponse({ description: 'Entry created successfully' })
@@ -50,6 +54,7 @@ export class ExperienceEducationController {
         return this.service.findOne(id);
     }
 
+    @TokenProtected()
     @Patch(':id')
     @ApiOperation({ summary: 'Update an entry' })
     @ApiOkResponse({ description: 'Entry updated' })
@@ -60,6 +65,7 @@ export class ExperienceEducationController {
         return this.service.update(id, dto);
     }
 
+    @TokenProtected()
     @Delete(':id')
     @ApiOperation({ summary: 'Delete an entry' })
     @ApiOkResponse({ description: 'Entry deleted' })

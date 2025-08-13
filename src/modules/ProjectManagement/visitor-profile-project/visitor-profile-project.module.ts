@@ -2,8 +2,10 @@ import { Module } from '@nestjs/common';
 import { VisitorProfileProjectService } from './visitor-profile-project.service';
 import { VisitorProfileProjectController } from './visitor-profile-project.controller';
 import { PrismaClient } from '@prisma/client';
+import { SecurityModule } from '../../../core/common/security.module';
 
 @Module({
+    imports: [SecurityModule],
     controllers: [VisitorProfileProjectController],
     providers: [VisitorProfileProjectService, PrismaClient]
 })

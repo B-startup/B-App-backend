@@ -12,18 +12,22 @@ import {
     ApiOperation,
     ApiCreatedResponse,
     ApiOkResponse,
-    ApiBadRequestResponse
+    ApiBadRequestResponse,
+    ApiBearerAuth
 } from '@nestjs/swagger';
 import { TeamUsers } from '@prisma/client';
 import { TeamUserService } from './team-users.service';
 import { CreateTeamUserDto } from './dto/create-team-user.dto';
 import { UpdateTeamUserDto } from './dto/update-team-user.dto';
+import { TokenProtected } from '../../../core/common/decorators/token-protected.decorator';
 
 @ApiTags('TeamUsers')
+@ApiBearerAuth()
 @Controller('team-users')
 export class TeamUserController {
     constructor(private readonly teamUserService: TeamUserService) {}
 
+    @TokenProtected()
     @Post()
     @ApiOperation({ summary: 'Add a user to a team' })
     @ApiCreatedResponse({ description: 'User added to team successfully' })
@@ -48,6 +52,7 @@ export class TeamUserController {
         return this.teamUserService.findOne(id);
     }
 
+    @TokenProtected()
     @Patch(':id')
     @ApiOperation({ summary: 'Update team-user link' })
     @ApiOkResponse({ description: 'Team-user link updated' })
@@ -58,6 +63,7 @@ export class TeamUserController {
         return this.teamUserService.update(id, dto);
     }
 
+    @TokenProtected()
     @Delete(':id')
     @ApiOperation({ summary: 'Remove a user from a team' })
     @ApiOkResponse({ description: 'User removed from team' })

@@ -13,18 +13,22 @@ import {
     ApiOkResponse,
     ApiCreatedResponse,
     ApiNotFoundResponse,
-    ApiBadRequestResponse
+    ApiBadRequestResponse,
+    ApiBearerAuth
 } from '@nestjs/swagger';
 import { Offer } from '@prisma/client';
 import { OfferService } from './offer.service';
 import { CreateOfferDto } from './dto/create-offer.dto';
 import { UpdateOfferDto } from './dto/update-offer.dto';
+import { TokenProtected } from '../../../core/common/decorators/token-protected.decorator';
 
 @ApiTags('Offers')
+@ApiBearerAuth()
 @Controller('offer')
 export class OfferController {
     constructor(private readonly offerService: OfferService) {}
 
+    @TokenProtected()
     @Post()
     @ApiOperation({ summary: 'Create a new offer' })
     @ApiCreatedResponse({ description: 'Offer created successfully' })
@@ -48,6 +52,7 @@ export class OfferController {
         return this.offerService.findOne(id);
     }
 
+    @TokenProtected()
     @Patch(':id')
     @ApiOperation({ summary: 'Update offer' })
     @ApiOkResponse({ description: 'Offer updated successfully' })
@@ -59,6 +64,7 @@ export class OfferController {
         return this.offerService.update(id, updateOfferDto);
     }
 
+    @TokenProtected()
     @Delete(':id')
     @ApiOperation({ summary: 'Delete offer' })
     @ApiOkResponse({ description: 'Offer deleted successfully' })
