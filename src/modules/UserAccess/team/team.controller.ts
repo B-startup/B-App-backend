@@ -14,18 +14,22 @@ import {
     ApiOkResponse,
     ApiCreatedResponse,
     ApiBadRequestResponse,
-    ApiNotFoundResponse
+    ApiNotFoundResponse,
+    ApiBearerAuth
 } from '@nestjs/swagger';
 import { Team } from '@prisma/client';
 import { TeamService } from './team.service';
 import { CreateTeamDto } from './dto/create-team.dto';
 import { UpdateTeamDto } from './dto/update-team.dto';
+import { TokenProtected } from '../../../core/common/decorators/token-protected.decorator';
 
 @ApiTags('Teams')
+@ApiBearerAuth()
 @Controller('team')
 export class TeamController {
     constructor(private readonly teamService: TeamService) {}
 
+    @TokenProtected()
     @Post()
     @ApiOperation({ summary: 'Create a new team' })
     @ApiCreatedResponse({ description: 'Team created successfully' })
@@ -64,6 +68,7 @@ export class TeamController {
         return this.teamService.findOne(id);
     }
 
+    @TokenProtected()
     @Patch(':id')
     @ApiOperation({ summary: 'Update team by ID' })
     @ApiOkResponse({ description: 'Team updated' })
@@ -71,6 +76,7 @@ export class TeamController {
         return this.teamService.update(id, dto);
     }
 
+    @TokenProtected()
     @Delete(':id')
     @ApiOperation({ summary: 'Delete team by ID' })
     @ApiOkResponse({ description: 'Team deleted' })

@@ -1,9 +1,4 @@
 import {
-    IsString,
-    IsNotEmpty,
-    IsUUID,
-    IsNumber,
-    Min,
     validate,
 } from 'class-validator';
 import { CreateVideoDto, UpdateVideoDto } from '../dto';

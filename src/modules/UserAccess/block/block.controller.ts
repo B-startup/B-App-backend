@@ -13,18 +13,22 @@ import {
     ApiCreatedResponse,
     ApiOkResponse,
     ApiBadRequestResponse,
-    ApiNotFoundResponse
+    ApiNotFoundResponse,
+    ApiBearerAuth
 } from '@nestjs/swagger';
 import { Block } from '@prisma/client';
 import { BlockService } from './block.service';
 import { CreateBlockDto } from './dto/create-block.dto';
 import { UpdateBlockDto } from './dto/update-block.dto';
+import { TokenProtected } from '../../../core/common/decorators/token-protected.decorator';
 
 @ApiTags('Block')
+@ApiBearerAuth()
 @Controller('block')
 export class BlockController {
     constructor(private readonly blockService: BlockService) {}
 
+    @TokenProtected()
     @Post()
     @ApiOperation({ summary: 'Create new block' })
     @ApiCreatedResponse({ description: 'Block created successfully' })
@@ -48,6 +52,7 @@ export class BlockController {
         return this.blockService.findOne(id);
     }
 
+    @TokenProtected()
     @Patch(':id')
     @ApiOperation({ summary: 'Update block' })
     @ApiOkResponse({ description: 'Block updated' })
@@ -58,6 +63,7 @@ export class BlockController {
         return this.blockService.update(id, dto);
     }
 
+    @TokenProtected()
     @Delete(':id')
     @ApiOperation({ summary: 'Delete block' })
     @ApiOkResponse({ description: 'Block deleted' })

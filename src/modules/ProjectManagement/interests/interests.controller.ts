@@ -13,18 +13,22 @@ import {
     ApiCreatedResponse,
     ApiOkResponse,
     ApiNotFoundResponse,
-    ApiBadRequestResponse
+    ApiBadRequestResponse,
+    ApiBearerAuth
 } from '@nestjs/swagger';
 import { InterestsService } from './interests.service';
 import { CreateInterestDto } from './dto/create-interest.dto';
 import { UpdateInterestDto } from './dto/update-interest.dto';
 import { Interests } from '@prisma/client';
+import { TokenProtected } from '../../../core/common/decorators/token-protected.decorator';
 
 @ApiTags('Interests')
+@ApiBearerAuth()
 @Controller('interests')
 export class InterestsController {
     constructor(private readonly interestsService: InterestsService) {}
 
+    @TokenProtected()
     @Post()
     @ApiOperation({ summary: 'Create interest' })
     @ApiCreatedResponse({ description: 'Interest created successfully' })
@@ -48,6 +52,7 @@ export class InterestsController {
         return this.interestsService.findOne(id);
     }
 
+    @TokenProtected()
     @Patch(':id')
     @ApiOperation({ summary: 'Update interest' })
     @ApiOkResponse({ description: 'Interest updated successfully' })
@@ -59,6 +64,7 @@ export class InterestsController {
         return this.interestsService.update(id, dto);
     }
 
+    @TokenProtected()
     @Delete(':id')
     @ApiOperation({ summary: 'Delete interest' })
     @ApiOkResponse({ description: 'Interest deleted successfully' })

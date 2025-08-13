@@ -10,14 +10,17 @@ import {
 import { VisitorProfileProjectService } from './visitor-profile-project.service';
 import { CreateVisitorProfileProjectDto } from './dto/create-visitor-profile-project.dto';
 import { UpdateVisitorProfileProjectDto } from './dto/update-visitor-profile-project.dto';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { VisitorProfileProject } from '@prisma/client';
+import { TokenProtected } from '../../../core/common/decorators/token-protected.decorator';
 
 @ApiTags('VisitorProfileProject')
+@ApiBearerAuth()
 @Controller('visitor-profile-project')
 export class VisitorProfileProjectController {
     constructor(private readonly service: VisitorProfileProjectService) {}
 
+    @TokenProtected()
     @Post()
     @ApiOperation({ summary: 'Create visitor record' })
     create(
@@ -38,6 +41,7 @@ export class VisitorProfileProjectController {
         return this.service.findOne(id);
     }
 
+    @TokenProtected()
     @Patch(':id')
     @ApiOperation({ summary: 'Update a visitor record' })
     update(
@@ -47,6 +51,7 @@ export class VisitorProfileProjectController {
         return this.service.update(id, dto);
     }
 
+    @TokenProtected()
     @Delete(':id')
     @ApiOperation({ summary: 'Delete a visitor record' })
     remove(@Param('id') id: string): Promise<VisitorProfileProject> {

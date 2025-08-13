@@ -16,14 +16,18 @@ import {
     ApiOperation,
     ApiResponse,
     ApiNotFoundResponse,
-    ApiBadRequestResponse
+    ApiBadRequestResponse,
+    ApiBearerAuth
 } from '@nestjs/swagger';
+import { TokenProtected } from '../../../core/common/decorators/token-protected.decorator';
 
 @ApiTags('sector')
+@ApiBearerAuth()
 @Controller('sector')
 export class SectorController {
     constructor(private readonly sectorService: SectorService) {}
 
+    @TokenProtected()
     @Post()
     @ApiOperation({ summary: 'Create a new sector' })
     @ApiResponse({ status: 201, description: 'Sector created successfully' })
@@ -47,6 +51,7 @@ export class SectorController {
         return this.sectorService.findOne(id);
     }
 
+    @TokenProtected()
     @Patch(':id')
     @ApiOperation({ summary: 'Update sector by ID' })
     @ApiResponse({ status: 200, description: 'Sector updated successfully' })
@@ -56,6 +61,7 @@ export class SectorController {
         return this.sectorService.update(id, dto);
     }
 
+    @TokenProtected()
     @Delete(':id')
     @ApiOperation({ summary: 'Delete sector by ID' })
     @ApiResponse({ status: 204, description: 'Sector deleted successfully' })

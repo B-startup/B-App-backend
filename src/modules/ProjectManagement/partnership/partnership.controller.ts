@@ -13,18 +13,22 @@ import {
     ApiCreatedResponse,
     ApiOkResponse,
     ApiNotFoundResponse,
-    ApiBadRequestResponse
+    ApiBadRequestResponse,
+    ApiBearerAuth
 } from '@nestjs/swagger';
 import { Partnership } from '@prisma/client';
 import { PartnershipService } from './partnership.service';
 import { CreatePartnershipDto } from './dto/create-partnership.dto';
 import { UpdatePartnershipDto } from './dto/update-partnership.dto';
+import { TokenProtected } from '../../../core/common/decorators/token-protected.decorator';
 
 @ApiTags('Partnerships')
+@ApiBearerAuth()
 @Controller('partnership')
 export class PartnershipController {
     constructor(private readonly partnershipService: PartnershipService) {}
 
+    @TokenProtected()
     @Post()
     @ApiOperation({ summary: 'Create a new partnership' })
     @ApiCreatedResponse({ description: 'Partnership created successfully' })
@@ -48,6 +52,7 @@ export class PartnershipController {
         return this.partnershipService.findOne(id);
     }
 
+    @TokenProtected()
     @Patch(':id')
     @ApiOperation({ summary: 'Update a partnership' })
     @ApiOkResponse({ description: 'Partnership updated successfully' })
@@ -58,6 +63,7 @@ export class PartnershipController {
         return this.partnershipService.update(id, dto);
     }
 
+    @TokenProtected()
     @Delete(':id')
     @ApiOperation({ summary: 'Delete a partnership' })
     @ApiOkResponse({ description: 'Partnership deleted successfully' })
