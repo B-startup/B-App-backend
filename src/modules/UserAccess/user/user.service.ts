@@ -543,6 +543,7 @@ export class UserService extends BaseCrudServiceImpl<User, CreateUserDto, Update
         // S'assurer que les champs statistiques sont présents avec des valeurs par défaut
         return {
             ...userWithoutSensitiveInfo,
+            profilePicture: this.buildProfileImageUrl(user.profilePicture),
             nbPosts: user.nbPosts || 0,
             nbProjects: user.nbProjects || 0,
             nbOffer: user.nbOffer || 0,
@@ -553,6 +554,30 @@ export class UserService extends BaseCrudServiceImpl<User, CreateUserDto, Update
             timeSpent: user.timeSpent || 0,
             score: user.score || 0
         };
+    }
+
+    /**
+     * Construit l'URL complète pour accéder à une image de profil
+     */
+    private buildProfileImageUrl(profilePicturePath: string): string | null {
+        if (!profilePicturePath) {
+            return null;
+        }
+
+        const baseUrl = this.configService.get<string>('BASE_URL', 'http://localhost:8050/');
+        // S'assurer que baseUrl se termine par "/"
+        const formattedBaseUrl = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
+        
+        if (profilePicturePath.startsWith('profile-images/')) {
+            // Pour les chemins relatifs "profile-images/filename.jpg"
+            return `${formattedBaseUrl}uploads/${profilePicturePath}`;
+        } else if (profilePicturePath.startsWith('uploads/')) {
+            // Pour les chemins qui commencent déjà par "uploads/"
+            return `${formattedBaseUrl}${profilePicturePath}`;
+        } else {
+            // Pour les autres cas, ajouter le préfixe complet
+            return `${formattedBaseUrl}uploads/profile-images/${profilePicturePath}`;
+        }
     }
 
     private validateImageFile(file: Express.Multer.File): void {
