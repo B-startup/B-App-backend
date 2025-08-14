@@ -13,18 +13,22 @@ import {
     ApiCreatedResponse,
     ApiOkResponse,
     ApiNotFoundResponse,
-    ApiBadRequestResponse
+    ApiBadRequestResponse,
+    ApiBearerAuth
 } from '@nestjs/swagger';
 import { UseOfFunds } from '@prisma/client';
 import { UseOfFundsService } from './use-of-funds.service';
 import { CreateUseOfFundsDto } from './dto/create-use-of-fund.dto';
 import { UpdateUseOfFundDto } from './dto/update-use-of-fund.dto';
+import { TokenProtected } from '../../../core/common/decorators/token-protected.decorator';
 
 @ApiTags('Use of Funds')
+@ApiBearerAuth()
 @Controller('use-of-funds')
 export class UseOfFundsController {
     constructor(private readonly useOfFundsService: UseOfFundsService) {}
 
+    @TokenProtected()
     @Post()
     @ApiOperation({ summary: 'Create new fund allocation' })
     @ApiCreatedResponse({ description: 'Use of funds entry created' })
@@ -48,6 +52,7 @@ export class UseOfFundsController {
         return this.useOfFundsService.findOne(id);
     }
 
+    @TokenProtected()
     @Patch(':id')
     @ApiOperation({ summary: 'Update fund allocation' })
     @ApiOkResponse({ description: 'Use of funds entry updated' })
@@ -58,6 +63,7 @@ export class UseOfFundsController {
         return this.useOfFundsService.update(id, dto);
     }
 
+    @TokenProtected()
     @Delete(':id')
     @ApiOperation({ summary: 'Delete fund allocation' })
     @ApiOkResponse({ description: 'Use of funds entry deleted' })

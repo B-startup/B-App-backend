@@ -40,6 +40,7 @@ describe('FileController', () => {
         isCompleteProfile: true,
         isPhoneVerified: false,
         score: 0,
+        nbPosts: 0,
         nbConnects: 0,
         nbFollowers: 0,
         nbFollowing: 0,

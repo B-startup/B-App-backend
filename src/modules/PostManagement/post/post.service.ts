@@ -17,14 +17,69 @@ export class PostService extends BaseCrudServiceImpl<
         super(prisma);
     }
 
+    /**
+     * Override de la méthode create pour incrémenter nbPosts de l'utilisateur
+     */
+    async create(createPostDto: CreatePostDto): Promise<Post> {
+        // Utiliser une transaction pour créer le post et incrémenter nbPosts
+        return await this.prisma.$transaction(async (prisma) => {
+            // Créer le post
+            const newPost = await prisma.post.create({
+                data: createPostDto
+            });
+
+            // Incrémenter nbPosts de l'utilisateur
+            await prisma.user.update({
+                where: { id: createPostDto.userId },
+                data: {
+                    nbPosts: {
+                        increment: 1
+                    }
+                }
+            });
+
+            return newPost;
+        });
+    }
+
+    /**
+     * Override de la méthode remove pour décrémenter nbPosts de l'utilisateur
+     */
+    async remove(id: string): Promise<Post> {
+        // Utiliser une transaction pour supprimer le post et décrémenter nbPosts
+        return await this.prisma.$transaction(async (prisma) => {
+            // Récupérer le post pour obtenir l'userId avant suppression
+            const postToDelete = await prisma.post.findUniqueOrThrow({
+                where: { id },
+                select: { userId: true }
+            });
+
+            // Supprimer le post
+            const deletedPost = await prisma.post.delete({
+                where: { id }
+            });
+
+            // Décrémenter nbPosts de l'utilisateur (minimum 0)
+            await prisma.user.update({
+                where: { id: postToDelete.userId },
+                data: {
+                    nbPosts: {
+                        decrement: 1
+                    }
+                }
+            });
+
+            return deletedPost;
+        });
+    }
+
     // Méthodes CRUD héritées du BaseService :
-    // - create(createPostDto: CreatePostDto): Promise<Post>
     // - findAll(): Promise<Post[]>
     // - findByUser(userId: string): Promise<Post[]>
     // - findOne(id: string): Promise<Post>
     // - findOneOrFail(id: string): Promise<Post>
     // - update(id: string, updatePostDto: UpdatePostDto): Promise<Post>
-    // - remove(id: string): Promise<Post>
+
 
     // Méthodes personnalisées pour le modèle Post
 

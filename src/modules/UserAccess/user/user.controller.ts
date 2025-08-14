@@ -20,7 +20,7 @@ import {
     ApiBody,
     ApiBearerAuth
 } from '@nestjs/swagger';
-import { CreateUserDto, UpdateUserDto, UserResponseDto } from './dto/user.dto';
+import { CreateUserDto, UpdateUserDto, UserResponseDto } from './dto';
 import { UserService } from './user.service';
 import { TokenProtected } from '../../../core/common/decorators/token-protected.decorator';
 
@@ -39,7 +39,7 @@ export class UserController {
         description: 'User has been created successfully'
     })
     create(@Body() createUserDto: CreateUserDto): Promise<UserResponseDto> {
-        return this.userService.create(createUserDto);
+        return this.userService.createUser(createUserDto);
     }
 
     @Post('with-profile-image')
@@ -84,7 +84,18 @@ export class UserController {
     })
     @ApiOkResponse({ description: 'List of all users' })
     findAll(): Promise<UserResponseDto[]> {
-        return this.userService.findAll();
+        return this.userService.findAllUsers();
+    }
+
+    @Get('with-stats')
+    @TokenProtected()
+    @ApiOperation({
+        summary: '📊 Get all users with detailed statistics',
+        description: 'Retrieves a list of all users with comprehensive statistics (posts, projects, offers, etc.)'
+    })
+    @ApiOkResponse({ description: 'List of all users with detailed statistics' })
+    findAllWithStats(): Promise<UserResponseDto[]> {
+        return this.userService.findAllWithStats();
     }
 
     @Get(':id')
@@ -95,7 +106,18 @@ export class UserController {
     })
     @ApiOkResponse({ description: 'User found' })
     findOne(@Param('id') id: string): Promise<UserResponseDto> {
-        return this.userService.findOne(id);
+        return this.userService.findUserById(id);
+    }
+
+    @Get(':id/with-stats')
+    @TokenProtected()
+    @ApiOperation({
+        summary: '📊 Get user by id with detailed statistics',
+        description: 'Retrieves a specific user with comprehensive statistics (posts, projects, offers, etc.)'
+    })
+    @ApiOkResponse({ description: 'User found with detailed statistics' })
+    findOneWithStats(@Param('id') id: string): Promise<UserResponseDto> {
+        return this.userService.findOneWithStats(id);
     }
 
     @Patch(':id')
@@ -111,7 +133,7 @@ export class UserController {
         @Param('id') id: string,
         @Body() updateUserDto: UpdateUserDto
     ): Promise<UserResponseDto> {
-        return this.userService.update(id, updateUserDto);
+        return this.userService.updateUser(id, updateUserDto);
     }
 
     @Patch(':id/with-profile-image')
@@ -270,6 +292,28 @@ export class UserController {
         return this.userService.getUserStats();
     }
 
+    @Post(':id/sync-posts-count')
+    @TokenProtected()
+    @ApiOperation({
+        summary: '🔄 Synchronize user posts count',
+        description: 'Manually synchronize the nbPosts field for a specific user with actual post count'
+    })
+    @ApiOkResponse({ description: 'User posts count synchronized successfully' })
+    async syncUserPostsCount(@Param('id') id: string): Promise<UserResponseDto> {
+        return this.userService.syncUserPostsCount(id);
+    }
+
+    @Post('sync-all-posts-count')
+    @TokenProtected()
+    @ApiOperation({
+        summary: '🔄 Synchronize all users posts count',
+        description: 'Manually synchronize the nbPosts field for all users with actual post counts'
+    })
+    @ApiOkResponse({ description: 'All users posts count synchronized successfully' })
+    async syncAllUsersPostsCount(): Promise<{ message: string; updated: number }> {
+        return this.userService.syncAllUsersPostsCount();
+    }
+
     @Delete(':id')
     @TokenProtected()
     @ApiOperation({
@@ -280,6 +324,6 @@ export class UserController {
         description: 'User has been deleted successfully'
     })
     remove(@Param('id') id: string): Promise<UserResponseDto> {
-        return this.userService.remove(id);
+        return this.userService.removeUser(id);
     }
 }

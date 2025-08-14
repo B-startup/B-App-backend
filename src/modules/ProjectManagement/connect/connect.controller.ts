@@ -13,18 +13,22 @@ import {
     ApiOperation,
     ApiOkResponse,
     ApiCreatedResponse,
-    ApiBadRequestResponse
+    ApiBadRequestResponse,
+    ApiBearerAuth
 } from '@nestjs/swagger';
 import { Connect } from '@prisma/client';
 import { ConnectService } from './connect.service';
 import { CreateConnectDto } from './dto/create-connect.dto';
 import { UpdateConnectDto } from './dto/update-connect.dto';
+import { TokenProtected } from '../../../core/common/decorators/token-protected.decorator';
 
 @ApiTags('Connects')
+@ApiBearerAuth()
 @Controller('connects')
 export class ConnectController {
     constructor(private readonly connectService: ConnectService) {}
 
+    @TokenProtected()
     @Post()
     @ApiOperation({ summary: 'Create a connection request' })
     @ApiCreatedResponse({ description: 'Connection request created' })
@@ -61,6 +65,7 @@ export class ConnectController {
         return this.connectService.findOne(id);
     }
 
+    @TokenProtected()
     @Patch(':id')
     @ApiOperation({ summary: 'Update connect' })
     @ApiOkResponse({ description: 'Connect updated' })
@@ -71,6 +76,7 @@ export class ConnectController {
         return this.connectService.update(id, dto);
     }
 
+    @TokenProtected()
     @Delete(':id')
     @ApiOperation({ summary: 'Delete connect' })
     @ApiOkResponse({ description: 'Connect deleted' })

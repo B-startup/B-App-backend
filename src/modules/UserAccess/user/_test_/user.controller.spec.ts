@@ -5,7 +5,7 @@ import { UserController } from '../user.controller';
 import { UserService } from '../user.service';
 import { PrismaService } from '../../../../core/services/prisma.service';
 import { TokenBlacklistService } from '../../../../core/services/token-blacklist.service';
-import { CreateUserDto, UpdateUserDto, UserResponseDto } from '../dto/user.dto';
+import { CreateUserDto, UpdateUserDto, UserResponseDto } from '../dto';
 
 describe('UserController', () => {
     let controller: UserController;
