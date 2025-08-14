@@ -3,7 +3,7 @@ import { ConflictException, NotFoundException, BadRequestException } from '@nest
 import { ConfigService } from '@nestjs/config';
 import { UserService } from '../user.service';
 import { PrismaService } from '../../../../core/services/prisma.service';
-import { CreateUserDto, UpdateUserDto } from '../dto/user.dto';
+import { CreateUserDto, UpdateUserDto } from '../dto';
 import * as bcrypt from 'bcryptjs';
 import * as fs from 'fs';
 
