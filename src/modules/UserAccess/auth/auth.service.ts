@@ -62,7 +62,7 @@ export class AuthService {
                 image: user.profilePicture
             },
             {
-                expiresIn: '30m'
+                expiresIn: '7d'
             }
         );
 
@@ -70,6 +70,7 @@ export class AuthService {
     }
 
     async refreshToken(refreshToken: string) {
+        try {
         const { sub } = this.jwtService.verify(refreshToken); // Changed from id to sub
         const user = await this.prisma.user.findUnique({ where: { id: sub } }); // Use sub as user ID
         if (!user) throw new UnauthorizedException('User not found');
@@ -80,9 +81,13 @@ export class AuthService {
             email: user.email,
             image: user.profilePicture
         }, {
-            expiresIn: '30m'
+            expiresIn: '15m'
         });
         return { token, refreshToken };
+        } catch (error) {
+            console.error('Refresh token error:', error);
+            throw new UnauthorizedException('Invalid refresh token');
+        }   
     }
 
     async forgetPassword(email: string): Promise<void> {
