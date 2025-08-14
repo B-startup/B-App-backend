@@ -37,12 +37,26 @@ export class ViewService extends BaseCrudServiceImpl<
 
         if (existingView) {
             // Si une vue existe déjà, on met à jour le temps passé
-            return this.model.update({
+            const updatedView = await this.model.update({
                 where: { id: existingView.id },
                 data: {
                     timespent: existingView.timespent + (data.timespent || 0)
                 }
             });
+
+            // Incrémenter le timeSpent global de l'utilisateur
+            if (data.timespent && data.timespent > 0) {
+                await this.prismaService.user.update({
+                    where: { id: data.userId },
+                    data: {
+                        timeSpent: {
+                            increment: data.timespent
+                        }
+                    }
+                });
+            }
+
+            return updatedView;
         }
 
         // Créer une nouvelle vue
@@ -53,6 +67,18 @@ export class ViewService extends BaseCrudServiceImpl<
                 timespent: data.timespent || 0
             }
         });
+
+        // Incrémenter le timeSpent global de l'utilisateur
+        if (data.timespent && data.timespent > 0) {
+            await this.prismaService.user.update({
+                where: { id: data.userId },
+                data: {
+                    timeSpent: {
+                        increment: data.timespent
+                    }
+                }
+            });
+        }
 
         // Incrémenter le compteur de vues pour la vidéo directement
         await this.prismaService.video.update({
