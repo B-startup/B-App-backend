@@ -6,15 +6,15 @@ import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { PrismaService } from '../../../core/services/prisma.service';
 import { BaseCrudServiceImpl } from '../../../core/common/services/base-crud.service';
-import { CreateUserDto, UpdateUserDto, UserResponseDto } from './dto/user.dto';
-import { UserRole } from '@prisma/client';
+import { CreateUserDto, UpdateUserDto, UserResponseDto } from './dto';
+import { UserRole, User } from '@prisma/client';
 import { cryptPassword, handleOtpOperation } from '../../../core/utils/auth';
 import {
     EmailSubject,
     EmailTemplate
 } from 'src/core/constants/email.constants';
 @Injectable()
-export class UserService extends BaseCrudServiceImpl<UserResponseDto, CreateUserDto, UpdateUserDto> {
+export class UserService extends BaseCrudServiceImpl<User, CreateUserDto, UpdateUserDto> {
     protected model: any;
     private readonly profileImagesDir: string;
     private readonly maxFileSize: number;
@@ -35,7 +35,7 @@ export class UserService extends BaseCrudServiceImpl<UserResponseDto, CreateUser
         this.ensureUploadDirectoryExists();
     }
 
-    async create(createDto: CreateUserDto): Promise<UserResponseDto> {
+    async create(createDto: CreateUserDto): Promise<User> {
         // Check if user already exists
         const existingUser = await this.prisma.user.findUnique({
             where: { email: createDto.email }
@@ -52,11 +52,6 @@ export class UserService extends BaseCrudServiceImpl<UserResponseDto, CreateUser
             isEmailVerified: false
         };
 
-        // Convertir la date de naissance en objet Date si fournie
-        if (createDto.birthdate) {
-            userData.birthdate = new Date(createDto.birthdate);
-        }
-
         const user = await this.prisma.user.create({
             data: userData
         });
@@ -71,32 +66,181 @@ export class UserService extends BaseCrudServiceImpl<UserResponseDto, CreateUser
                 subject: EmailSubject.VERIFY_ACCOUNT
             }
         );
+        
         return user;
     }
 
-    async findAll(): Promise<UserResponseDto[]> {
-        const users = await this.model.findMany({
-            orderBy: { createdAt: 'desc' }
-        });
+    // Méthodes spécifiques qui retournent des DTOs (pour le controller)
+    
+    /**
+     * Créer un utilisateur et retourner le DTO
+     */
+    async createUser(createDto: CreateUserDto): Promise<UserResponseDto> {
+        const user = await this.create(createDto);
+        return this.toUserResponseDto(user);
+    }
+
+    /**
+     * Trouver tous les utilisateurs et retourner les DTOs
+     */
+    async findAllUsers(): Promise<UserResponseDto[]> {
+        const users = await this.findAll();
         return users.map(user => this.toUserResponseDto(user));
     }
 
-    async findOne(id: string): Promise<UserResponseDto> {
+    /**
+     * Trouver un utilisateur et retourner le DTO
+     */
+    async findUserById(id: string): Promise<UserResponseDto> {
+        const user = await this.findOne(id);
+        return this.toUserResponseDto(user);
+    }
+
+    /**
+     * Obtenir un utilisateur avec ses statistiques détaillées
+     */
+    async findOneWithStats(id: string): Promise<UserResponseDto> {
         const user = await this.model.findUnique({
-            where: { id }
+            where: { id },
+            include: {
+                _count: {
+                    select: {
+                        posts: true,
+                        projects: true,
+                        offers: true,
+                        likes: true,
+                        comments: true,
+                        views: true,
+                        connects: true,
+                        following: true,
+                        followers: true
+                    }
+                }
+            }
         });
 
         if (!user) {
             throw new NotFoundException(`Utilisateur avec l'ID ${id} non trouvé`);
         }
 
-        return this.toUserResponseDto(user);
+        // Enrichir les données avec les compteurs calculés
+        const enrichedUser = {
+            ...user,
+            nbPosts: user._count.posts,
+            nbProjects: user._count.projects,
+            nbOffer: user._count.offers,
+            nbConnects: user._count.connects,
+            nbFollowing: user._count.following,
+            nbFollowers: user._count.followers
+        };
+
+        return this.toUserResponseDto(enrichedUser);
     }
 
-    async update(id: string, updateUserDto: UpdateUserDto): Promise<UserResponseDto> {
-        // Vérifier que l'utilisateur existe
-        const existingUser = await this.findOne(id);
+    /**
+     * Obtenir tous les utilisateurs avec leurs statistiques
+     */
+    async findAllWithStats(): Promise<UserResponseDto[]> {
+        const users = await this.model.findMany({
+            include: {
+                _count: {
+                    select: {
+                        posts: true,
+                        projects: true,
+                        offers: true,
+                        likes: true,
+                        comments: true,
+                        views: true,
+                        connects: true,
+                        following: true,
+                        followers: true
+                    }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
 
+        return users.map(user => {
+            const enrichedUser = {
+                ...user,
+                nbPosts: user._count.posts,
+                nbProjects: user._count.projects,
+                nbOffer: user._count.offers,
+                nbConnects: user._count.connects,
+                nbFollowing: user._count.following,
+                nbFollowers: user._count.followers
+            };
+            return this.toUserResponseDto(enrichedUser);
+        });
+    }
+
+    /**
+     * Synchroniser le compteur nbPosts d'un utilisateur avec ses posts réels
+     */
+    async syncUserPostsCount(userId: string): Promise<UserResponseDto> {
+        const user = await this.model.findUnique({
+            where: { id: userId },
+            include: {
+                _count: {
+                    select: {
+                        posts: true
+                    }
+                }
+            }
+        });
+
+        if (!user) {
+            throw new NotFoundException(`Utilisateur avec l'ID ${userId} non trouvé`);
+        }
+
+        const actualPostsCount = user._count.posts;
+
+        const updatedUser = await this.model.update({
+            where: { id: userId },
+            data: {
+                nbPosts: actualPostsCount
+            }
+        });
+
+        return this.toUserResponseDto(updatedUser);
+    }
+
+    /**
+     * Synchroniser tous les compteurs nbPosts
+     */
+    async syncAllUsersPostsCount(): Promise<{ updated: number; message: string }> {
+        const users = await this.model.findMany({
+            select: {
+                id: true,
+                name: true,
+                _count: {
+                    select: {
+                        posts: true
+                    }
+                }
+            }
+        });
+
+        let updatedCount = 0;
+
+        for (const user of users) {
+            const actualPostsCount = user._count.posts;
+            
+            await this.model.update({
+                where: { id: user.id },
+                data: { nbPosts: actualPostsCount }
+            });
+
+            updatedCount++;
+        }
+
+        return {
+            updated: updatedCount,
+            message: `${updatedCount} utilisateurs mis à jour avec leurs compteurs de posts`
+        };
+    }
+
+    async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
         // Filtrer les champs vides/undefined/null pour ne mettre à jour que les champs fournis
         const updateData = Object.keys(updateUserDto).reduce((acc, key) => {
             const value = updateUserDto[key];
@@ -108,7 +252,7 @@ export class UserService extends BaseCrudServiceImpl<UserResponseDto, CreateUser
 
         // Si aucune donnée à mettre à jour, retourner l'utilisateur existant
         if (Object.keys(updateData).length === 0) {
-            return existingUser;
+            return await this.findOne(id);
         }
 
         // Si le mot de passe est fourni, le hasher
@@ -134,15 +278,13 @@ export class UserService extends BaseCrudServiceImpl<UserResponseDto, CreateUser
             }
         }
 
-        const updatedUser = await this.model.update({
+        return await this.model.update({
             where: { id },
             data: updateData
         });
-
-        return this.toUserResponseDto(updatedUser);
     }
 
-    async remove(id: string): Promise<UserResponseDto> {
+    async remove(id: string): Promise<User> {
         const user = await this.findOne(id);
         
         // Supprimer l'image de profil si elle existe
@@ -150,19 +292,32 @@ export class UserService extends BaseCrudServiceImpl<UserResponseDto, CreateUser
             await this.deleteProfileImageFile(user.profilePicture);
         }
 
-        const deletedUser = await this.model.delete({
+        return await this.model.delete({
             where: { id }
         });
+    }
 
-        return this.toUserResponseDto(deletedUser);
+    /**
+     * Mettre à jour un utilisateur et retourner le DTO
+     */
+    async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<UserResponseDto> {
+        const user = await this.update(id, updateUserDto);
+        return this.toUserResponseDto(user);
+    }
+
+    /**
+     * Supprimer un utilisateur et retourner le DTO
+     */
+    async removeUser(id: string): Promise<UserResponseDto> {
+        const user = await this.remove(id);
+        return this.toUserResponseDto(user);
     }
 
     // Méthodes spécifiques à User
 
     async findByEmail(email: string): Promise<UserResponseDto | null> {
-        const user = await this.model.findUnique({
-            where: { email }
-        });
+        // Utiliser la méthode générique findBy du BaseCrudService
+        const user = await this.findBy('email', email);
         return user ? this.toUserResponseDto(user) : null;
     }
 
@@ -384,7 +539,20 @@ export class UserService extends BaseCrudServiceImpl<UserResponseDto, CreateUser
 
     private toUserResponseDto(user: any): UserResponseDto {
         const { password, otpCode, otpCodeExpiresAt, refreshToken, ...userWithoutSensitiveInfo } = user;
-        return userWithoutSensitiveInfo;
+        
+        // S'assurer que les champs statistiques sont présents avec des valeurs par défaut
+        return {
+            ...userWithoutSensitiveInfo,
+            nbPosts: user.nbPosts || 0,
+            nbProjects: user.nbProjects || 0,
+            nbOffer: user.nbOffer || 0,
+            nbConnects: user.nbConnects || 0,
+            nbFollowers: user.nbFollowers || 0,
+            nbFollowing: user.nbFollowing || 0,
+            nbVisits: user.nbVisits || 0,
+            timeSpent: user.timeSpent || 0,
+            score: user.score || 0
+        };
     }
 
     private validateImageFile(file: Express.Multer.File): void {

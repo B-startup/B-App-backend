@@ -143,6 +143,9 @@ model User {
   /// Number of offers made by this user
   nbOffer Int @default(0)
 
+  /// Number of posts created by this user
+  nbPosts Int @default(0)
+
   // -------------------- Timestamps -----------------------
 
   /// Timestamp when the user was created
