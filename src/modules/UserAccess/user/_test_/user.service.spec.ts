@@ -81,8 +81,6 @@ describe('UserService', () => {
         }).compile();
 
         service = module.get<UserService>(UserService);
-        prismaService = module.get<PrismaService>(PrismaService);
-        configService = module.get<ConfigService>(ConfigService);
 
         // Mock fs
         (fs.existsSync as jest.Mock).mockReturnValue(true);
