@@ -50,7 +50,6 @@ describe('VideoController (e2e)', () => {
             .compile();
 
         app = moduleFixture.createNestApplication();
-        prismaService = moduleFixture.get<PrismaService>(PrismaService);
         jwtService = moduleFixture.get<JwtService>(JwtService);
         
         await app.init();

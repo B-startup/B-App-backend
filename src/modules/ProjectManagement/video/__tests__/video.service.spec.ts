@@ -70,7 +70,6 @@ describe('VideoService', () => {
 
         service = module.get<VideoService>(VideoService);
         prismaService = module.get<PrismaService>(PrismaService);
-        configService = module.get<ConfigService>(ConfigService);
     });
 
     afterEach(() => {
