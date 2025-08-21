@@ -147,7 +147,6 @@ describe('CommentController', () => {
                 projectId: 'project-1'
             };
 
-            const mockUser = { sub: 'user-1' };
             mockCommentService.create.mockResolvedValue(mockComment);
 
             const result = await controller.create(createCommentDto);
@@ -164,7 +163,6 @@ describe('CommentController', () => {
                 projectId: 'project-1'
             };
 
-            const mockUser = { sub: 'user-2' };
             const reply = {
                 ...mockComment,
                 id: 'reply-1',

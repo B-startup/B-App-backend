@@ -46,7 +46,7 @@ export class UserController {
     @UseInterceptors(FileInterceptor('profileImage'))
     @ApiConsumes('multipart/form-data')
     @ApiOperation({
-        summary: '📸 Create user with profile image',
+        summary: '📸 Create user with profile image ( à supprimer)',
         description: 'Creates a new user with optional profile image upload'
     })
     @ApiBody({
@@ -79,44 +79,43 @@ export class UserController {
     @Get()
     @TokenProtected()
     @ApiOperation({
-        summary: 'Get all users',
-        description: 'Retrieves a list of all registered users'
+        summary: 'Get all users with statistics',
+        description: 'Retrieves a list of all registered users with their comprehensive statistics'
     })
-    @ApiOkResponse({ description: 'List of all users' })
+    @ApiOkResponse({ description: 'List of all users with statistics' })
     findAll(): Promise<UserResponseDto[]> {
-        return this.userService.findAllUsers();
+        return this.userService.findAllWithStats();
     }
 
-    @Get('with-stats')
+    @Get('search')
     @TokenProtected()
     @ApiOperation({
-        summary: '📊 Get all users with detailed statistics',
-        description: 'Retrieves a list of all users with comprehensive statistics (posts, projects, offers, etc.)'
+        summary: '🔍 Advanced user search',
+        description: 'Advanced search across multiple user fields (name, email, country, city, website) with a single search input'
     })
-    @ApiOkResponse({ description: 'List of all users with detailed statistics' })
-    findAllWithStats(): Promise<UserResponseDto[]> {
-        return this.userService.findAllWithStats();
+    @ApiOkResponse({
+        description: 'Users found successfully'
+    })
+    async advancedSearch(
+        @Query('q') searchQuery?: string,
+        @Query('page') page?: number,
+        @Query('limit') limit?: number
+    ) {
+        return this.userService.advancedSearch({
+            searchQuery,
+            page,
+            limit
+        });
     }
 
     @Get(':id')
     @TokenProtected()
     @ApiOperation({
-        summary: 'Get user by id',
-        description: 'Retrieves a specific user by their unique identifier'
-    })
-    @ApiOkResponse({ description: 'User found' })
-    findOne(@Param('id') id: string): Promise<UserResponseDto> {
-        return this.userService.findUserById(id);
-    }
-
-    @Get(':id/with-stats')
-    @TokenProtected()
-    @ApiOperation({
-        summary: '📊 Get user by id with detailed statistics',
+        summary: 'Get user by id with detailed statistics',
         description: 'Retrieves a specific user with comprehensive statistics (posts, projects, offers, etc.)'
     })
     @ApiOkResponse({ description: 'User found with detailed statistics' })
-    findOneWithStats(@Param('id') id: string): Promise<UserResponseDto> {
+    findOne(@Param('id') id: string): Promise<UserResponseDto> {
         return this.userService.findOneWithStats(id);
     }
 
@@ -141,7 +140,7 @@ export class UserController {
     @UseInterceptors(FileInterceptor('profileImage'))
     @ApiConsumes('multipart/form-data')
     @ApiOperation({
-        summary: '🔄 Update user with profile image',
+        summary: '🔄 Update user with profile image ( à supprimer)',
         description: 'Updates user information with optional profile image upload'
     })
     @ApiBody({
@@ -216,60 +215,6 @@ export class UserController {
         return this.userService.removeProfileImage(id);
     }
 
-    @Get('search')
-    @TokenProtected()
-    @ApiOperation({
-        summary: '🔍 Search users',
-        description: 'Search users with filters and pagination'
-    })
-    @ApiOkResponse({
-        description: 'Users found successfully'
-    })
-    async searchUsers(
-        @Query('search') search?: string,
-        @Query('country') country?: string,
-        @Query('city') city?: string,
-        @Query('role') role?: string,
-        @Query('isEmailVerified') isEmailVerified?: boolean,
-        @Query('page') page?: number,
-        @Query('limit') limit?: number
-    ) {
-        return this.userService.findUsers({
-            search,
-            country,
-            city,
-            role,
-            isEmailVerified,
-            page,
-            limit
-        });
-    }
-
-    @Get('email/:email')
-    @TokenProtected()
-    @ApiOperation({
-        summary: '📧 Find user by email',
-        description: 'Find a specific user by email address'
-    })
-    @ApiOkResponse({ description: 'User found by email' })
-    async findByEmail(@Param('email') email: string): Promise<UserResponseDto | null> {
-        return this.userService.findByEmail(email);
-    }
-
-    @Patch(':id/profile')
-    @TokenProtected()
-    @ApiOperation({
-        summary: '👤 Update user profile',
-        description: 'Update user profile (limited fields for self-update)'
-    })
-    @ApiOkResponse({ description: 'Profile updated successfully' })
-    async updateProfile(
-        @Param('id') id: string,
-        @Body() updateDto: UpdateUserDto
-    ): Promise<UserResponseDto> {
-        return this.userService.updateProfile(id, updateDto);
-    }
-
     @Post(':id/complete-profile')
     @TokenProtected()
     @ApiOperation({
@@ -290,28 +235,6 @@ export class UserController {
     @ApiOkResponse({ description: 'User statistics retrieved successfully' })
     async getUserStats() {
         return this.userService.getUserStats();
-    }
-
-    @Post(':id/sync-posts-count')
-    @TokenProtected()
-    @ApiOperation({
-        summary: '🔄 Synchronize user posts count',
-        description: 'Manually synchronize the nbPosts field for a specific user with actual post count'
-    })
-    @ApiOkResponse({ description: 'User posts count synchronized successfully' })
-    async syncUserPostsCount(@Param('id') id: string): Promise<UserResponseDto> {
-        return this.userService.syncUserPostsCount(id);
-    }
-
-    @Post('sync-all-posts-count')
-    @TokenProtected()
-    @ApiOperation({
-        summary: '🔄 Synchronize all users posts count',
-        description: 'Manually synchronize the nbPosts field for all users with actual post counts'
-    })
-    @ApiOkResponse({ description: 'All users posts count synchronized successfully' })
-    async syncAllUsersPostsCount(): Promise<{ message: string; updated: number }> {
-        return this.userService.syncAllUsersPostsCount();
     }
 
     @Delete(':id')
