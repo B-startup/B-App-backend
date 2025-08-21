@@ -178,7 +178,7 @@ export class UserService extends BaseCrudServiceImpl<User, CreateUserDto, Update
         // Filtrer les champs vides/undefined/null pour ne mettre à jour que les champs fournis
         const updateData = Object.keys(updateUserDto).reduce((acc, key) => {
             const value = updateUserDto[key];
-            if (value !== undefined && value !== null && value !== '') {
+            if (value !== undefined && value !== null) {
                 acc[key] = value;
             }
             return acc;
