@@ -3,11 +3,7 @@ import { Transform } from 'class-transformer';
 import {
     IsOptional,
     IsString,
-    IsBoolean,
     IsDateString,
-    IsInt,
-    Min,
-    Max,
     MaxLength,
     IsUrl
 } from 'class-validator';
@@ -51,39 +47,6 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
     @IsUrl({}, { message: 'Please provide a valid URL' })
     webSite?: string;
 
-    @ApiPropertyOptional({ example: '12345678', description: 'National ID number' })
-    @IsOptional()
-    @IsString()
-    @MaxLength(20, { message: 'CIN cannot exceed 20 characters' })
-    @Transform(({ value }) => value?.trim())
-    CIN?: string;
 
-    @ApiPropertyOptional({ example: 'AB1234567', description: 'Passport number' })
-    @IsOptional()
-    @IsString()
-    @MaxLength(20, { message: 'Passport number cannot exceed 20 characters' })
-    @Transform(({ value }) => value?.trim())
-    passport?: string;
 
-    @ApiPropertyOptional({ example: false, description: 'Email verification status' })
-    @IsOptional()
-    @IsBoolean()
-    isEmailVerified?: boolean;
-
-    @ApiPropertyOptional({ example: false, description: 'Profile completion status' })
-    @IsOptional()
-    @IsBoolean()
-    isCompleteProfile?: boolean;
-
-    @ApiPropertyOptional({ example: false, description: 'Phone verification status' })
-    @IsOptional()
-    @IsBoolean()
-    isPhoneVerified?: boolean;
-
-    @ApiPropertyOptional({ example: 100, description: 'User score based on activity' })
-    @IsOptional()
-    @IsInt()
-    @Min(0, { message: 'Score cannot be negative' })
-    @Max(10000, { message: 'Score cannot exceed 10000' })
-    score?: number;
 }

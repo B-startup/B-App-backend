@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { PrismaService } from '../../../core/services/prisma.service';
 import { BaseCrudServiceImpl } from '../../../core/common/services/base-crud.service';
 import { CreateUserDto, UpdateUserDto, UserResponseDto } from './dto';
-import { UserRole, User } from '@prisma/client';
+import {  User } from '@prisma/client';
 import { cryptPassword, handleOtpOperation } from '../../../core/utils/auth';
 import {
     EmailSubject,
@@ -174,72 +174,6 @@ export class UserService extends BaseCrudServiceImpl<User, CreateUserDto, Update
         });
     }
 
-    /**
-     * Synchroniser le compteur nbPosts d'un utilisateur avec ses posts réels
-     */
-    async syncUserPostsCount(userId: string): Promise<UserResponseDto> {
-        const user = await this.model.findUnique({
-            where: { id: userId },
-            include: {
-                _count: {
-                    select: {
-                        posts: true
-                    }
-                }
-            }
-        });
-
-        if (!user) {
-            throw new NotFoundException(`Utilisateur avec l'ID ${userId} non trouvé`);
-        }
-
-        const actualPostsCount = user._count.posts;
-
-        const updatedUser = await this.model.update({
-            where: { id: userId },
-            data: {
-                nbPosts: actualPostsCount
-            }
-        });
-
-        return this.toUserResponseDto(updatedUser);
-    }
-
-    /**
-     * Synchroniser tous les compteurs nbPosts
-     */
-    async syncAllUsersPostsCount(): Promise<{ updated: number; message: string }> {
-        const users = await this.model.findMany({
-            select: {
-                id: true,
-                name: true,
-                _count: {
-                    select: {
-                        posts: true
-                    }
-                }
-            }
-        });
-
-        let updatedCount = 0;
-
-        for (const user of users) {
-            const actualPostsCount = user._count.posts;
-            
-            await this.model.update({
-                where: { id: user.id },
-                data: { nbPosts: actualPostsCount }
-            });
-
-            updatedCount++;
-        }
-
-        return {
-            updated: updatedCount,
-            message: `${updatedCount} utilisateurs mis à jour avec leurs compteurs de posts`
-        };
-    }
-
     async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
         // Filtrer les champs vides/undefined/null pour ne mettre à jour que les champs fournis
         const updateData = Object.keys(updateUserDto).reduce((acc, key) => {
@@ -315,18 +249,11 @@ export class UserService extends BaseCrudServiceImpl<User, CreateUserDto, Update
 
     // Méthodes spécifiques à User
 
-    async findByEmail(email: string): Promise<UserResponseDto | null> {
-        // Utiliser la méthode générique findBy du BaseCrudService
-        const user = await this.findBy('email', email);
-        return user ? this.toUserResponseDto(user) : null;
-    }
-
-    async findUsers(filters: {
-        search?: string;
-        country?: string;
-        city?: string;
-        role?: string;
-        isEmailVerified?: boolean;
+    /**
+     * Recherche avancée - cherche dans plusieurs champs avec une seule query
+     */
+    async advancedSearch(filters: {
+        searchQuery?: string;
         page?: number;
         limit?: number;
     }): Promise<{
@@ -335,51 +262,73 @@ export class UserService extends BaseCrudServiceImpl<User, CreateUserDto, Update
         page: number;
         limit: number;
     }> {
-        const { search, country, city, role, isEmailVerified, page = 1, limit = 10 } = filters;
+        const { searchQuery, page = 1, limit = 10 } = filters;
         
         const where: any = {};
         
-        if (search) {
+        if (searchQuery?.trim()) {
             where.OR = [
-                { name: { contains: search, mode: 'insensitive' } },
-                { email: { contains: search, mode: 'insensitive' } }
+                { name: { contains: searchQuery, mode: 'insensitive' } },
+                { email: { contains: searchQuery, mode: 'insensitive' } },
+                { country: { contains: searchQuery, mode: 'insensitive' } },
+                { city: { contains: searchQuery, mode: 'insensitive' } },
+                { webSite: { contains: searchQuery, mode: 'insensitive' } }
             ];
         }
-        
-        if (country) where.country = { contains: country, mode: 'insensitive' };
-        if (city) where.city = { contains: city, mode: 'insensitive' };
-        if (role) where.role = role as UserRole;
-        if (typeof isEmailVerified === 'boolean') where.isEmailVerified = isEmailVerified;
 
         const [users, total] = await Promise.all([
             this.model.findMany({
                 where,
                 skip: (page - 1) * limit,
                 take: limit,
-                orderBy: { createdAt: 'desc' }
+                orderBy: { createdAt: 'desc' },
+                include: {
+                    _count: {
+                        select: {
+                            posts: true,
+                            projects: true,
+                            offers: true,
+                            likes: true,
+                            comments: true,
+                            views: true,
+                            connects: true,
+                            following: true,
+                            followers: true
+                        }
+                    }
+                }
             }),
             this.model.count({ where })
         ]);
 
         return {
-            users: users.map(user => this.toUserResponseDto(user)),
+            users: users.map(user => {
+                const enrichedUser = {
+                    ...user,
+                    nbPosts: user._count.posts,
+                    nbProjects: user._count.projects,
+                    nbOffer: user._count.offers,
+                    nbConnects: user._count.connects,
+                    nbFollowing: user._count.following,
+                    nbFollowers: user._count.followers
+                };
+                return this.toUserResponseDto(enrichedUser);
+            }),
             total,
             page,
             limit
         };
     }
 
-    async updateProfile(id: string, updateData: Partial<UpdateUserDto>): Promise<UserResponseDto> {
-        // Seuls certains champs sont autorisés pour la mise à jour du profil
-        const allowedFields = ['name', 'description', 'country', 'city', 'birthdate', 'phone', 'webSite'];
-        const filteredData = Object.keys(updateData)
-            .filter(key => allowedFields.includes(key))
-            .reduce((obj, key) => {
-                obj[key] = updateData[key];
-                return obj;
-            }, {});
+    async createWithProfileImage(createDto: CreateUserDto, file?: Express.Multer.File): Promise<UserResponseDto> {
+        let createdUser = await this.create(createDto);
 
-        return this.update(id, filteredData);
+        if (file) {
+            // uploadProfileImage retourne un UserResponseDto, donc nous obtenons l'user directement
+            return await this.uploadProfileImage(createdUser.id, file);
+        }
+
+        return this.toUserResponseDto(createdUser);
     }
 
     async markProfileAsComplete(id: string): Promise<UserResponseDto> {
@@ -485,14 +434,6 @@ export class UserService extends BaseCrudServiceImpl<User, CreateUserDto, Update
             // Si l'upload échoue, on ne peut pas restaurer l'ancienne image car elle a été supprimée
             throw new BadRequestException('Erreur lors de l\'upload de l\'image');
         }
-    }
-
-    async createWithProfileImage(createUserDto: CreateUserDto, file: Express.Multer.File): Promise<UserResponseDto> {
-        const user = await this.create(createUserDto);
-        if (file) {
-            return this.uploadProfileImage(user.id, file);
-        }
-        return user;
     }
 
     async updateWithProfileImage(id: string, updateUserDto: UpdateUserDto, file: Express.Multer.File): Promise<UserResponseDto> {
@@ -658,5 +599,105 @@ export class UserService extends BaseCrudServiceImpl<User, CreateUserDto, Update
             // On ne lance pas l'erreur pour ne pas bloquer le processus principal
             // mais on log l'erreur pour le débogage
         }
+    }
+
+    // ==================== HYBRID APPROACH METHODS ====================
+
+    /**
+     * Override findAll() - Hybrid approach: direct Prisma selection for simple lists
+     */
+    override async findAll() {
+        return this.model.findMany({
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+                profilePicture: true,
+                nbFollowers: true,
+                nbFollowing: true,
+                nbProjects: true,
+                nbPosts: true,
+                createdAt: true,
+                updatedAt: true
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+    }
+
+    /**
+     * Override findOne() - Simple selection for base CRUD compatibility
+     */
+    override async findOne(id: string) {
+        const user = await this.model.findUnique({
+            where: { id },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+                profilePicture: true,
+                description: true,
+                phone: true,
+                createdAt: true,
+                updatedAt: true
+            }
+        });
+
+        if (!user) {
+            throw new NotFoundException('User not found');
+        }
+
+        return user;
+    }
+
+    /**
+     * Override findByUser() - Not applicable for User entity (would be circular)
+     */
+    override async findByUser(userId: string) {
+        // For User entity, this doesn't make sense, return empty array
+        return [];
+    }
+
+    /**
+     * Get simple users list for dropdowns/selectors (no business logic)
+     */
+    async findAllSimple() {
+        return this.model.findMany({
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                profilePicture: true
+            },
+            where: {
+                role: { not: 'ADMIN' } // Exclude admins from simple lists
+            },
+            orderBy: { name: 'asc' }
+        });
+    }
+
+    /**
+     * Search users (simple selection for performance)
+     */
+    async searchUsers(query: string) {
+        return this.model.findMany({
+            where: {
+                OR: [
+                    { name: { contains: query, mode: 'insensitive' } },
+                    { email: { contains: query, mode: 'insensitive' } }
+                ]
+            },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                profilePicture: true,
+                nbFollowers: true,
+                role: true
+            },
+            take: 20, // Limit results for performance
+            orderBy: { nbFollowers: 'desc' } // Most followed first
+        });
     }
 }
