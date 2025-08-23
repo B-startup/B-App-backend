@@ -66,24 +66,56 @@ export class AuthService {
             }
         );
 
+        // 🔐 Sauvegarder le refresh token en base pour sécurité et rotation
+        await this.prisma.user.update({
+            where: { id: user.id },
+            data: { refreshToken }
+        });
+
         return { token, refreshToken };
     }
 
     async refreshToken(refreshToken: string) {
         try {
-        const { sub } = this.jwtService.verify(refreshToken); // Changed from id to sub
-        const user = await this.prisma.user.findUnique({ where: { id: sub } }); // Use sub as user ID
-        if (!user) throw new UnauthorizedException('User not found');
+            const { sub } = this.jwtService.verify(refreshToken); // Changed from id to sub
+            const user = await this.prisma.user.findUnique({ where: { id: sub } }); // Use sub as user ID
+            if (!user) throw new UnauthorizedException('User not found');
 
-        const token = this.jwtService.sign({
-            sub: user.id, // Standard JWT subject
-            name: user.name,
-            email: user.email,
-            image: user.profilePicture
-        }, {
-            expiresIn: '15m'
-        });
-        return { token, refreshToken };
+            // 🔐 Vérifier que le refresh token correspond à celui stocké en base
+            if (user.refreshToken !== refreshToken) {
+                throw new UnauthorizedException('Invalid refresh token - token rotation required');
+            }
+
+            // 🔄 Générer un nouveau access token
+            const newAccessToken = this.jwtService.sign({
+                sub: user.id, // Standard JWT subject
+                name: user.name,
+                email: user.email,
+                image: user.profilePicture
+            }, {
+                expiresIn: '15m'
+            });
+
+            // 🔄 Générer un nouveau refresh token (rotation de sécurité)
+            const newRefreshToken = this.jwtService.sign({
+                sub: user.id,
+                name: user.name,
+                email: user.email,
+                image: user.profilePicture
+            }, {
+                expiresIn: '7d'
+            });
+
+            // 💾 Mettre à jour le refresh token en base
+            await this.prisma.user.update({
+                where: { id: user.id },
+                data: { refreshToken: newRefreshToken }
+            });
+
+            return { 
+                token: newAccessToken, 
+                refreshToken: newRefreshToken 
+            };
         } catch (error) {
             console.error('Refresh token error:', error);
             throw new UnauthorizedException('Invalid refresh token');
@@ -229,11 +261,12 @@ export class AuthService {
                 throw new UnauthorizedException('User not found');
             }
 
-            // Mettre à jour lastLogoutAt pour invalider les anciens tokens
+            // Mettre à jour lastLogoutAt et révoquer le refresh token
             await this.prisma.user.update({
                 where: { id: userId },
                 data: {
-                    lastLogoutAt: new Date()
+                    lastLogoutAt: new Date(),
+                    refreshToken: null // 🔐 Révoquer le refresh token
                 }
             });
 
@@ -256,11 +289,12 @@ export class AuthService {
         }
 
         return {
-            message: 'Logout successful. Token has been invalidated.',
+            message: 'Logout successful. All tokens have been invalidated.',
             instructions: [
-                'Token has been blacklisted on server',
+                'Access token has been blacklisted on server',
+                'Refresh token has been revoked from database',
                 'Remove access token from localStorage/sessionStorage',
-                'Clear refresh token',
+                'Clear refresh token from secure storage',
                 'Redirect to login page'
             ]
         };
