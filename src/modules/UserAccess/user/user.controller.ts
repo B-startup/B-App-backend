@@ -42,47 +42,13 @@ export class UserController {
         return this.userService.createUser(createUserDto);
     }
 
-    @Post('with-profile-image')
-    @UseInterceptors(FileInterceptor('profileImage'))
-    @ApiConsumes('multipart/form-data')
-    @ApiOperation({
-        summary: '📸 Create user with profile image ( à supprimer)',
-        description: 'Creates a new user with optional profile image upload'
-    })
-    @ApiBody({
-        description: 'User data with optional profile image',
-        schema: {
-            type: 'object',
-            properties: {
-                name: { type: 'string', example: 'John Doe' },
-                email: { type: 'string', example: 'user@example.com' },
-                password: { type: 'string', example: 'StrongPass123!' },
-                profileImage: {
-                    type: 'string',
-                    format: 'binary',
-                    description: 'Profile image file (JPEG, PNG, GIF, WebP max 2MB)'
-                }
-            },
-            required: ['name', 'email', 'password']
-        }
-    })
-    @ApiCreatedResponse({
-        description: 'User created successfully with profile image'
-    })
-    async createWithProfileImage(
-        @Body() createUserDto: CreateUserDto,
-        @UploadedFile() profileImage?: Express.Multer.File
-    ): Promise<UserResponseDto> {
-        return this.userService.createWithProfileImage(createUserDto, profileImage);
-    }
-
     @Get()
     @TokenProtected()
     @ApiOperation({
-        summary: 'Get all users with statistics',
-        description: 'Retrieves a list of all registered users with their comprehensive statistics'
+        summary: 'Get all users',
+        description: 'Retrieves a list of all registered users'
     })
-    @ApiOkResponse({ description: 'List of all users with statistics' })
+    @ApiOkResponse({ description: 'List of all users' })
     findAll(): Promise<UserResponseDto[]> {
         return this.userService.findAllWithStats();
     }
@@ -111,37 +77,21 @@ export class UserController {
     @Get(':id')
     @TokenProtected()
     @ApiOperation({
-        summary: 'Get user by id with detailed statistics',
-        description: 'Retrieves a specific user with comprehensive statistics (posts, projects, offers, etc.)'
+        summary: 'Get user by id',
+        description: 'Retrieves a specific user (posts, projects, offers, etc.)'
     })
-    @ApiOkResponse({ description: 'User found with detailed statistics' })
+    @ApiOkResponse({ description: 'User found' })
     findOne(@Param('id') id: string): Promise<UserResponseDto> {
         return this.userService.findOneWithStats(id);
     }
 
     @Patch(':id')
     @TokenProtected()
-    @ApiOperation({
-        summary: 'Update user',
-        description: "Updates an existing user's information"
-    })
-    @ApiOkResponse({
-        description: 'User has been updated successfully'
-    })
-    update(
-        @Param('id') id: string,
-        @Body() updateUserDto: UpdateUserDto
-    ): Promise<UserResponseDto> {
-        return this.userService.updateUser(id, updateUserDto);
-    }
-
-    @Patch(':id/with-profile-image')
-    @TokenProtected()
     @UseInterceptors(FileInterceptor('profileImage'))
     @ApiConsumes('multipart/form-data')
     @ApiOperation({
-        summary: '🔄 Update user with profile image ( à supprimer)',
-        description: 'Updates user information with optional profile image upload'
+        summary: '🔄 Update user with optional profile image',
+        description: 'Updates user information including all fields with optional profile image upload'
     })
     @ApiBody({
         description: 'User update data with optional profile image',
@@ -151,6 +101,12 @@ export class UserController {
                 name: { type: 'string', example: 'John Doe Updated' },
                 email: { type: 'string', example: 'updated@example.com' },
                 password: { type: 'string', example: 'NewStrongPass123!' },
+                description: { type: 'string', example: 'A passionate developer interested in tech innovations' },
+                country: { type: 'string', example: 'Tunisia' },
+                city: { type: 'string', example: 'Tunis' },
+                birthdate: { type: 'string', example: '1990-01-15', description: 'Date in YYYY-MM-DD format' },
+                phone: { type: 'string', example: '+216 20 123 456' },
+                webSite: { type: 'string', example: 'https://example.com' },
                 profileImage: {
                     type: 'string',
                     format: 'binary',
@@ -160,7 +116,7 @@ export class UserController {
         }
     })
     @ApiOkResponse({
-        description: 'User updated successfully with profile image'
+        description: 'User updated successfully with optional profile image'
     })
     async updateWithProfileImage(
         @Param('id') id: string,
@@ -168,38 +124,6 @@ export class UserController {
         @UploadedFile() profileImage?: Express.Multer.File
     ): Promise<UserResponseDto> {
         return this.userService.updateWithProfileImage(id, updateUserDto, profileImage);
-    }
-
-    @Post(':id/profile-image')
-    @TokenProtected()
-    @UseInterceptors(FileInterceptor('profileImage'))
-    @ApiConsumes('multipart/form-data')
-    @ApiOperation({
-        summary: '📸 Upload profile image',
-        description: 'Upload or update profile image for an existing user'
-    })
-    @ApiBody({
-        description: 'Profile image file',
-        schema: {
-            type: 'object',
-            properties: {
-                profileImage: {
-                    type: 'string',
-                    format: 'binary',
-                    description: 'Profile image file (JPEG, PNG, GIF, WebP max 2MB)'
-                }
-            },
-            required: ['profileImage']
-        }
-    })
-    @ApiCreatedResponse({
-        description: 'Profile image uploaded successfully'
-    })
-    async uploadProfileImage(
-        @Param('id') id: string,
-        @UploadedFile() profileImage: Express.Multer.File
-    ): Promise<UserResponseDto> {
-        return this.userService.uploadProfileImage(id, profileImage);
     }
 
     @Delete(':id/profile-image')
@@ -213,17 +137,6 @@ export class UserController {
     })
     async removeProfileImage(@Param('id') id: string): Promise<UserResponseDto> {
         return this.userService.removeProfileImage(id);
-    }
-
-    @Post(':id/complete-profile')
-    @TokenProtected()
-    @ApiOperation({
-        summary: '✅ Mark profile as complete',
-        description: 'Mark user profile as complete if all required fields are filled'
-    })
-    @ApiOkResponse({ description: 'Profile marked as complete' })
-    async markProfileAsComplete(@Param('id') id: string): Promise<UserResponseDto> {
-        return this.userService.markProfileAsComplete(id);
     }
 
     @Get('stats/overview')

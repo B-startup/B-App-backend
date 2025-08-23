@@ -47,6 +47,9 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
     @IsUrl({}, { message: 'Please provide a valid URL' })
     webSite?: string;
 
-
+    @ApiPropertyOptional({ example: 'profile-images/image.jpg', description: 'Profile picture path' })
+    @IsOptional()
+    @Transform(({ value }) => value?.trim())
+    profilePicture?: string;
 
 }

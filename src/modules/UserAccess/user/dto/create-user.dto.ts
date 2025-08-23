@@ -40,9 +40,4 @@ export class CreateUserDto {
     @IsOptional()
     @IsEnum($Enums.UserRole, { message: 'Role must be User or ADMIN' })
     role?: $Enums.UserRole;
-
-    @ApiPropertyOptional({ example: 'profile-images/image.jpg', description: 'Profile picture path' })
-    @IsOptional()
-    @Transform(({ value }) => value?.trim())
-    profilePicture?: string;
 }
