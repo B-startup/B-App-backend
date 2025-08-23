@@ -180,14 +180,6 @@ export class UserService extends BaseCrudServiceImpl<User, CreateUserDto, Update
     }
 
     /**
-     * Mettre à jour un utilisateur et retourner le DTO
-     */
-    async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<UserResponseDto> {
-        const user = await this.update(id, updateUserDto);
-        return this.toUserResponseDto(user);
-    }
-
-    /**
      * Supprimer un utilisateur et retourner le DTO
      */
     async removeUser(id: string): Promise<UserResponseDto> {
@@ -242,45 +234,26 @@ export class UserService extends BaseCrudServiceImpl<User, CreateUserDto, Update
         };
     }
 
-    async createWithProfileImage(createDto: CreateUserDto, file?: Express.Multer.File): Promise<UserResponseDto> {
-        let createdUser = await this.create(createDto);
 
-        if (file) {
-            // uploadProfileImage retourne un UserResponseDto, donc nous obtenons l'user directement
-            return await this.uploadProfileImage(createdUser.id, file);
-        }
 
-        return this.toUserResponseDto(createdUser);
-    }
 
-    async markProfileAsComplete(id: string): Promise<UserResponseDto> {
-        const updatedUser = await this.model.update({
-            where: { id },
-            data: { isCompleteProfile: true }
-        });
-
-        return this.toUserResponseDto(updatedUser);
-    }
+    
 
     async getUserStats(): Promise<{
         total: number;
         verified: number;
         unverified: number;
-        completeProfiles: number;
-        incompleteProfiles: number;
         byRole: Record<string, number>;
         byCountry: Record<string, number>;
     }> {
         const [
             total,
             verified,
-            completeProfiles,
             roleStats,
             countryStats
         ] = await Promise.all([
             this.model.count(),
             this.model.count({ where: { isEmailVerified: true } }),
-            this.model.count({ where: { isCompleteProfile: true } }),
             this.model.groupBy({
                 by: ['role'],
                 _count: { role: true }
@@ -296,8 +269,6 @@ export class UserService extends BaseCrudServiceImpl<User, CreateUserDto, Update
             total,
             verified,
             unverified: total - verified,
-            completeProfiles,
-            incompleteProfiles: total - completeProfiles,
             byRole: roleStats.reduce((acc, item) => {
                 acc[item.role] = item._count.role;
                 return acc;
@@ -358,7 +329,7 @@ export class UserService extends BaseCrudServiceImpl<User, CreateUserDto, Update
         }
     }
 
-    async updateWithProfileImage(id: string, updateUserDto: UpdateUserDto, file: Express.Multer.File): Promise<UserResponseDto> {
+    async updateWithProfileImage(id: string, updateUserDto: UpdateUserDto, file?: Express.Multer.File): Promise<UserResponseDto> {
         // Effectuer la mise à jour des données utilisateur d'abord
         let updatedUser;
         if (Object.keys(updateUserDto).length > 0) {
@@ -369,11 +340,12 @@ export class UserService extends BaseCrudServiceImpl<User, CreateUserDto, Update
         
         // Si une nouvelle image est fournie, la traiter
         if (file) {
-            // uploadProfileImage s'occupera de supprimer l'ancienne image
+            // uploadProfileImage s'occupera de supprimer l'ancienne image et retourne un UserResponseDto
             return this.uploadProfileImage(id, file);
         }
         
-        return updatedUser;
+        // Retourner le DTO même si aucune image n'est fournie
+        return this.toUserResponseDto(updatedUser);
     }
 
     async removeProfileImage(userId: string): Promise<UserResponseDto> {
