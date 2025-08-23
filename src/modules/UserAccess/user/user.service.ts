@@ -97,88 +97,36 @@ export class UserService extends BaseCrudServiceImpl<User, CreateUserDto, Update
     }
 
     /**
-     * Obtenir un utilisateur avec ses statistiques détaillées
+     * Obtenir un utilisateur avec ses statistiques détaillées (directement depuis la DB)
      */
     async findOneWithStats(id: string): Promise<UserResponseDto> {
         const user = await this.model.findUnique({
-            where: { id },
-            include: {
-                _count: {
-                    select: {
-                        posts: true,
-                        projects: true,
-                        offers: true,
-                        likes: true,
-                        comments: true,
-                        views: true,
-                        connects: true,
-                        following: true,
-                        followers: true
-                    }
-                }
-            }
+            where: { id }
         });
 
         if (!user) {
             throw new NotFoundException(`Utilisateur avec l'ID ${id} non trouvé`);
         }
 
-        // Enrichir les données avec les compteurs calculés
-        const enrichedUser = {
-            ...user,
-            nbPosts: user._count.posts,
-            nbProjects: user._count.projects,
-            nbOffer: user._count.offers,
-            nbConnects: user._count.connects,
-            nbFollowing: user._count.following,
-            nbFollowers: user._count.followers
-        };
-
-        return this.toUserResponseDto(enrichedUser);
+        return this.toUserResponseDto(user);
     }
 
     /**
-     * Obtenir tous les utilisateurs avec leurs statistiques
+     * Obtenir tous les utilisateurs avec leurs statistiques (directement depuis la DB)
      */
     async findAllWithStats(): Promise<UserResponseDto[]> {
         const users = await this.model.findMany({
-            include: {
-                _count: {
-                    select: {
-                        posts: true,
-                        projects: true,
-                        offers: true,
-                        likes: true,
-                        comments: true,
-                        views: true,
-                        connects: true,
-                        following: true,
-                        followers: true
-                    }
-                }
-            },
             orderBy: { createdAt: 'desc' }
         });
 
-        return users.map(user => {
-            const enrichedUser = {
-                ...user,
-                nbPosts: user._count.posts,
-                nbProjects: user._count.projects,
-                nbOffer: user._count.offers,
-                nbConnects: user._count.connects,
-                nbFollowing: user._count.following,
-                nbFollowers: user._count.followers
-            };
-            return this.toUserResponseDto(enrichedUser);
-        });
+        return users.map(user => this.toUserResponseDto(user));
     }
 
     async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
         // Filtrer les champs vides/undefined/null pour ne mettre à jour que les champs fournis
         const updateData = Object.keys(updateUserDto).reduce((acc, key) => {
             const value = updateUserDto[key];
-            if (value !== undefined && value !== null && value !== '') {
+            if (value !== undefined && value !== null) {
                 acc[key] = value;
             }
             return acc;
@@ -250,7 +198,7 @@ export class UserService extends BaseCrudServiceImpl<User, CreateUserDto, Update
     // Méthodes spécifiques à User
 
     /**
-     * Recherche avancée - cherche dans plusieurs champs avec une seule query
+     * Recherche avancée - cherche dans plusieurs champs avec une seule query (statistiques déjà en DB)
      */
     async advancedSearch(filters: {
         searchQuery?: string;
@@ -281,39 +229,13 @@ export class UserService extends BaseCrudServiceImpl<User, CreateUserDto, Update
                 where,
                 skip: (page - 1) * limit,
                 take: limit,
-                orderBy: { createdAt: 'desc' },
-                include: {
-                    _count: {
-                        select: {
-                            posts: true,
-                            projects: true,
-                            offers: true,
-                            likes: true,
-                            comments: true,
-                            views: true,
-                            connects: true,
-                            following: true,
-                            followers: true
-                        }
-                    }
-                }
+                orderBy: { createdAt: 'desc' }
             }),
             this.model.count({ where })
         ]);
 
         return {
-            users: users.map(user => {
-                const enrichedUser = {
-                    ...user,
-                    nbPosts: user._count.posts,
-                    nbProjects: user._count.projects,
-                    nbOffer: user._count.offers,
-                    nbConnects: user._count.connects,
-                    nbFollowing: user._count.following,
-                    nbFollowers: user._count.followers
-                };
-                return this.toUserResponseDto(enrichedUser);
-            }),
+            users: users.map(user => this.toUserResponseDto(user)),
             total,
             page,
             limit
