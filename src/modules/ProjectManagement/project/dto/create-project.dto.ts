@@ -29,11 +29,13 @@ export class CreateProjectDto {
 
     @ApiProperty({
         example: 'logo.png',
-        description: 'Logo image file path or URL'
+        description: 'Logo image file path or URL',
+        required: false
     })
+    @IsOptional()
     @IsString()
-    @Transform(({ value }) => value.trim())
-    logoImage: string;
+    @Transform(({ value }) => value?.trim())
+    logoImage?: string;
 
     @ApiProperty({
         example: 'An app to reduce food waste',
@@ -74,7 +76,12 @@ export class CreateProjectDto {
     @ApiProperty({ example: 'team-uuid-456', required: false })
     @IsOptional()
     @IsString()
-    @Transform(({ value }) => value?.trim())
+    @Transform(({ value }) => {
+        if (!value || value.trim() === '' || value === 'undefined' || value === 'null') {
+            return undefined;
+        }
+        return value.trim();
+    })
     teamId?: string;
 
     @ApiProperty({ example: 150, description: 'Number of customers' })
