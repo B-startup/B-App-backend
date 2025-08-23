@@ -157,6 +157,9 @@ model User {
   /// Timestamp when the user last logged out (for token invalidation)
   lastLogoutAt DateTime?
 
+  /// Current refresh token for this user (for secure token rotation)
+  refreshToken String?
+
   // ---------------------- Relations ----------------------
 
   /// Projects created by the user (founders)
