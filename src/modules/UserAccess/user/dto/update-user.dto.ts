@@ -5,6 +5,7 @@ import {
     IsString,
     IsDateString,
     MaxLength,
+    MinLength,
     IsUrl
 } from 'class-validator';
 import { CreateUserDto } from './create-user.dto';
@@ -14,6 +15,7 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
     @IsOptional()
     @IsString()
     @MaxLength(500, { message: 'Description cannot exceed 500 characters' })
+    @MinLength(10, {message: 'Description cannot be less than 10 characters'})
     @Transform(({ value }) => value?.trim())
     description?: string;
 
@@ -47,6 +49,9 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
     @IsUrl({}, { message: 'Please provide a valid URL' })
     webSite?: string;
 
-
+    @ApiPropertyOptional({ example: 'profile-images/image.jpg', description: 'Profile picture path' })
+    @IsOptional()
+    @Transform(({ value }) => value?.trim())
+    profilePicture?: string;
 
 }
