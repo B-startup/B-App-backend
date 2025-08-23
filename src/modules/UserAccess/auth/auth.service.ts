@@ -62,7 +62,7 @@ export class AuthService {
                 image: user.profilePicture
             },
             {
-                expiresIn: '30m'
+                expiresIn: '7d'
             }
         );
 
@@ -103,7 +103,7 @@ export class AuthService {
                 email: user.email,
                 image: user.profilePicture
             }, {
-                expiresIn: '30m'
+                expiresIn: '7d'
             });
 
             // 💾 Mettre à jour le refresh token en base
