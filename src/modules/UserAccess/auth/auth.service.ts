@@ -81,41 +81,17 @@ export class AuthService {
             const user = await this.prisma.user.findUnique({ where: { id: sub } }); // Use sub as user ID
             if (!user) throw new UnauthorizedException('User not found');
 
-            // 🔐 Vérifier que le refresh token correspond à celui stocké en base
-            if (user.refreshToken !== refreshToken) {
-                throw new UnauthorizedException('Invalid refresh token - token rotation required');
-            }
+        const token = this.jwtService.sign({
+            sub: user.id, // Standard JWT subject
+            name: user.name,
+            email: user.email,
+            image: user.profilePicture
+        }, {
+            expiresIn: '15m'
+        });
 
-            // 🔄 Générer un nouveau access token
-            const newAccessToken = this.jwtService.sign({
-                sub: user.id, // Standard JWT subject
-                name: user.name,
-                email: user.email,
-                image: user.profilePicture
-            }, {
-                expiresIn: '15m'
-            });
-
-            // 🔄 Générer un nouveau refresh token (rotation de sécurité)
-            const newRefreshToken = this.jwtService.sign({
-                sub: user.id,
-                name: user.name,
-                email: user.email,
-                image: user.profilePicture
-            }, {
-                expiresIn: '7d'
-            });
-
-            // 💾 Mettre à jour le refresh token en base
-            await this.prisma.user.update({
-                where: { id: user.id },
-                data: { refreshToken: newRefreshToken }
-            });
-
-            return { 
-                token: newAccessToken, 
-                refreshToken: newRefreshToken 
-            };
+        return { token, refreshToken };
+           
         } catch (error) {
             console.error('Refresh token error:', error);
             throw new UnauthorizedException('Invalid refresh token');
