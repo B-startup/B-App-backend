@@ -86,36 +86,19 @@ export class AuthService {
                 throw new UnauthorizedException('Invalid refresh token - token rotation required');
             }
 
-            // 🔄 Générer un nouveau access token
-            const newAccessToken = this.jwtService.sign({
-                sub: user.id, // Standard JWT subject
-                name: user.name,
-                email: user.email,
-                image: user.profilePicture
-            }, {
-                expiresIn: '15m'
-            });
+           
 
-            // 🔄 Générer un nouveau refresh token (rotation de sécurité)
-            const newRefreshToken = this.jwtService.sign({
-                sub: user.id,
-                name: user.name,
-                email: user.email,
-                image: user.profilePicture
-            }, {
-                expiresIn: '7d'
-            });
+              const token = this.jwtService.sign({
+            sub: user.id, // Standard JWT subject
+            name: user.name,
+            email: user.email,
+            image: user.profilePicture
+        }, {
+            expiresIn: '15m'
+        });
 
-            // 💾 Mettre à jour le refresh token en base
-            await this.prisma.user.update({
-                where: { id: user.id },
-                data: { refreshToken: newRefreshToken }
-            });
-
-            return { 
-                token: newAccessToken, 
-                refreshToken: newRefreshToken 
-            };
+           return { token, refreshToken };
+           
         } catch (error) {
             console.error('Refresh token error:', error);
             throw new UnauthorizedException('Invalid refresh token');
