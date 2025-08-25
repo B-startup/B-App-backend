@@ -417,7 +417,7 @@ export class ProjectService extends BaseCrudServiceImpl<
     }
 
     /**
-     * Override de la méthode remove pour supprimer aussi le logo
+     * Override de la méthode remove pour supprimer aussi le logo et le dossier du projet
      */
     async remove(id: string): Promise<Project> {
         return await this.prisma.$transaction(async (prisma) => {
@@ -430,15 +430,16 @@ export class ProjectService extends BaseCrudServiceImpl<
             // Supprimer le logo s'il existe
             if (projectToDelete.logoImage) {
                 await this.deleteLogoFile(projectToDelete.logoImage);
-                
-                // Supprimer aussi le dossier du projet s'il est vide
-                const projectDir = path.join(this.projectFilesDir, id);
-                if (fs.existsSync(projectDir)) {
-                    try {
-                        fs.rmSync(projectDir, { recursive: true, force: true });
-                    } catch (error) {
-                        console.warn(`Could not remove project directory ${projectDir}:`, error);
-                    }
+            }
+
+            // Supprimer le dossier complet du projet (avec tous ses fichiers)
+            const projectDir = path.join(this.projectFilesDir, id);
+            if (fs.existsSync(projectDir)) {
+                try {
+                    fs.rmSync(projectDir, { recursive: true, force: true });
+                    console.log(`Project directory removed successfully: ${projectDir}`);
+                } catch (error) {
+                    console.warn(`Could not remove project directory ${projectDir}:`, error);
                 }
             }
 
