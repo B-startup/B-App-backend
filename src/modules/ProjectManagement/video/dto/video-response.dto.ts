@@ -27,16 +27,16 @@ export class VideoResponseDto {
     projectId: string;
 
     @ApiProperty({
-        description: 'Video file URL',
-        example: 'https://example.com/videos/project-demo.mp4'
+        description: 'User ID who uploaded the video',
+        example: 'user-uuid-123'
     })
-    videoUrl: string;
+    userId: string;
 
     @ApiProperty({
-        description: 'Video file path on server',
-        example: 'uploads/ProjectVideos/project-demo.mp4'
+        description: 'Video file URL (complete URL for direct access)',
+        example: 'https://example.com/uploads/project-videos/project-uuid/video.mp4'
     })
-    filePath: string;
+    videoUrl: string;
 
     @ApiProperty({
         description: 'Video file size in bytes',
@@ -63,6 +63,12 @@ export class VideoResponseDto {
         nullable: true
     })
     thumbnailUrl?: string;
+
+    @ApiProperty({
+        description: 'Number of views',
+        example: 150
+    })
+    nbViews: number;
 
     @ApiProperty({
         description: 'Creation date',
