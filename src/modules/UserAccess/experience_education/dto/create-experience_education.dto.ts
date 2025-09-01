@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsOptional, IsDateString, IsEnum } from 'class-validator';
-import { TypeOfExperience } from '../enums/type-of-experience.enum';
+import { TypeOfExperience } from '@prisma/client';
 
 export class CreateExperienceEducationDto {
     @ApiProperty()
