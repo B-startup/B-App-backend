@@ -1,14 +1,17 @@
-import { IsString, IsEnum, IsUrl, IsNotEmpty } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { SocialMediaPlatform } from '@prisma/client';
 
-export class CreateSocialMediaDto {
+export class SocialMediaResponseDto {
+    @ApiProperty({
+        description: 'Unique identifier for the social media record',
+        example: 'social-media-uuid-123'
+    })
+    id: string;
+
     @ApiProperty({
         description: 'User ID who owns this social media link',
         example: 'user-uuid-123'
     })
-    @IsString()
-    @IsNotEmpty()
     userId: string;
 
     @ApiProperty({
@@ -16,14 +19,23 @@ export class CreateSocialMediaDto {
         enum: SocialMediaPlatform,
         example: SocialMediaPlatform.LINKEDIN
     })
-    @IsEnum(SocialMediaPlatform)
     platform: SocialMediaPlatform;
 
     @ApiProperty({
         description: 'URL of the social media profile',
         example: 'https://linkedin.com/in/username'
     })
-    @IsUrl()
-    @IsNotEmpty()
     url: string;
+
+    @ApiProperty({
+        description: 'Timestamp when the record was created',
+        example: '2024-01-15T10:00:00Z'
+    })
+    createdAt: Date;
+
+    @ApiProperty({
+        description: 'Timestamp when the record was last updated',
+        example: '2024-01-15T10:00:00Z'
+    })
+    updatedAt: Date;
 }
