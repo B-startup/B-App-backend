@@ -24,8 +24,9 @@ import {
     ApiBearerAuth
 } from '@nestjs/swagger';
 import { VideoService } from './video.service';
-import { CreateVideoDto, UpdateVideoDto, VideoResponseDto, UploadVideoDto } from './dto';
+import { UpdateVideoDto, VideoResponseDto, UploadVideoDto } from './dto';
 import { TokenProtected } from '../../../core/common/decorators/token-protected.decorator';
+import { GetCurrentUserId } from '../../../core/common/decorators/get-current-user-id.decorator';
 
 @ApiTags('Project Videos')
 @ApiBearerAuth()
@@ -34,41 +35,27 @@ export class VideoController {
     constructor(private readonly videoService: VideoService) {}
 
     @TokenProtected()
-    @Post()
-    @ApiOperation({ summary: 'Create a new video entry' })
-    @ApiBody({ type: CreateVideoDto })
-    @ApiResponse({
-        status: 201,
-        description: 'Video created successfully',
-        type: VideoResponseDto
-    })
-    @ApiResponse({ status: 400, description: 'Bad Request' })
-    @ApiResponse({ status: 404, description: 'Project not found' })
-    async create(@Body() createVideoDto: CreateVideoDto): Promise<VideoResponseDto> {
-        return await this.videoService.create(createVideoDto);
-    }
-
-    @TokenProtected()
     @Post('upload')
     @UseInterceptors(FileInterceptor('file'))
     @ApiConsumes('multipart/form-data')
-    @ApiOperation({ summary: 'Upload a video file' })
+    @ApiOperation({ summary: 'Upload a video file with automatic duration analysis' })
     @ApiBody({
-        description: 'Video upload data',
+        description: 'Video upload data with automatic duration detection',
         type: UploadVideoDto
     })
     @ApiResponse({
         status: 201,
-        description: 'Video uploaded successfully',
+        description: 'Video uploaded successfully with duration analyzed',
         type: VideoResponseDto
     })
     @ApiResponse({ status: 400, description: 'Bad Request' })
     @ApiResponse({ status: 404, description: 'Project not found' })
     async uploadVideo(
         @UploadedFile() file: Express.Multer.File,
-        @Body() uploadData: UploadVideoDto
+        @Body() uploadData: UploadVideoDto,
+        @GetCurrentUserId() userId: string
     ): Promise<VideoResponseDto> {
-        return await this.videoService.uploadVideo(file, uploadData);
+        return await this.videoService.uploadVideo(file, uploadData, userId);
     }
 
     @TokenProtected()
@@ -86,23 +73,9 @@ export class VideoController {
     })
     async findAll(@Query('projectId') projectId?: string): Promise<VideoResponseDto[]> {
         if (projectId) {
-            return await this.videoService.findByProject(projectId);
+            return await this.videoService.findByProjectWithDto(projectId);
         }
-        return await this.videoService.findAll();
-    }
-
-    @TokenProtected()
-    @Get('project/:projectId')
-    @ApiOperation({ summary: 'Get all videos for a specific project' })
-    @ApiParam({ name: 'projectId', description: 'Project ID' })
-    @ApiResponse({
-        status: 200,
-        description: 'Project videos retrieved successfully',
-        type: [VideoResponseDto]
-    })
-    @ApiResponse({ status: 404, description: 'Project not found' })
-    async findByProject(@Param('projectId') projectId: string): Promise<VideoResponseDto[]> {
-        return await this.videoService.findByProject(projectId);
+        return await this.videoService.findAllWithDto();
     }
 
     @TokenProtected()
@@ -122,35 +95,102 @@ export class VideoController {
     }
 
     @TokenProtected()
-    @Get(':id')
-    @ApiOperation({ summary: 'Get video by ID' })
-    @ApiParam({ name: 'id', description: 'Video ID' })
-    @ApiResponse({
-        status: 200,
-        description: 'Video found',
-        type: VideoResponseDto
-    })
-    @ApiResponse({ status: 404, description: 'Video not found' })
-    async findOne(@Param('id') id: string): Promise<VideoResponseDto> {
-        return await this.videoService.findOne(id);
-    }
-
-    @TokenProtected()
     @Patch(':id')
-    @ApiOperation({ summary: 'Update video by ID' })
-    @ApiParam({ name: 'id', description: 'Video ID' })
-    @ApiBody({ type: UpdateVideoDto })
+    @UseInterceptors(FileInterceptor('file'))
+    @ApiConsumes('multipart/form-data')
+    @ApiOperation({ 
+        summary: 'Update video metadata and/or change video file',
+        description: 'Update video information. Use the "Charger la vidéo" button to upload a new video file that will replace the existing one.'
+    })
+    @ApiParam({ name: 'id', description: 'Video ID to update' })
+    @ApiBody({
+        description: 'Video update data with optional file replacement via "Charger la vidéo" button',
+        schema: {
+            type: 'object',
+            properties: {
+                file: {
+                    type: 'string',
+                    format: 'binary',
+                    description: 'New video file (use "Charger la vidéo" button) - Will replace existing video'
+                },
+                title: {
+                    type: 'string',
+                    description: 'Video title',
+                    example: 'Mon nouveau titre de vidéo'
+                },
+                description: {
+                    type: 'string',
+                    description: 'Video description',
+                    example: 'Description mise à jour de la vidéo'
+                },
+                projectId: {
+                    type: 'string',
+                    description: 'Project ID (if changing project)',
+                    example: 'project-uuid-123'
+                },
+                thumbnailUrl: {
+                    type: 'string',
+                    description: 'Thumbnail URL',
+                    example: 'https://example.com/thumbnail.jpg'
+                }
+            }
+        }
+    })
     @ApiResponse({
         status: 200,
         description: 'Video updated successfully',
-        type: VideoResponseDto
+        type: VideoResponseDto,
+        schema: {
+            example: {
+                id: 'video-uuid-123',
+                title: 'Titre mis à jour',
+                description: 'Description mise à jour',
+                projectId: 'project-uuid-123',
+                userId: 'user-uuid-123',
+                videoUrl: 'http://localhost:3000/uploads/project-videos/project-uuid/new-video.mp4',
+                duration: 185,
+                fileSize: 20971520,
+                mimeType: 'video/mp4',
+                nbViews: 25,
+                createdAt: '2025-08-25T10:00:00Z',
+                updatedAt: '2025-08-25T15:45:00Z'
+            }
+        }
+    })
+    @ApiResponse({ 
+        status: 400, 
+        description: 'Bad Request - Invalid file format or size too large',
+        schema: {
+            example: {
+                message: 'Invalid video format. Allowed formats: video/mp4, video/avi, video/mov, video/wmv, video/flv, video/webm, video/mkv',
+                error: 'Bad Request',
+                statusCode: 400
+            }
+        }
     })
     @ApiResponse({ status: 404, description: 'Video not found' })
     async update(
         @Param('id') id: string,
-        @Body() updateVideoDto: UpdateVideoDto
+        @Body() updateVideoDto: UpdateVideoDto,
+        @UploadedFile() file?: Express.Multer.File,
+        @GetCurrentUserId() userId?: string
     ): Promise<VideoResponseDto> {
-        return await this.videoService.update(id, updateVideoDto);
+        // Logique spéciale pour le bouton "Charger la vidéo"
+        if (file) {
+            console.log(`📹 Chargement d'une nouvelle vidéo pour l'ID: ${id}`);
+            console.log(`📁 Nom du fichier: ${file.originalname}`);
+            console.log(`📊 Taille du fichier: ${(file.size / 1024 / 1024).toFixed(2)} MB`);
+            console.log(`🎬 Type MIME: ${file.mimetype}`);
+        }
+
+        // Appeler le service avec la logique de remplacement
+        const result = await this.videoService.updateWithFileReplacement(id, updateVideoDto, file, userId);
+
+        if (file) {
+            console.log(`✅ Vidéo chargée avec succès! Nouvelle durée: ${result.duration}s`);
+        }
+
+        return result;
     }
 
     @TokenProtected()

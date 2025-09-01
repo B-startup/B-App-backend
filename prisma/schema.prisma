@@ -270,8 +270,8 @@ model Project {
   /// Title of the project, displayed as the primary name
   title String
 
-  /// URL or path to the project logo or image
-  logoImage String
+  /// URL or path to the project logo or image (optional)
+  logoImage String?
 
   /// A high-level summary of what the project is about
   description String
@@ -787,11 +787,8 @@ model Video {
   /// ID of the project this video is associated with
   projectId String
 
-  /// URL or path to the video file
+  /// Complete URL to the video file for direct access
   videoUrl String
-
-  /// File path on the server
-  filePath String @default("")
 
   /// File size in bytes
   fileSize Int @default(0)

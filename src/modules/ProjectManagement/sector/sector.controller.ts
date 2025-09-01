@@ -40,8 +40,16 @@ export class SectorController {
     @ApiOperation({ summary: 'Get all sectors' })
     @ApiResponse({ status: 200, description: 'List of sectors returned' })
     findAll() {
-        return this.sectorService.findAll();
+        return this.sectorService.findAllOptimized();
     }
+
+    @Get('search')
+    @ApiOperation({ summary: 'Search sectors by keyword' })
+    @ApiResponse({ status: 200, description: 'Search results returned' })
+    search(@Query('q') keyword: string) {
+        return this.sectorService.searchSectorsOptimized(keyword);
+    }
+
 
     @Get(':id')
     @ApiOperation({ summary: 'Get sector by ID' })
@@ -49,6 +57,14 @@ export class SectorController {
     @ApiNotFoundResponse({ description: 'Sector not found' })
     findOne(@Param('id') id: string) {
         return this.sectorService.findOne(id);
+    }
+
+    @Get(':id/detailed')
+    @ApiOperation({ summary: 'Get sector with full details' })
+    @ApiResponse({ status: 200, description: 'Detailed sector returned' })
+    @ApiNotFoundResponse({ description: 'Sector not found' })
+    findOneDetailed(@Param('id') id: string) {
+        return this.sectorService.findOneDetailed(id);
     }
 
     @TokenProtected()
@@ -68,19 +84,5 @@ export class SectorController {
     @ApiNotFoundResponse({ description: 'Sector not found' })
     remove(@Param('id') id: string) {
         return this.sectorService.remove(id);
-    }
-
-    @Get('search')
-    @ApiOperation({ summary: 'Search sectors by keyword' })
-    @ApiResponse({ status: 200, description: 'Search results returned' })
-    search(@Query('q') keyword: string) {
-        return this.sectorService.search(keyword, ['name', 'description']);
-    }
-
-    @Get('paginate')
-    @ApiOperation({ summary: 'Get paginated list of sectors' })
-    @ApiResponse({ status: 200, description: 'Paginated sectors returned' })
-    paginate(@Query('skip') skip = 0, @Query('take') take = 10) {
-        return this.sectorService.paginate(Number(skip), Number(take));
     }
 }
