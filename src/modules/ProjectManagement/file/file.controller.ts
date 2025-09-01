@@ -3,7 +3,6 @@ import {
     Get,
     Post,
     Body,
-    Patch,
     Param,
     Delete,
     UseInterceptors,
@@ -11,8 +10,7 @@ import {
     ParseUUIDPipe,
     Query,
     Res,
-    BadRequestException,
-    UseGuards
+    BadRequestException
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
@@ -27,12 +25,9 @@ import {
     ApiBearerAuth
 } from '@nestjs/swagger';
 import { FileService } from './file.service';
-import { CreateFileDto } from './dto/create-file.dto';
-import { UpdateFileDto } from './dto/update-file.dto';
 import { UploadFileDto } from './dto/upload-file.dto';
-import { File, FileType, User } from '@prisma/client';
+import { FileType, User } from '@prisma/client';
 import { TokenProtected } from '../../../core/common/decorators/token-protected.decorator';
-import { ResourceOwnerGuard } from '../../../core/common/guards/resource-owner.guard';
 import { CurrentUser } from '../../../core/common/decorators/current-user.decorator';
 
 import * as fs from 'fs';
@@ -42,23 +37,6 @@ import * as fs from 'fs';
 @Controller('files')
 export class FileController {
     constructor(private readonly fileService: FileService) {}
-
-    @Post()
-    @TokenProtected()
-    @ApiOperation({ summary: 'Create a new file record' })
-    @ApiResponse({
-        status: 201,
-        description: 'File record created successfully',
-        type: Object
-    })
-    @ApiResponse({ status: 400, description: 'Bad request' })
-    @ApiResponse({ status: 404, description: 'Project not found' })
-    create(
-        @Body() createFileDto: CreateFileDto,
-        @CurrentUser() _user: User
-    ): Promise<File> {
-        return this.fileService.create(createFileDto);
-    }
 
     @Post('upload')
     @TokenProtected()
@@ -92,89 +70,66 @@ export class FileController {
         status: 201,
         description: 'File uploaded and record created successfully'
     })
-    @ApiResponse({
-        status: 400,
-        description: 'Bad request - Invalid file or parameters'
-    })
-    @ApiResponse({ status: 404, description: 'Project not found' })
     async uploadFile(
         @Body() uploadFileDto: UploadFileDto,
         @UploadedFile() file: Express.Multer.File,
         @CurrentUser() _user: User
-    ): Promise<File> {
+    ) {
         if (!file) {
             throw new BadRequestException('File is required');
         }
-
         return this.fileService.uploadFile(uploadFileDto, file);
     }
 
     @Get()
     @TokenProtected()
-    @ApiOperation({ summary: 'Get all files' })
+    @ApiOperation({ summary: 'Get all files (optimized)' })
     @ApiQuery({
         name: 'projectId',
         required: false,
         description: 'Filter by project ID'
     })
+    @ApiQuery({
+        name: 'type',
+        required: false,
+        enum: FileType,
+        description: 'Filter by file type'
+    })
+    @ApiQuery({
+        name: 'search',
+        required: false,
+        description: 'Search files by name'
+    })
     @ApiResponse({ status: 200, description: 'Files retrieved successfully' })
     async findAll(
         @CurrentUser() _user: User,
-        @Query('projectId') projectId?: string
-    ): Promise<File[]> {
-        if (projectId) {
-            return this.fileService.findByProject(projectId);
+        @Query('projectId') projectId?: string,
+        @Query('type') type?: FileType,
+        @Query('search') search?: string
+    ) {
+        if (search) {
+            return this.fileService.searchFilesOptimized(search);
         }
-        return this.fileService.findAll();
+        if (type) {
+            return this.fileService.findByTypeOptimized(type);
+        }
+        if (projectId) {
+            return this.fileService.findByProjectOptimized(projectId);
+        }
+        return this.fileService.findAllOptimized();
     }
 
-    @Get('project/:projectId')
-    @TokenProtected()
-    @ApiOperation({ summary: 'Get all files for a specific project' })
-    @ApiParam({ name: 'projectId', description: 'Project ID' })
-    @ApiResponse({
-        status: 200,
-        description: 'Project files retrieved successfully'
-    })
-    @ApiResponse({ status: 404, description: 'Project not found' })
-    findByProject(
-        @Param('projectId', ParseUUIDPipe) projectId: string,
-        @CurrentUser() _user: User
-    ): Promise<File[]> {
-        return this.fileService.findByProject(projectId);
-    }
-
-    @Get('project/:projectId/stats')
-    @TokenProtected()
-    @ApiOperation({ summary: 'Get file statistics for a project' })
-    @ApiParam({ name: 'projectId', description: 'Project ID' })
-    @ApiResponse({
-        status: 200,
-        description: 'Project file statistics retrieved successfully'
-    })
-    @ApiResponse({ status: 404, description: 'Project not found' })
-    getProjectStats(
-        @Param('projectId', ParseUUIDPipe) projectId: string,
-        @CurrentUser() _user: User
-    ): Promise<{
-        totalFiles: number;
-        filesByType: Record<FileType, number>;
-        totalSizeBytes: number;
-    }> {
-        return this.fileService.getProjectFileStats(projectId);
-    }
 
     @Get(':id')
     @TokenProtected()
-    @ApiOperation({ summary: 'Get a file by ID' })
+    @ApiOperation({ summary: 'Get a file with detailed information' })
     @ApiParam({ name: 'id', description: 'File ID' })
     @ApiResponse({ status: 200, description: 'File retrieved successfully' })
-    @ApiResponse({ status: 404, description: 'File not found' })
     findOne(
         @Param('id', ParseUUIDPipe) id: string,
         @CurrentUser() _user: User
-    ): Promise<File> {
-        return this.fileService.findOne(id);
+    ) {
+        return this.fileService.findOneDetailed(id);
     }
 
     @Get(':id/download')
@@ -182,7 +137,6 @@ export class FileController {
     @ApiOperation({ summary: 'Download a file' })
     @ApiParam({ name: 'id', description: 'File ID' })
     @ApiResponse({ status: 200, description: 'File downloaded successfully' })
-    @ApiResponse({ status: 404, description: 'File not found' })
     async downloadFile(
         @Param('id', ParseUUIDPipe) id: string,
         @Res() res: Response,
@@ -200,34 +154,15 @@ export class FileController {
         fileStream.pipe(res);
     }
 
-    @Patch(':id')
-    @TokenProtected()
-    @UseGuards(ResourceOwnerGuard)
-    @ApiOperation({ summary: 'Update a file record' })
-    @ApiParam({ name: 'id', description: 'File ID' })
-    @ApiResponse({ status: 200, description: 'File updated successfully' })
-    @ApiResponse({ status: 404, description: 'File not found' })
-    @ApiResponse({ status: 403, description: 'Forbidden - Not the owner' })
-    update(
-        @Param('id', ParseUUIDPipe) id: string,
-        @Body() updateFileDto: UpdateFileDto,
-        @CurrentUser() _user: User
-    ): Promise<File> {
-        return this.fileService.update(id, updateFileDto);
-    }
-
     @Delete(':id')
     @TokenProtected()
-    @UseGuards(ResourceOwnerGuard)
     @ApiOperation({ summary: 'Delete a file record and physical file' })
     @ApiParam({ name: 'id', description: 'File ID' })
     @ApiResponse({ status: 200, description: 'File deleted successfully' })
-    @ApiResponse({ status: 404, description: 'File not found' })
-    @ApiResponse({ status: 403, description: 'Forbidden - Not the owner' })
     remove(
         @Param('id', ParseUUIDPipe) id: string,
         @CurrentUser() _user: User
-    ): Promise<File> {
+    ) {
         return this.fileService.remove(id);
     }
 }

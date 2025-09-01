@@ -210,6 +210,175 @@ export class FileService extends BaseCrudServiceImpl<
         };
     }
 
+    // ==================== HYBRID APPROACH METHODS ====================
+    // Optimized methods for simple cases (direct Prisma selection)
+    // Complex methods with business logic use full relations
+
+    /**
+     * Get all files with optimized selection (for lists)
+     */
+    async findAllOptimized() {
+        return this.model.findMany({
+            select: {
+                id: true,
+                fileName: true,
+                fileType: true,
+                fileUrl: true,
+                createdAt: true,
+                updatedAt: true,
+                project: {
+                    select: {
+                        id: true,
+                        title: true,
+                        creator: {
+                            select: {
+                                id: true,
+                                name: true
+                            }
+                        }
+                    }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+    }
+
+    /**
+     * Get files by project (optimized selection)
+     */
+    async findByProjectOptimized(projectId: string) {
+        return this.model.findMany({
+            where: { projectId },
+            select: {
+                id: true,
+                fileName: true,
+                fileType: true,
+                fileUrl: true,
+                createdAt: true,
+                updatedAt: true
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+    }
+
+    /**
+     * Get files by type (optimized selection)
+     */
+    async findByTypeOptimized(fileType: FileType) {
+        return this.model.findMany({
+            where: { fileType },
+            select: {
+                id: true,
+                fileName: true,
+                fileType: true,
+                fileUrl: true,
+                createdAt: true,
+                project: {
+                    select: {
+                        id: true,
+                        title: true,
+                        creator: {
+                            select: {
+                                id: true,
+                                name: true
+                            }
+                        }
+                    }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+    }
+
+    /**
+     * Search files by name (optimized selection)
+     */
+    async searchFilesOptimized(query: string) {
+        return this.model.findMany({
+            where: {
+                fileName: {
+                    contains: query,
+                    mode: 'insensitive'
+                }
+            },
+            select: {
+                id: true,
+                fileName: true,
+                fileType: true,
+                fileUrl: true,
+                createdAt: true,
+                project: {
+                    select: {
+                        id: true,
+                        title: true,
+                        creator: {
+                            select: {
+                                id: true,
+                                name: true
+                            }
+                        }
+                    }
+                }
+            },
+            orderBy: { createdAt: 'desc' },
+            take: 50
+        });
+    }
+
+    /**
+     * Get file with detailed information (complex case)
+     */
+    async findOneDetailed(id: string) {
+        const file = await this.model.findUnique({
+            where: { id },
+            include: {
+                project: {
+                    select: {
+                        id: true,
+                        title: true,
+                        description: true,
+                        status: true,
+                        creator: {
+                            select: {
+                                id: true,
+                                name: true,
+                                profilePicture: true,
+                                email: true
+                            }
+                        },
+                        sector: {
+                            select: {
+                                id: true,
+                                name: true
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        if (!file) {
+            throw new NotFoundException('File not found');
+        }
+
+        // Add file size information if file exists
+        let fileSize = 0;
+        if (file.fileUrl && fs.existsSync(file.fileUrl)) {
+            try {
+                const stats = fs.statSync(file.fileUrl);
+                fileSize = stats.size;
+            } catch (error) {
+                console.warn(`Failed to get file size for: ${file.fileUrl}`, error);
+            }
+        }
+
+        return {
+            ...file,
+            fileSize
+        };
+    }
+
+    
     /**
      * Validate file type matches expected type
      */
