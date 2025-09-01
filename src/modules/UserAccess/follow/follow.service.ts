@@ -1,7 +1,7 @@
 import { Injectable, ConflictException } from '@nestjs/common';
 import { Follow, PrismaClient } from '@prisma/client';
 import { BaseCrudServiceImpl } from '../../../core/common/services/base-crud.service';
-import { CreateFollowDto, UpdateFollowDto, FollowResponseDto, FollowWithUserDetailsDto } from './dto';
+import { CreateFollowDto, UpdateFollowDto, FollowResponseDto } from './dto';
 
 @Injectable()
 export class FollowService extends BaseCrudServiceImpl<
@@ -110,36 +110,11 @@ export class FollowService extends BaseCrudServiceImpl<
         });
     }
 
-    // Méthodes CRUD héritées du BaseService :
-    // - findAll(): Promise<Follow[]>
-    // - findByUser(userId: string): Promise<Follow[]>
-    // - findOne(id: string): Promise<Follow>
-    // - findOneOrFail(id: string): Promise<Follow>
-    // - update(id: string, updateFollowDto: UpdateFollowDto): Promise<Follow>
-
-    // Méthodes personnalisées pour le modèle Follow
-
     /**
      * Crée un suivi et retourne une FollowResponseDto
      */
     async createFollow(createFollowDto: CreateFollowDto): Promise<FollowResponseDto> {
         const follow = await this.create(createFollowDto);
-        return new FollowResponseDto(follow);
-    }
-
-    /**
-     * Trouve tous les suivis avec transformation en DTO
-     */
-    async findAllFollows(): Promise<FollowResponseDto[]> {
-        const follows = await this.findAll();
-        return follows.map(follow => new FollowResponseDto(follow));
-    }
-
-    /**
-     * Trouve un suivi par ID avec transformation en DTO
-     */
-    async findFollowById(id: string): Promise<FollowResponseDto> {
-        const follow = await this.findOne(id);
         return new FollowResponseDto(follow);
     }
 
@@ -152,67 +127,51 @@ export class FollowService extends BaseCrudServiceImpl<
     }
 
     /**
-     * Trouve tous les utilisateurs suivis par un utilisateur donné
+     * Trouve tous les utilisateurs suivis par un utilisateur donné (optimisé)
      */
-    async getFollowing(userId: string): Promise<FollowWithUserDetailsDto[]> {
-        const follows = await this.prisma.follow.findMany({
+    async getFollowing(userId: string): Promise<any[]> {
+        return this.prisma.follow.findMany({
             where: { followerId: userId },
-            include: {
+            select: {
+                id: true,
+                followingId: true,
+                createdAt: true,
                 following: {
                     select: {
                         id: true,
                         name: true,
-                        email: true,
-                    },
-                },
+                        profilePicture: true,
+                        nbFollowers: true,
+                        nbFollowing: true
+                    }
+                }
             },
-            orderBy: { createdAt: 'desc' },
+            orderBy: { createdAt: 'desc' }
         });
-
-        return follows.map(follow => ({
-            ...new FollowResponseDto(follow),
-            following: follow.following,
-        }));
     }
 
     /**
-     * Trouve tous les followers d'un utilisateur donné
+     * Trouve tous les followers d'un utilisateur donné (optimisé)
      */
-    async getFollowers(userId: string): Promise<FollowWithUserDetailsDto[]> {
-        const follows = await this.prisma.follow.findMany({
+    async getFollowers(userId: string): Promise<any[]> {
+        return this.prisma.follow.findMany({
             where: { followingId: userId },
-            include: {
+            select: {
+                id: true,
+                followerId: true,
+                createdAt: true,
                 follower: {
                     select: {
                         id: true,
                         name: true,
-                        email: true,
-                    },
-                },
+                        profilePicture: true,
+                        nbFollowers: true,
+                        nbFollowing: true
+                    }
+                }
             },
-            orderBy: { createdAt: 'desc' },
+            orderBy: { createdAt: 'desc' }
         });
-
-        return follows.map(follow => ({
-            ...new FollowResponseDto(follow),
-            follower: follow.follower,
-        }));
-    }
-
-    /**
-     * Vérifie si un utilisateur en suit un autre
-     */
-    async isFollowing(followerId: string, followingId: string): Promise<boolean> {
-        const follow = await this.prisma.follow.findUnique({
-            where: {
-                followerId_followingId: {
-                    followerId,
-                    followingId,
-                },
-            },
-        });
-
-        return !!follow;
     }
 
     /**
@@ -253,61 +212,5 @@ export class FollowService extends BaseCrudServiceImpl<
                 follow: new FollowResponseDto(newFollow),
             };
         }
-    }
-
-    /**
-     * Obtient les statistiques de suivi pour un utilisateur
-     */
-    async getFollowStats(userId: string): Promise<{
-        followersCount: number;
-        followingCount: number;
-    }> {
-        const [followersCount, followingCount] = await Promise.all([
-            this.prisma.follow.count({
-                where: { followingId: userId },
-            }),
-            this.prisma.follow.count({
-                where: { followerId: userId },
-            }),
-        ]);
-
-        return {
-            followersCount,
-            followingCount,
-        };
-    }
-
-    /**
-     * Trouve les suivis mutuels entre deux utilisateurs
-     */
-    async getMutualFollows(userId1: string, userId2: string): Promise<FollowWithUserDetailsDto[]> {
-        // Utilisateurs que userId1 suit ET que userId2 suit aussi
-        const mutualFollows = await this.prisma.follow.findMany({
-            where: {
-                followerId: userId1,
-                followingId: {
-                    in: await this.prisma.follow
-                        .findMany({
-                            where: { followerId: userId2 },
-                            select: { followingId: true },
-                        })
-                        .then(follows => follows.map(f => f.followingId)),
-                },
-            },
-            include: {
-                following: {
-                    select: {
-                        id: true,
-                        name: true,
-                        email: true,
-                    },
-                },
-            },
-        });
-
-        return mutualFollows.map(follow => ({
-            ...new FollowResponseDto(follow),
-            following: follow.following,
-        }));
     }
 }
