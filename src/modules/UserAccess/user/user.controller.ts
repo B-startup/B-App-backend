@@ -190,7 +190,7 @@ export class UserController {
         try {
             const existingSocialMedias = await this.socialMediaService.findAll();
             const existingSocialMedia = existingSocialMedias.find(
-                sm => sm.userId === id && sm.platform === platform
+                sm =>  sm.platform === platform
             );
 
             if (existingSocialMedia) {
