@@ -594,4 +594,6 @@ export class UserService extends BaseCrudServiceImpl<User, CreateUserDto, Update
             orderBy: { nbFollowers: 'desc' } // Most followed first
         });
     }
+
+
 }
