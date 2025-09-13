@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Offer, PrismaClient } from '@prisma/client';
+import { Offer, PrismaClient, StatusOffer } from '@prisma/client';
 import { BaseCrudServiceImpl } from 'src/core/common/services/base-crud.service';
 import { CreateOfferDto } from './dto/create-offer.dto';
 import { UpdateOfferDto } from './dto/update-offer.dto';
@@ -17,10 +17,10 @@ export class OfferService extends BaseCrudServiceImpl<
     }
 
     /**
-     * Override de la méthode create pour incrémenter nbOffer de l'utilisateur
+     * Override de la méthode create pour incrémenter nbOffer de l'utilisateur et nbOffers du projet
      */
     async create(createOfferDto: CreateOfferDto): Promise<Offer> {
-        // Utiliser une transaction pour créer l'offre et incrémenter nbOffer
+        // Utiliser une transaction pour créer l'offre et incrémenter les compteurs
         return await this.prisma.$transaction(async (prisma) => {
             // Créer l'offre
             const newOffer = await prisma.offer.create({
@@ -37,17 +37,27 @@ export class OfferService extends BaseCrudServiceImpl<
                 }
             });
 
+            // Incrémenter nbOffers du projet
+            await prisma.project.update({
+                where: { id: createOfferDto.projectId },
+                data: {
+                    nbOffers: {
+                        increment: 1
+                    }
+                }
+            });
+
             return newOffer;
         });
     }
 
     override async remove(id: string): Promise<Offer> {
-        // Utiliser une transaction pour supprimer l'offre et décrémenter nbOffer
+        // Utiliser une transaction pour supprimer l'offre et décrémenter les compteurs
         return await this.prisma.$transaction(async (prisma) => {
-            // Récupérer l'offre pour obtenir l'userId avant suppression
+            // Récupérer l'offre pour obtenir l'userId et projectId avant suppression
             const offerToDelete = await prisma.offer.findUniqueOrThrow({
                 where: { id },
-                select: { userId: true }
+                select: { userId: true, projectId: true }
             });
 
             // Supprimer l'offre
@@ -55,11 +65,21 @@ export class OfferService extends BaseCrudServiceImpl<
                 where: { id }
             });
 
-            // Décrémenter nbOffer de l'utilisateur (minimum 0)
+            // Décrémenter nbOffer de l'utilisateur
             await prisma.user.update({
                 where: { id: offerToDelete.userId },
                 data: {
                     nbOffer: {
+                        decrement: 1
+                    }
+                }
+            });
+
+            // Décrémenter nbOffers du projet
+            await prisma.project.update({
+                where: { id: offerToDelete.projectId },
+                data: {
+                    nbOffers: {
                         decrement: 1
                     }
                 }
@@ -188,5 +208,148 @@ export class OfferService extends BaseCrudServiceImpl<
             averageAmount,
             highestOffer
         };
+    }
+
+    // ==================== HYBRID APPROACH METHODS ====================
+
+    /**
+     * Get all offers with optimized selection (for lists)
+     */
+    async findAllOptimized() {
+        return this.prisma.offer.findMany({
+            select: {
+                id: true,
+                amount: true,
+                offerDescription: true,
+                status: true,
+                createdAt: true,
+                updatedAt: true,
+                user: {
+                    select: {
+                        id: true,
+                        name: true,
+                        profilePicture: true
+                    }
+                },
+                project: {
+                    select: {
+                        id: true,
+                        title: true,
+                        logoImage: true
+                    }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+    }
+
+    /**
+     * Get offers by user (optimized selection)
+     */
+    async findByUserOptimized(userId: string) {
+        return this.prisma.offer.findMany({
+            where: { userId },
+            select: {
+                id: true,
+                amount: true,
+                offerDescription: true,
+                status: true,
+                createdAt: true,
+                updatedAt: true,
+                project: {
+                    select: {
+                        id: true,
+                        title: true,
+                        description: true,
+                        logoImage: true,
+                        creator: {
+                            select: {
+                                id: true,
+                                name: true
+                            }
+                        }
+                    }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+    }
+
+    /**
+     * Get offers by project (optimized selection)
+     */
+    async findByProjectOptimized(projectId: string) {
+        return this.prisma.offer.findMany({
+            where: { projectId },
+            select: {
+                id: true,
+                amount: true,
+                offerDescription: true,
+                status: true,
+                createdAt: true,
+                updatedAt: true,
+                user: {
+                    select: {
+                        id: true,
+                        name: true,
+                        profilePicture: true,
+                        role: true
+                    }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+    }
+
+    /**
+     * Get offers by status (optimized selection)
+     */
+    async findByStatusOptimized(status: StatusOffer) {
+        return this.prisma.offer.findMany({
+            where: { status },
+            select: {
+                id: true,
+                amount: true,
+                offerDescription: true,
+                status: true,
+                createdAt: true,
+                user: {
+                    select: {
+                        id: true,
+                        name: true,
+                        profilePicture: true
+                    }
+                },
+                project: {
+                    select: {
+                        id: true,
+                        title: true,
+                        logoImage: true
+                    }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+    }
+
+    /**
+     * Get offer summary (lightweight for dashboards)
+     */
+    async getOfferSummaryOptimized(userId?: string, projectId?: string) {
+        const where: any = {};
+        if (userId) where.userId = userId;
+        if (projectId) where.projectId = projectId;
+
+        return this.prisma.offer.findMany({
+            where,
+            select: {
+                id: true,
+                amount: true,
+                status: true,
+                createdAt: true
+            },
+            orderBy: { createdAt: 'desc' },
+            take: 10
+        });
     }
 }

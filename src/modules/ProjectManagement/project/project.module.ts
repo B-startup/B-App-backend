@@ -8,6 +8,7 @@ import { SecurityModule } from '../../../core/common/security.module';
 @Module({
     imports: [SecurityModule, ConfigModule],
     controllers: [ProjectController],
-    providers: [ProjectService, PrismaClient]
+    providers: [ProjectService, PrismaClient],
+    exports: [ProjectService]
 })
 export class ProjectModule {}

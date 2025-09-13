@@ -24,6 +24,9 @@ import {
 import { CreateUserDto, UpdateUserDto, UserResponseDto } from './dto';
 import { UserService } from './user.service';
 import { SocialMediaService } from '../social-media/social-media.service';
+import { PostService } from '../../PostManagement/post/post.service';
+import { ExperienceEducationService } from '../experience_education/experience_education.service';
+import { ProjectService } from '../../ProjectManagement/project/project.service';
 import { TokenProtected } from '../../../core/common/decorators/token-protected.decorator';
 
 @ApiTags('Users')
@@ -32,7 +35,10 @@ import { TokenProtected } from '../../../core/common/decorators/token-protected.
 export class UserController {
     constructor(
         private readonly userService: UserService,
-        private readonly socialMediaService: SocialMediaService
+        private readonly socialMediaService: SocialMediaService,
+        private readonly postService: PostService,
+        private readonly experienceEducationService: ExperienceEducationService,
+        private readonly projectService: ProjectService
     ) {}
 
     @Post()
@@ -88,6 +94,65 @@ export class UserController {
     @ApiOkResponse({ description: 'User found' })
     findOne(@Param('id') id: string): Promise<UserResponseDto> {
         return this.userService.findOneWithStats(id);
+    }
+
+    @Get('profile/:id')
+    @TokenProtected()
+    @ApiOperation({
+        summary: 'Get complete user profile',
+        description: 'Retrieves complete user profile with all related data: social media, experience & education, posts, and projects'
+    })
+    @ApiOkResponse({ 
+        description: 'Complete user profile retrieved successfully',
+        schema: {
+            type: 'object',
+            properties: {
+                user: {
+                    type: 'object',
+                    description: 'User basic information and statistics'
+                },
+                socialMedia: {
+                    type: 'array',
+                    description: 'User social media links'
+                },
+                experienceEducation: {
+                    type: 'array', 
+                    description: 'User experience and education records'
+                },
+                posts: {
+                    type: 'array',
+                    description: 'User posts with optimized data'
+                },
+                projects: {
+                    type: 'array',
+                    description: 'User projects with optimized data'
+                }
+            }
+        }
+    })
+    async getUserProfile(@Param('id') id: string) {
+        // Utilisateur de base avec statistiques
+        const user = await this.userService.findOneWithStats(id);
+        
+        // Réseaux sociaux de l'utilisateur
+        const socialMedia = await this.socialMediaService.findByUserId(id);
+        
+        // Expérience et éducation
+        const experienceEducation = await this.experienceEducationService.findByUser(id);
+        
+        // Posts de l'utilisateur avec données optimisées
+        const posts = await this.postService.findByUserOptimized(id);
+        
+        // Projets de l'utilisateur avec données optimisées
+        const projects = await this.projectService.findByCreatorOptimized(id);
+
+        return {
+            user,
+            socialMedia,
+            experienceEducation,
+            posts,
+            projects
+        };
     }
 
     @Patch(':id')

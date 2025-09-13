@@ -77,13 +77,7 @@ export class PostController {
 
     @TokenProtected()
     @Get()
-    @ApiOperation({ summary: 'Get all posts' })
-    @ApiQuery({
-        name: 'withRelations',
-        required: false,
-        type: Boolean,
-        description: 'Include related data (user, media, likes, comments, etc.)'
-    })
+    @ApiOperation({ summary: 'Get all posts (optimized)' })
     @ApiQuery({
         name: 'page',
         required: false,
@@ -102,7 +96,6 @@ export class PostController {
         type: [PostResponseDto]
     })
     async findAll(
-        @Query('withRelations') withRelations?: boolean,
         @Query('page') pageParam?: string,
         @Query('limit') limitParam?: string
     ) {
@@ -110,58 +103,31 @@ export class PostController {
         const page = pageParam ? parseInt(pageParam, 10) : undefined;
         const limit = limitParam ? parseInt(limitParam, 10) : undefined;
 
-        // Si des paramètres de pagination sont fournis
+        // Si des paramètres de pagination sont fournis, utiliser la version optimisée
         if (page || limit) {
             const paginationDto = { page, limit };
-            return await this.postService.findAllPaginated(paginationDto);
+            return await this.postService.findAllPaginatedOptimized(paginationDto);
         }
 
-        if (withRelations === true) {
-            return await this.postService.findAllWithRelations();
-        }
-        return await this.postService.findAll();
+        // Utiliser la version optimisée par défaut
+        return await this.postService.findAllOptimized();
     }
 
     @Get('public')
-    @ApiOperation({ summary: 'Get all public posts' })
-    @ApiQuery({
-        name: 'page',
-        required: false,
-        type: Number,
-        description: 'Page number for pagination'
-    })
-    @ApiQuery({
-        name: 'limit',
-        required: false,
-        type: Number,
-        description: 'Number of items per page'
-    })
+    @ApiOperation({ summary: 'Get all public posts (optimized)' })
     @ApiResponse({
         status: 200,
         description: 'Public posts retrieved successfully',
-        type: PaginatedPostResponseDto
+        type: [PostResponseDto]
     })
-    async findPublicPosts(
-        @Query('page') pageParam?: string,
-        @Query('limit') limitParam?: string
-    ) {
-        // Convertir les paramètres en nombres si ils existent
-        const page = pageParam ? parseInt(pageParam, 10) : undefined;
-        const limit = limitParam ? parseInt(limitParam, 10) : undefined;
-
-        // Si des paramètres de pagination sont fournis
-        if (page || limit) {
-            const paginationDto = { page, limit };
-            return await this.postService.findPublicPostsPaginated(
-                paginationDto
-            );
-        }
-        return await this.postService.findPublicPosts();
+    async findPublicPosts() {
+        // Utiliser la version optimisée uniquement
+        return await this.postService.findPublicPostsOptimized();
     }
 
     @TokenProtected()
     @Get('user/:userId')
-    @ApiOperation({ summary: 'Get all posts by a specific user' })
+    @ApiOperation({ summary: 'Get all posts by a specific user (optimized)' })
     @ApiParam({ name: 'userId', description: 'User ID' })
     @ApiResponse({
         status: 200,
@@ -171,34 +137,23 @@ export class PostController {
     @ApiResponse({ status: 404, description: 'User not found' })
     async findByUser(
         @Param('userId') userId: string
-    ): Promise<PostResponseDto[]> {
-        return await this.postService.findByUser(userId);
+    ) {
+        return await this.postService.findByUserOptimized(userId);
     }
 
     @TokenProtected()
     @Get(':id')
-    @ApiOperation({ summary: 'Get a post by ID' })
+    @ApiOperation({ summary: 'Get a post by ID with all relations' })
     @ApiParam({ name: 'id', description: 'Post ID' })
-    @ApiQuery({
-        name: 'withRelations',
-        required: false,
-        type: Boolean,
-        description: 'Include related data (user, media, likes, comments, etc.)'
-    })
     @ApiResponse({
         status: 200,
         description: 'Post retrieved successfully',
         type: PostResponseDto
     })
     @ApiResponse({ status: 404, description: 'Post not found' })
-    async findOne(
-        @Param('id') id: string,
-        @Query('withRelations') withRelations?: boolean
-    ) {
-        if (withRelations === true) {
-            return await this.postService.findOneWithRelations(id);
-        }
-        return await this.postService.findOne(id);
+    async findOne(@Param('id') id: string) {
+        // Utiliser toujours la version avec relations pour les détails d'un post
+        return await this.postService.findOneWithRelations(id);
     }
 
     @TokenProtected()
@@ -233,65 +188,21 @@ export class PostController {
         return await this.postService.remove(id);
     }
 
-    // Actions spécifiques pour les interactions
-
     @TokenProtected()
-    @Patch(':id/like')
-    @ApiOperation({ summary: 'Increment likes count for a post' })
-    @ApiParam({ name: 'id', description: 'Post ID' })
+    @Get('search')
+    @ApiOperation({ summary: 'Search posts by content (optimized)' })
+    @ApiQuery({
+        name: 'q',
+        required: true,
+        type: String,
+        description: 'Search term'
+    })
     @ApiResponse({
         status: 200,
-        description: 'Like count incremented successfully',
-        type: PostResponseDto
+        description: 'Search results retrieved successfully',
+        type: [PostResponseDto]
     })
-    @ApiResponse({ status: 404, description: 'Post not found' })
-    @HttpCode(HttpStatus.OK)
-    async incrementLikes(@Param('id') id: string): Promise<PostResponseDto> {
-        return await this.postService.incrementLikes(id);
-    }
-
-    @TokenProtected()
-    @Patch(':id/view')
-    @ApiOperation({ summary: 'Increment views count for a post' })
-    @ApiParam({ name: 'id', description: 'Post ID' })
-    @ApiResponse({
-        status: 200,
-        description: 'View count incremented successfully',
-        type: PostResponseDto
-    })
-    @ApiResponse({ status: 404, description: 'Post not found' })
-    @HttpCode(HttpStatus.OK)
-    async incrementViews(@Param('id') id: string): Promise<PostResponseDto> {
-        return await this.postService.incrementViews(id);
-    }
-
-    @TokenProtected()
-    @Patch(':id/comment')
-    @ApiOperation({ summary: 'Increment comments count for a post' })
-    @ApiParam({ name: 'id', description: 'Post ID' })
-    @ApiResponse({
-        status: 200,
-        description: 'Comment count incremented successfully',
-        type: PostResponseDto
-    })
-    @ApiResponse({ status: 404, description: 'Post not found' })
-    @HttpCode(HttpStatus.OK)
-    async incrementComments(@Param('id') id: string): Promise<PostResponseDto> {
-        return await this.postService.incrementComments(id);
-    }
-
-    @TokenProtected()
-    @Patch(':id/share')
-    @ApiOperation({ summary: 'Increment shares count for a post' })
-    @ApiParam({ name: 'id', description: 'Post ID' })
-    @ApiResponse({
-        status: 200,
-        description: 'Share count incremented successfully',
-        type: PostResponseDto
-    })
-    @ApiResponse({ status: 404, description: 'Post not found' })
-    @HttpCode(HttpStatus.OK)
-    async incrementShares(@Param('id') id: string): Promise<PostResponseDto> {
-        return await this.postService.incrementShares(id);
+    async searchPosts(@Query('q') searchTerm: string) {
+        return await this.postService.searchPostsOptimized(searchTerm);
     }
 }
