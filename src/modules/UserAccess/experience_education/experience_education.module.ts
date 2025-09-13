@@ -7,6 +7,7 @@ import { SecurityModule } from '../../../core/common/security.module';
 @Module({
     imports: [SecurityModule],
     controllers: [ExperienceEducationController],
-    providers: [ExperienceEducationService, PrismaClient]
+    providers: [ExperienceEducationService, PrismaClient],
+    exports: [ExperienceEducationService]
 })
 export class ExperienceEducationModule {}

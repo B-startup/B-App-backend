@@ -264,6 +264,10 @@ export class ProjectService extends BaseCrudServiceImpl<
                 financialGoal: true,
                 monthlyRevenue: true,
                 status: true,
+                nbLikes: true,
+                nbComments: true,
+                nbViews: true,
+                nbOffers: true,
                 createdAt: true,
                 updatedAt: true,
                 sector: {
@@ -272,11 +276,50 @@ export class ProjectService extends BaseCrudServiceImpl<
                         name: true
                     }
                 },
-                _count: {
+                files: {
                     select: {
-                        likes: true,
-                        comments: true,
-                        offers: true
+                        id: true,
+                        fileName: true,
+                        fileType: true,
+                        fileUrl: true,
+                        createdAt: true
+                    }
+                },
+                offers: {
+                    select: {
+                        id: true,
+                        amount: true,
+                        offerDescription: true,
+                        status: true,
+                        createdAt: true,
+                        user: {
+                            select: {
+                                id: true,
+                                name: true,
+                                profilePicture: true
+                            }
+                        }
+                    },
+                    orderBy: { createdAt: 'desc' }
+                },
+                partnerships: {
+                    select: {
+                        id: true,
+                        name: true,
+                        webSite: true,
+                        createdAt: true
+                    }
+                },
+                videos: {
+                    select: {
+                        id: true,
+                        title: true,
+                        description: true,
+                        videoUrl: true,
+                        thumbnailUrl: true,
+                        duration: true,
+                        nbViews: true,
+                        createdAt: true
                     }
                 }
             },

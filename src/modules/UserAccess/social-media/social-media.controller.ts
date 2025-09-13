@@ -55,6 +55,19 @@ export class SocialMediaController {
     }
 
     @TokenProtected()
+    @Get('user/:userId')
+    @ApiOperation({ summary: 'Get all social media links for a specific user' })
+    @ApiParam({ name: 'userId', description: 'User ID' })
+    @ApiResponse({
+        status: 200,
+        description: 'User social media links retrieved successfully',
+        type: [SocialMediaResponseDto]
+    })
+    async findByUserId(@Param('userId') userId: string): Promise<SocialMediaResponseDto[]> {
+        return await this.socialMediaService.findByUserId(userId);
+    }
+
+    @TokenProtected()
     @Get(':id')
     @ApiOperation({ summary: 'Get social media link by ID' })
     @ApiParam({ name: 'id', description: 'Social media link ID' })
