@@ -3,7 +3,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 export default function setupSwagger(app: INestApplication) {
     const config = new DocumentBuilder()
-        .setTitle('Personal Template Nestjs API')
+        .setTitle('BOM - Business Opportunity Match API')
         .setDescription('Business Opportunity Match API documentation')
         .setVersion('1.0')
         .addBearerAuth()

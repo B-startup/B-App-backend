@@ -83,196 +83,9 @@ export class PostService extends BaseCrudServiceImpl<
 
     // Méthodes personnalisées pour le modèle Post
 
-    /**
-     * Trouve tous les posts avec pagination
-     */
-    async findAllPaginated(paginationDto: PaginationDto): Promise<{
-        data: Post[];
-        meta: {
-            total: number;
-            page: number;
-            limit: number;
-            totalPages: number;
-            hasNextPage: boolean;
-            hasPrevPage: boolean;
-        };
-    }> {
-        const { page = 1, limit = 20 } = paginationDto; // Default à 20 pour mobile
-        const skip = (page - 1) * limit;
+    
 
-        const [data, total] = await Promise.all([
-            this.prisma.post.findMany({
-                skip,
-                take: limit,
-                orderBy: { createdAt: 'desc' }
-            }),
-            this.prisma.post.count()
-        ]);
 
-        const totalPages = Math.ceil(total / limit);
-
-        return {
-            data,
-            meta: {
-                total,
-                page,
-                limit,
-                totalPages,
-                hasNextPage: page < totalPages,
-                hasPrevPage: page > 1
-            }
-        };
-    }
-
-    /**
-     * Trouve tous les posts publics
-     */
-    async findPublicPosts(): Promise<Post[]> {
-        return this.prisma.post.findMany({
-            where: { isPublic: true },
-            orderBy: { createdAt: 'desc' }
-        });
-    }
-
-    /**
-     * Trouve tous les posts publics avec pagination
-     */
-    async findPublicPostsPaginated(paginationDto: PaginationDto): Promise<{
-        data: Post[];
-        meta: {
-            total: number;
-            page: number;
-            limit: number;
-            totalPages: number;
-            hasNextPage: boolean;
-            hasPrevPage: boolean;
-        };
-    }> {
-        const { page = 1, limit = 20 } = paginationDto; // Default à 20 pour mobile
-        const skip = (page - 1) * limit;
-
-        const [data, total] = await Promise.all([
-            this.prisma.post.findMany({
-                where: { isPublic: true },
-                skip,
-                take: limit,
-                orderBy: { createdAt: 'desc' }
-            }),
-            this.prisma.post.count({
-                where: { isPublic: true }
-            })
-        ]);
-
-        const totalPages = Math.ceil(total / limit);
-
-        return {
-            data,
-            meta: {
-                total,
-                page,
-                limit,
-                totalPages,
-                hasNextPage: page < totalPages,
-                hasPrevPage: page > 1
-            }
-        };
-    }
-
-    /**
-     * Incrémente le nombre de likes d'un post
-     */
-    async incrementLikes(id: string): Promise<Post> {
-        return await this.prisma.post.update({
-            where: { id },
-            data: {
-                nbLikes: {
-                    increment: 1
-                }
-            }
-        });
-    }
-
-    /**
-     * Incrémente le nombre de vues d'un post
-     */
-    async incrementViews(id: string): Promise<Post> {
-        return await this.prisma.post.update({
-            where: { id },
-            data: {
-                nbViews: {
-                    increment: 1
-                }
-            }
-        });
-    }
-
-    /**
-     * Incrémente le nombre de commentaires d'un post
-     */
-    async incrementComments(id: string): Promise<Post> {
-        return await this.prisma.post.update({
-            where: { id },
-            data: {
-                nbComments: {
-                    increment: 1
-                }
-            }
-        });
-    }
-
-    /**
-     * Incrémente le nombre de partages d'un post
-     */
-    async incrementShares(id: string): Promise<Post> {
-        return await this.prisma.post.update({
-            where: { id },
-            data: {
-                nbShares: {
-                    increment: 1
-                }
-            }
-        });
-    }
-
-    /**
-     * Trouve les posts avec leurs relations (media, likes, comments, etc.)
-     */
-    async findAllWithRelations(): Promise<any[]> {
-        return this.prisma.post.findMany({
-            include: {
-                user: {
-                    select: {
-                        id: true,
-                        name: true,
-                        email: true
-                    }
-                },
-                media: true,
-                Like: true,
-                Comment: {
-                    include: {
-                        user: {
-                            select: {
-                                id: true,
-                                name: true
-                            }
-                        }
-                    }
-                },
-                PostSector: {
-                    include: {
-                        sector: true
-                    }
-                },
-                PostTag: {
-                    include: {
-                        tag: true
-                    }
-                }
-            },
-            orderBy: { createdAt: 'desc' }
-        });
-    }
 
     /**
      * Trouve un post avec toutes ses relations
@@ -311,6 +124,206 @@ export class PostService extends BaseCrudServiceImpl<
                     }
                 }
             }
+        });
+    }
+
+    // ==================== HYBRID APPROACH METHODS ====================
+
+    /**
+     * Get all posts with optimized selection (for feeds/lists)
+     */
+    async findAllOptimized() {
+        return this.prisma.post.findMany({
+            select: {
+                id: true,
+                content: true,
+                isPublic: true,
+                createdAt: true,
+                updatedAt: true,
+                nbLikes: true,
+                nbViews: true,
+                nbComments: true,
+                nbShares: true,
+                user: {
+                    select: {
+                        id: true,
+                        name: true,
+                        profilePicture: true
+                    }
+                },
+                media: {
+                    select: {
+                        id: true,
+                        mediaUrl: true,
+                        mediaType: true
+                    },
+                    take: 1
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+    }
+
+    /**
+     * Get posts by user (optimized selection)
+     */
+    async findByUserOptimized(userId: string) {
+        return this.prisma.post.findMany({
+            where: { userId },
+            select: {
+                id: true,
+                content: true,
+                isPublic: true,
+                createdAt: true,
+                updatedAt: true,
+                nbLikes: true,
+                nbViews: true,
+                nbComments: true,
+                nbShares: true,
+                media: {
+                    select: {
+                        id: true,
+                        mediaUrl: true,
+                        mediaType: true,
+                        createdAt: true
+                    }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+    }
+
+    /**
+     * Get public posts (optimized selection for public feed)
+     */
+    async findPublicPostsOptimized() {
+        return this.prisma.post.findMany({
+            where: { isPublic: true },
+            select: {
+                id: true,
+                content: true,
+                createdAt: true,
+                updatedAt: true,
+                nbLikes: true,
+                nbViews: true,
+                nbComments: true,
+                nbShares: true,
+                user: {
+                    select: {
+                        id: true,
+                        name: true,
+                        profilePicture: true
+                    }
+                },
+                media: {
+                    select: {
+                        id: true,
+                        mediaUrl: true,
+                        mediaType: true
+                    },
+                    take: 1
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+    }
+
+    /**
+     * Get paginated posts (optimized selection)
+     */
+    async findAllPaginatedOptimized(paginationDto: PaginationDto) {
+        const { page = 1, limit = 20 } = paginationDto;
+        const skip = (page - 1) * limit;
+
+        const [data, total] = await Promise.all([
+            this.prisma.post.findMany({
+                skip,
+                take: limit,
+                select: {
+                    id: true,
+                    content: true,
+                    isPublic: true,
+                    createdAt: true,
+                    nbLikes: true,
+                    nbViews: true,
+                    nbComments: true,
+                    user: {
+                        select: {
+                            id: true,
+                            name: true,
+                            profilePicture: true
+                        }
+                    },
+                    media: {
+                        select: {
+                            id: true,
+                            mediaUrl: true,
+                            mediaType: true
+                        },
+                        take: 1
+                    }
+                },
+                orderBy: { createdAt: 'desc' }
+            }),
+            this.prisma.post.count()
+        ]);
+
+        const totalPages = Math.ceil(total / limit);
+
+        return {
+            data,
+            meta: {
+                total,
+                page,
+                limit,
+                totalPages,
+                hasNextPage: page < totalPages,
+                hasPrevPage: page > 1
+            }
+        };
+    }
+
+    /**
+     * Search posts by content (optimized selection)
+     */
+    async searchPostsOptimized(searchTerm: string) {
+        return this.prisma.post.findMany({
+            where: {
+                AND: [
+                    { isPublic: true },
+                    {
+                        content: {
+                            contains: searchTerm,
+                            mode: 'insensitive'
+                        }
+                    }
+                ]
+            },
+            select: {
+                id: true,
+                content: true,
+                createdAt: true,
+                nbLikes: true,
+                nbViews: true,
+                nbComments: true,
+                user: {
+                    select: {
+                        id: true,
+                        name: true,
+                        profilePicture: true
+                    }
+                },
+                media: {
+                    select: {
+                        id: true,
+                        mediaUrl: true,
+                        mediaType: true
+                    },
+                    take: 1
+                }
+            },
+            orderBy: { createdAt: 'desc' },
+            take: 50
         });
     }
 }

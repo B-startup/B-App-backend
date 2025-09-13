@@ -345,6 +345,9 @@ model Project {
   /// Number of times users have connected with the project
   nbConnects Int @default(0)
 
+  /// Number of offers made on this project
+  nbOffers Int @default(0)
+
   /// Indicates if the project has been verified by an admin or moderator
   verifiedProject Boolean @default(false)
 

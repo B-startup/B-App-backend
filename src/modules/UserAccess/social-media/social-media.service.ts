@@ -121,12 +121,25 @@ export class SocialMediaService {
     }
 
     /**
+     * Get all social media links for a specific user
+     */
+    async findByUserId(userId: string): Promise<SocialMediaResponseDto[]> {
+        const socialMediaLinks = await this.prisma.socialMedia.findMany({
+            where: { userId },
+            orderBy: {
+                createdAt: 'desc'
+            }
+        });
+
+        return socialMediaLinks.map(link => this.mapToResponseDto(link));
+    }
+
+    /**
      * Map Prisma model to response DTO
      */
     private mapToResponseDto(socialMedia: SocialMedia): SocialMediaResponseDto {
         return {
             id: socialMedia.id,
-            userId: socialMedia.userId,
             platform: socialMedia.platform,
             url: socialMedia.url,
             createdAt: socialMedia.createdAt,
