@@ -8,11 +8,7 @@ export class SocialMediaResponseDto {
     })
     id: string;
 
-    @ApiProperty({
-        description: 'User ID who owns this social media link',
-        example: 'user-uuid-123'
-    })
-    userId: string;
+
 
     @ApiProperty({
         description: 'Social media platform',

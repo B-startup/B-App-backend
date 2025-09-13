@@ -126,7 +126,6 @@ export class SocialMediaService {
     private mapToResponseDto(socialMedia: SocialMedia): SocialMediaResponseDto {
         return {
             id: socialMedia.id,
-            userId: socialMedia.userId,
             platform: socialMedia.platform,
             url: socialMedia.url,
             createdAt: socialMedia.createdAt,

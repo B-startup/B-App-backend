@@ -133,65 +133,79 @@ export class UserController {
     ) {
         const { socialMediaLinks, ...userUpdateData } = updateData;
 
-        // Parse social media links if provided as string
-        let parsedSocialMediaLinks = socialMediaLinks;
-        if (socialMediaLinks && typeof socialMediaLinks === 'string') {
-            try {
-                parsedSocialMediaLinks = JSON.parse(socialMediaLinks);
-            } catch {
-                throw new BadRequestException('Invalid socialMediaLinks format. Must be a valid JSON array.');
-            }
-        }
+        const parsedSocialMediaLinks = this.parseSocialMediaLinks(socialMediaLinks);
+        await this.updateUserProfile(id, userUpdateData, profileImage);
+        const updatedSocialMedias = await this.updateSocialMediaLinks(id, parsedSocialMediaLinks);
 
-        // 1. Update user profile (with or without image)
-        if (profileImage) {
-            await this.userService.updateWithProfileImage(id, userUpdateData, profileImage);
-        } else {
-            await this.userService.update(id, userUpdateData);
-        }
-
-        // 2. Handle social media links if provided
-        const updatedSocialMedias = [];
-        if (parsedSocialMediaLinks && Array.isArray(parsedSocialMediaLinks)) {
-            for (const socialMediaData of parsedSocialMediaLinks) {
-                const { platform, url } = socialMediaData;
-                
-                try {
-                    // Try to get existing social media for this platform
-                    const existingSocialMedias = await this.socialMediaService.findAll();
-                    const existingSocialMedia = existingSocialMedias.find(
-                        sm => sm.userId === id && sm.platform === platform
-                    );
-
-                    if (existingSocialMedia) {
-                        // Update existing social media
-                        const updated = await this.socialMediaService.update(existingSocialMedia.id, { url });
-                        updatedSocialMedias.push(updated);
-                    } else {
-                        // Create new social media
-                        const created = await this.socialMediaService.create({
-                            userId: id,
-                            platform,
-                            url
-                        });
-                        updatedSocialMedias.push(created);
-                    }
-                } catch (error) {
-                    console.warn(`Failed to process social media ${platform}:`, error.message);
-                    // Continue with other social medias instead of failing completely
-                }
-            }
-        }
-
-        // 3. Get user with all stats for complete response
         const userWithStats = await this.userService.findOneWithStats(id);
-
-        // 4. Return complete response
         return {
             ...userWithStats,
             socialMedias: updatedSocialMedias,
             message: 'Profile updated successfully'
         };
+    }
+
+    private parseSocialMediaLinks(socialMediaLinks?: string): any {
+        if (!socialMediaLinks || typeof socialMediaLinks !== 'string') {
+            return socialMediaLinks;
+        }
+
+        try {
+            return JSON.parse(socialMediaLinks);
+        } catch {
+            throw new BadRequestException('Invalid socialMediaLinks format. Must be a valid JSON array.');
+        }
+    }
+
+    private async updateUserProfile(
+        id: string,
+        userUpdateData: UpdateUserDto,
+        profileImage?: Express.Multer.File
+    ): Promise<void> {
+        if (profileImage) {
+            await this.userService.updateWithProfileImage(id, userUpdateData, profileImage);
+        } else {
+            await this.userService.update(id, userUpdateData);
+        }
+    }
+
+    private async updateSocialMediaLinks(id: string, parsedSocialMediaLinks: any): Promise<any[]> {
+        const updatedSocialMedias = [];
+        if (!parsedSocialMediaLinks || !Array.isArray(parsedSocialMediaLinks)) {
+            return updatedSocialMedias;
+        }
+
+        for (const socialMediaData of parsedSocialMediaLinks) {
+            const updatedSocialMedia = await this.processSocialMediaUpdate(id, socialMediaData);
+            if (updatedSocialMedia) {
+                updatedSocialMedias.push(updatedSocialMedia);
+            }
+        }
+        return updatedSocialMedias;
+    }
+
+    private async processSocialMediaUpdate(id: string, socialMediaData: any): Promise<any | null> {
+        const { platform, url } = socialMediaData;
+        
+        try {
+            const existingSocialMedias = await this.socialMediaService.findAll();
+            const existingSocialMedia = existingSocialMedias.find(
+                sm =>  sm.platform === platform
+            );
+
+            if (existingSocialMedia) {
+                return await this.socialMediaService.update(existingSocialMedia.id, { url });
+            } else {
+                return await this.socialMediaService.create({
+                    userId: id,
+                    platform,
+                    url
+                });
+            }
+        } catch (error) {
+            console.warn(`Failed to process social media ${platform}:`, error.message);
+            return null;
+        }
     }
 
     @Delete(':id/profile-image')
