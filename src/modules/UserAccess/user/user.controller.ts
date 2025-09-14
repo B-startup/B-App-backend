@@ -161,57 +161,57 @@ export class UserController {
     @ApiConsumes('multipart/form-data')
     @ApiOperation({
         summary: '🚀 Complete profile update (User + Social Media)',
-        description: 'Update user profile and social media links. Use data field for clean JSON body + optional image upload.'
+        description: 'Update user profile and social media links. All fields are optional for flexible partial updates.'
     })
     @ApiBody({
-        description: 'Profile update with JSON data field + optional image upload',
+        description: 'Complete profile update with individual optional fields',
         schema: {
             type: 'object',
             properties: {
-                data: {
-                    type: 'string',
-                    description: 'JSON string containing all profile data and social media links',
-                    example: JSON.stringify({
-                        name: 'John Doe Updated',
-                        email: 'updated@example.com',
-                        description: 'A passionate full-stack developer',
-                        country: 'Tunisia',
-                        city: 'Tunis',
-                        phone: '+216 20 123 456',
-                        webSite: 'https://johndoe.dev',
-                        socialMediaLinks: [
-                            { platform: 'INSTAGRAM', url: 'https://instagram.com/johndoe' },
-                            { platform: 'FACEBOOK', url: 'https://facebook.com/johndoe' },
-                            { platform: 'LINKEDIN', url: 'https://linkedin.com/in/johndoe' }
-                        ]
-                    }, null, 2)
+                name: { 
+                    type: 'string', 
+                    example: 'John Doe Updated',
+                    description: 'User full name (optional)'
+                },
+                email: { 
+                    type: 'string', 
+                    example: 'updated@example.com',
+                    description: 'User email address (optional)'
+                },
+                description: { 
+                    type: 'string', 
+                    example: 'A passionate full-stack developer',
+                    description: 'User bio/description (optional)'
+                },
+                country: { 
+                    type: 'string', 
+                    example: 'Tunisia',
+                    description: 'User country (optional)'
+                },
+                city: { 
+                    type: 'string', 
+                    example: 'Tunis',
+                    description: 'User city (optional)'
+                },
+                phone: { 
+                    type: 'string', 
+                    example: '+216 20 123 456',
+                    description: 'User phone number (optional)'
+                },
+                webSite: { 
+                    type: 'string', 
+                    example: 'https://johndoe.dev',
+                    description: 'User website URL (optional)'
                 },
                 profileImage: {
                     type: 'string',
                     format: 'binary',
                     description: 'Profile image file (optional - JPEG, PNG, GIF, WebP max 2MB)'
-                }
-            },
-            required: ['data']
-        },
-        examples: {
-            'Complete Profile Update': {
-                summary: 'Update profile with social media',
-                value: {
-                    data: JSON.stringify({
-                        name: 'John Doe Updated',
-                        email: 'updated@example.com',
-                        description: 'A passionate full-stack developer',
-                        country: 'Tunisia',
-                        city: 'Tunis',
-                        phone: '+216 20 123 456',
-                        webSite: 'https://johndoe.dev',
-                        socialMediaLinks: [
-                            { platform: 'INSTAGRAM', url: 'https://instagram.com/johndoe' },
-                            { platform: 'FACEBOOK', url: 'https://facebook.com/johndoe' },
-                            { platform: 'LINKEDIN', url: 'https://linkedin.com/in/johndoe' }
-                        ]
-                    }, null, 2)
+                },
+                socialMediaLinks: {
+                    type: 'string',
+                    example: '[{"platform":"INSTAGRAM","url":"https://instagram.com/johndoe"},{"platform":"FACEBOOK","url":"https://facebook.com/johndoe"}]',
+                    description: 'JSON array string of social media links (optional). Each object should have: platform (FACEBOOK|INSTAGRAM|LINKEDIN|TWITTER|YOUTUBE|TIKTOK|GITHUB|WEBSITE) and url'
                 }
             }
         }
@@ -254,20 +254,11 @@ export class UserController {
     })
     async update(
         @Param('id') id: string,
-        @Body() body: { data: string },
+        @Body() updateData: UpdateUserDto & { socialMediaLinks?: string },
         @UploadedFile() profileImage?: Express.Multer.File
     ) {
-        // Parse JSON data from the 'data' field
-        let profileData: any;
-        try {
-            profileData = JSON.parse(body.data);
-        } catch (error) {
-            console.error('Failed to parse profile data:', error);
-            throw new BadRequestException('Invalid data format. Must be valid JSON.');
-        }
-
-        // Extract socialMediaLinks from parsed data
-        const { socialMediaLinks, ...userUpdateData } = profileData;
+        // Extract socialMediaLinks from direct form fields
+        const { socialMediaLinks, ...userUpdateData } = updateData;
 
         const parsedSocialMediaLinks = this.parseSocialMediaLinks(socialMediaLinks);
         await this.updateUserProfile(id, userUpdateData, profileImage);
@@ -285,26 +276,16 @@ export class UserController {
         };
     }
 
-    private parseSocialMediaLinks(socialMediaLinks?: string | any[]): any {
-        if (!socialMediaLinks) {
+    private parseSocialMediaLinks(socialMediaLinks?: string): any {
+        if (!socialMediaLinks || typeof socialMediaLinks !== 'string') {
             return [];
         }
 
-        // If it's already an array (from JSON body), return as is
-        if (Array.isArray(socialMediaLinks)) {
-            return socialMediaLinks;
+        try {
+            return JSON.parse(socialMediaLinks);
+        } catch {
+            throw new BadRequestException('Invalid socialMediaLinks format. Must be a valid JSON array.');
         }
-
-        // If it's a string (from form-data), try to parse it
-        if (typeof socialMediaLinks === 'string') {
-            try {
-                return JSON.parse(socialMediaLinks);
-            } catch {
-                throw new BadRequestException('Invalid socialMediaLinks format. Must be a valid JSON array.');
-            }
-        }
-
-        return [];
     }
 
     private async updateUserProfile(
