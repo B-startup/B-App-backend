@@ -161,58 +161,124 @@ export class UserController {
     @ApiConsumes('multipart/form-data')
     @ApiOperation({
         summary: '🚀 Complete profile update (User + Social Media)',
-        description: 'Update user profile and social media links in one optimized request.'
+        description: 'Update user profile and social media links. All fields are optional for flexible partial updates.'
     })
     @ApiBody({
-        description: 'Complete profile update with social media links',
+        description: 'Complete profile update with individual optional fields',
         schema: {
             type: 'object',
             properties: {
-                name: { type: 'string', example: 'John Doe Updated' },
-                email: { type: 'string', example: 'updated@example.com' },
-                description: { type: 'string', example: 'A passionate developer' },
-                country: { type: 'string', example: 'Tunisia' },
-                city: { type: 'string', example: 'Tunis' },
-                phone: { type: 'string', example: '+216 20 123 456' },
-                webSite: { type: 'string', example: 'https://example.com' },
+                name: { 
+                    type: 'string', 
+                    example: 'John Doe Updated',
+                    description: 'User full name (optional)'
+                },
+                email: { 
+                    type: 'string', 
+                    example: 'updated@example.com',
+                    description: 'User email address (optional)'
+                },
+                description: { 
+                    type: 'string', 
+                    example: 'A passionate full-stack developer',
+                    description: 'User bio/description (optional)'
+                },
+                country: { 
+                    type: 'string', 
+                    example: 'Tunisia',
+                    description: 'User country (optional)'
+                },
+                city: { 
+                    type: 'string', 
+                    example: 'Tunis',
+                    description: 'User city (optional)'
+                },
+                phone: { 
+                    type: 'string', 
+                    example: '+216 20 123 456',
+                    description: 'User phone number (optional)'
+                },
+                webSite: { 
+                    type: 'string', 
+                    example: 'https://johndoe.dev',
+                    description: 'User website URL (optional)'
+                },
                 profileImage: {
                     type: 'string',
                     format: 'binary',
-                    description: 'Profile image file (JPEG, PNG, GIF, WebP max 2MB)'
+                    description: 'Profile image file (optional - JPEG, PNG, GIF, WebP max 2MB)'
                 },
                 socialMediaLinks: {
                     type: 'string',
-                    example: '[{"platform":"FACEBOOK","url":"https://facebook.com/user"},{"platform":"INSTAGRAM","url":"https://instagram.com/user"}]',
-                    description: 'JSON array as string. Each object should have: platform (FACEBOOK|INSTAGRAM|LINKEDIN|TWITTER|YOUTUBE|TIKTOK|GITHUB|WEBSITE) and url'
+                    example: '[{"platform":"INSTAGRAM","url":"https://instagram.com/johndoe"},{"platform":"FACEBOOK","url":"https://facebook.com/johndoe"}]',
+                    description: 'JSON array string of social media links (optional). Each object should have: platform (FACEBOOK|INSTAGRAM|LINKEDIN|TWITTER|YOUTUBE|TIKTOK|GITHUB|WEBSITE) and url'
                 }
             }
         }
     })
     @ApiOkResponse({
-        description: 'Profile updated successfully with social media links'
+        description: 'Profile updated successfully with complete user data and all social media links',
+        schema: {
+            type: 'object',
+            properties: {
+                id: { type: 'string', example: 'user-uuid' },
+                name: { type: 'string', example: 'John Doe Updated' },
+                email: { type: 'string', example: 'updated@example.com' },
+                description: { type: 'string', example: 'A passionate full-stack developer' },
+                country: { type: 'string', example: 'Tunisia' },
+                city: { type: 'string', example: 'Tunis' },
+                phone: { type: 'string', example: '+216 20 123 456' },
+                webSite: { type: 'string', example: 'https://johndoe.dev' },
+                profilePicture: { type: 'string', example: 'https://example.com/profile.jpg' },
+                nbFollowers: { type: 'number', example: 150 },
+                nbFollowing: { type: 'number', example: 75 },
+                nbPosts: { type: 'number', example: 42 },
+                nbProjects: { type: 'number', example: 8 },
+                socialMedias: {
+                    type: 'array',
+                    description: 'Complete list of all user social media links',
+                    items: {
+                        type: 'object',
+                        properties: {
+                            id: { type: 'string', example: 'social-media-uuid' },
+                            platform: { type: 'string', example: 'FACEBOOK' },
+                            url: { type: 'string', example: 'https://facebook.com/johndoe' },
+                            createdAt: { type: 'string', example: '2025-09-13T15:30:00Z' },
+                            updatedAt: { type: 'string', example: '2025-09-13T15:30:00Z' }
+                        }
+                    }
+                },
+                message: { type: 'string', example: 'Profile updated successfully' }
+            }
+        }
     })
     async update(
         @Param('id') id: string,
         @Body() updateData: UpdateUserDto & { socialMediaLinks?: string },
         @UploadedFile() profileImage?: Express.Multer.File
     ) {
+        // Extract socialMediaLinks from direct form fields
         const { socialMediaLinks, ...userUpdateData } = updateData;
 
         const parsedSocialMediaLinks = this.parseSocialMediaLinks(socialMediaLinks);
         await this.updateUserProfile(id, userUpdateData, profileImage);
-        const updatedSocialMedias = await this.updateSocialMediaLinks(id, parsedSocialMediaLinks);
+        await this.updateSocialMediaLinks(id, parsedSocialMediaLinks);
 
         const userWithStats = await this.userService.findOneWithStats(id);
+        
+        // Récupérer toute la liste des réseaux sociaux de l'utilisateur
+        const allUserSocialMedias = await this.socialMediaService.findByUserId(id);
+        
         return {
             ...userWithStats,
-            socialMedias: updatedSocialMedias,
+            socialMedias: allUserSocialMedias,
             message: 'Profile updated successfully'
         };
     }
 
     private parseSocialMediaLinks(socialMediaLinks?: string): any {
         if (!socialMediaLinks || typeof socialMediaLinks !== 'string') {
-            return socialMediaLinks;
+            return [];
         }
 
         try {
