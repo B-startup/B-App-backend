@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { MailerService } from '@nestjs-modules/mailer';
 import * as fs from 'fs';
 import * as path from 'path';
+import { CloudinaryService } from '../../../core/services/cloudinary.service';
 import { v4 as uuidv4 } from 'uuid';
 import { PrismaService } from '../../../core/services/prisma.service';
 import { BaseCrudServiceImpl } from '../../../core/common/services/base-crud.service';
@@ -24,6 +25,7 @@ export class UserService extends BaseCrudServiceImpl<User, CreateUserDto, Update
         prisma: PrismaService,
         private readonly configService: ConfigService,
         private readonly mailerService: MailerService,
+        private readonly cloudinaryService: CloudinaryService,
     ) {
         super(prisma);
         this.model = prisma.user;
@@ -169,14 +171,38 @@ export class UserService extends BaseCrudServiceImpl<User, CreateUserDto, Update
     async remove(id: string): Promise<User> {
         const user = await this.findOne(id);
         
+        console.log('🗑️  Suppression de l\'utilisateur:', id);
+        console.log('📁 Image de profil à supprimer:', user.profilePicture || 'Aucune');
+        
         // Supprimer l'image de profil si elle existe
         if (user.profilePicture) {
-            await this.deleteProfileImageFile(user.profilePicture);
+            try {
+                // Supprimer de Cloudinary si c'est une URL Cloudinary
+                if (this.isCloudinaryUrl(user.profilePicture)) {
+                    console.log('☁️  Suppression de l\'image Cloudinary...');
+                    const publicId = this.cloudinaryService.extractPublicIdFromUrl(user.profilePicture);
+                    if (publicId) {
+                        await this.cloudinaryService.deleteProfileImage(publicId);
+                        console.log('✅ Image Cloudinary supprimée avec succès');
+                    }
+                } else {
+                    // Supprimer le fichier local si c'est une image locale
+                    console.log('🗑️  Suppression de l\'image locale...');
+                    await this.deleteProfileImageFile(user.profilePicture);
+                    console.log('✅ Image locale supprimée avec succès');
+                }
+            } catch (error) {
+                console.error('❌ Erreur lors de la suppression de l\'image:', error);
+                // Continue avec la suppression de l'utilisateur même si l'image échoue
+            }
         }
 
-        return await this.model.delete({
+        const deletedUser = await this.model.delete({
             where: { id }
         });
+
+        console.log('✅ Utilisateur supprimé avec succès:', id);
+        return deletedUser;
     }
 
     /**
@@ -290,42 +316,42 @@ export class UserService extends BaseCrudServiceImpl<User, CreateUserDto, Update
         this.validateImageFile(file);
 
         const user = await this.findOne(userId);
-        const oldImagePath = user.profilePicture;
+        const oldImageUrl = user.profilePicture;
 
         console.log('🔄 Upload d\'une nouvelle image de profil pour l\'utilisateur:', userId);
-        console.log('📁 Ancienne image:', oldImagePath || 'Aucune');
-
-        // Supprimer l'ancienne image avant d'uploader la nouvelle
-        if (oldImagePath) {
-            console.log('🗑️  Suppression de l\'ancienne image...');
-            await this.deleteProfileImageFile(oldImagePath);
-        }
-
-        // Générer un nom de fichier unique
-        const fileExtension = path.extname(file.originalname);
-        const filename = `profile-${Date.now()}-${uuidv4().slice(0, 6)}${fileExtension}`;
-        const relativePath = `profile-images/${filename}`;
-        const fullPath = path.join(this.profileImagesDir, filename);
-
-        console.log('📤 Nouveau fichier à sauvegarder:', fullPath);
+        console.log('📁 Ancienne image:', oldImageUrl || 'Aucune');
 
         try {
-            // Sauvegarder le fichier
-            fs.writeFileSync(fullPath, file.buffer);
-            console.log('✅ Fichier sauvegardé avec succès');
+            // Upload vers Cloudinary
+            console.log('☁️  Upload vers Cloudinary...');
+            const cloudinaryResult = await this.cloudinaryService.uploadProfileImage(file, userId);
+            
+            console.log('✅ Upload Cloudinary réussi:', cloudinaryResult.secure_url);
 
-            // Mettre à jour l'utilisateur
+            // Supprimer l'ancienne image de Cloudinary si elle existe
+            if (oldImageUrl && this.isCloudinaryUrl(oldImageUrl)) {
+                console.log('🗑️  Suppression de l\'ancienne image Cloudinary...');
+                const oldPublicId = this.cloudinaryService.extractPublicIdFromUrl(oldImageUrl);
+                if (oldPublicId) {
+                    await this.cloudinaryService.deleteProfileImage(oldPublicId);
+                }
+            } else if (oldImageUrl) {
+                // Si c'était une image locale, la supprimer aussi
+                console.log('🗑️  Suppression de l\'ancienne image locale...');
+                await this.deleteProfileImageFile(oldImageUrl);
+            }
+
+            // Mettre à jour l'utilisateur avec l'URL Cloudinary
             const updatedUser = await this.model.update({
                 where: { id: userId },
-                data: { profilePicture: relativePath }
+                data: { profilePicture: cloudinaryResult.secure_url }
             });
 
-            console.log('✅ Base de données mise à jour avec le nouveau chemin:', relativePath);
+            console.log('✅ Base de données mise à jour avec l\'URL Cloudinary:', cloudinaryResult.secure_url);
             return this.toUserResponseDto(updatedUser);
         } catch (error) {
-            console.error('❌ Erreur lors de l\'upload de l\'image:', error);
-            // Si l'upload échoue, on ne peut pas restaurer l'ancienne image car elle a été supprimée
-            throw new BadRequestException('Erreur lors de l\'upload de l\'image');
+            console.error('❌ Erreur lors de l\'upload vers Cloudinary:', error);
+            throw new BadRequestException('Erreur lors de l\'upload de l\'image vers Cloudinary');
         }
     }
 
@@ -355,7 +381,18 @@ export class UserService extends BaseCrudServiceImpl<User, CreateUserDto, Update
         console.log('📁 Image à supprimer:', user.profilePicture || 'Aucune');
         
         if (user.profilePicture) {
-            await this.deleteProfileImageFile(user.profilePicture);
+            // Supprimer de Cloudinary si c'est une URL Cloudinary
+            if (this.isCloudinaryUrl(user.profilePicture)) {
+                console.log('☁️  Suppression de l\'image Cloudinary...');
+                const publicId = this.cloudinaryService.extractPublicIdFromUrl(user.profilePicture);
+                if (publicId) {
+                    await this.cloudinaryService.deleteProfileImage(publicId);
+                }
+            } else {
+                // Supprimer le fichier local si c'est une image locale
+                console.log('🗑️  Suppression de l\'image locale...');
+                await this.deleteProfileImageFile(user.profilePicture);
+            }
             
             const updatedUser = await this.model.update({
                 where: { id: userId },
@@ -399,20 +436,22 @@ export class UserService extends BaseCrudServiceImpl<User, CreateUserDto, Update
             return null;
         }
 
-        const baseUrl = this.configService.get<string>('BASE_URL', 'http://localhost:8050/');
-        // S'assurer que baseUrl se termine par "/"
-        const formattedBaseUrl = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
-        
-        if (profilePicturePath.startsWith('profile-images/')) {
-            // Pour les chemins relatifs "profile-images/filename.jpg"
-            return `${formattedBaseUrl}uploads/${profilePicturePath}`;
-        } else if (profilePicturePath.startsWith('uploads/')) {
-            // Pour les chemins qui commencent déjà par "uploads/"
-            return `${formattedBaseUrl}${profilePicturePath}`;
-        } else {
-            // Pour les autres cas, ajouter le préfixe complet
-            return `${formattedBaseUrl}uploads/profile-images/${profilePicturePath}`;
+        // Si c'est déjà une URL Cloudinary complète, la retourner telle quelle
+        if (this.isCloudinaryUrl(profilePicturePath)) {
+            console.log(`☁️ Cloudinary URL: ${profilePicturePath}`);
+            return profilePicturePath;
         }
+
+        // Les anciennes images locales ne sont plus supportées
+        console.warn(`⚠️ Image locale non supportée: ${profilePicturePath}. Toutes les images doivent être migrées vers Cloudinary.`);
+        return null;
+    }
+
+    /**
+     * Vérifie si une URL est une URL Cloudinary
+     */
+    private isCloudinaryUrl(url: string): boolean {
+        return url && url.includes('cloudinary.com');
     }
 
     private validateImageFile(file: Express.Multer.File): void {
@@ -492,6 +531,28 @@ export class UserService extends BaseCrudServiceImpl<User, CreateUserDto, Update
             });
             // On ne lance pas l'erreur pour ne pas bloquer le processus principal
             // mais on log l'erreur pour le débogage
+        }
+    }
+
+    /**
+     * Test la connexion à Cloudinary
+     */
+    async testCloudinaryConnection(): Promise<any> {
+        try {
+            const result = await this.cloudinaryService.testConnection();
+            return {
+                connected: result.connected || false,
+                cloudName: this.configService.get<string>('CLOUDINARY_CLOUD_NAME'),
+                message: result.connected ? 'Cloudinary connection successful' : 'Cloudinary connection failed',
+                details: result
+            };
+        } catch (error) {
+            return {
+                connected: false,
+                cloudName: this.configService.get<string>('CLOUDINARY_CLOUD_NAME'),
+                message: 'Cloudinary connection test failed',
+                error: error.message
+            };
         }
     }
 

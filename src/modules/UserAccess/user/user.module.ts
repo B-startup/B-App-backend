@@ -8,6 +8,7 @@ import { PostModule } from '../../PostManagement/post/post.module';
 import { ExperienceEducationModule } from '../experience_education/experience_education.module';
 import { ProjectModule } from '../../ProjectManagement/project/project.module';
 import { PrismaService } from 'src/core/services/prisma.service';
+import { CloudinaryService } from 'src/core/services/cloudinary.service';
 import { SecurityModule } from '../../../core/common/security.module';
 @Module({
     imports: [
@@ -22,7 +23,8 @@ import { SecurityModule } from '../../../core/common/security.module';
     providers: [
         UserService, 
         SocialMediaService, 
-        PrismaService
+        PrismaService,
+        CloudinaryService
     ],
     exports: [UserService]
 })
