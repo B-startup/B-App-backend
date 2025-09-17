@@ -85,6 +85,26 @@ export class UserController {
         });
     }
 
+    @Get('test-cloudinary')
+    @ApiOperation({
+        summary: '☁️ Test Cloudinary connection',
+        description: 'Test endpoint to verify Cloudinary configuration and connection'
+    })
+    @ApiOkResponse({ 
+        description: 'Cloudinary connection test result',
+        schema: {
+            type: 'object',
+            properties: {
+                connected: { type: 'boolean' },
+                cloudName: { type: 'string' },
+                message: { type: 'string' }
+            }
+        }
+    })
+    async testCloudinaryConnection() {
+        return this.userService.testCloudinaryConnection();
+    }
+
     @Get(':id')
     @TokenProtected()
     @ApiOperation({
