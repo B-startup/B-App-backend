@@ -44,7 +44,7 @@ export class FileController {
     @ApiOperation({ summary: 'Upload a file and create record' })
     @ApiConsumes('multipart/form-data')
     @ApiBody({
-        description: 'File upload with project information',
+        description: 'File upload with project information (type detected automatically)',
         schema: {
             type: 'object',
             properties: {
@@ -53,15 +53,10 @@ export class FileController {
                     format: 'uuid',
                     description: 'ID of the project'
                 },
-                fileType: {
-                    type: 'string',
-                    enum: Object.values(FileType),
-                    description: 'Type of the file'
-                },
                 file: {
                     type: 'string',
                     format: 'binary',
-                    description: 'File to upload'
+                    description: 'File to upload (type detected automatically)'
                 }
             }
         }
@@ -78,7 +73,40 @@ export class FileController {
         if (!file) {
             throw new BadRequestException('File is required');
         }
-        return this.fileService.uploadFile(uploadFileDto, file);
+
+        // Utiliser le type fourni ou le détecter automatiquement
+        const fileType = uploadFileDto.fileType || this.detectFileType(file.mimetype);
+        
+        // Ajouter le type final au DTO
+        const uploadDtoWithType = {
+            ...uploadFileDto,
+            fileType: fileType
+        };
+
+        return this.fileService.uploadFile(uploadDtoWithType, file);
+    }
+
+    /**
+     * Détecte le type de fichier basé sur le MIME type
+     */
+    private detectFileType(mimeType: string): FileType {
+        const mimeTypeToFileType: Record<string, FileType> = {
+            'application/pdf': FileType.PDF,
+            'image/png': FileType.PNG,
+            'image/jpeg': FileType.JPG,
+            'image/jpg': FileType.JPG,
+            'application/vnd.ms-powerpoint': FileType.PPT,
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation': FileType.PPT
+        };
+
+        const fileType = mimeTypeToFileType[mimeType];
+        if (!fileType) {
+            throw new BadRequestException(
+                `Unsupported file type: ${mimeType}. Supported types: PDF, PNG, JPG, PPT`
+            );
+        }
+
+        return fileType;
     }
 
     @Get()

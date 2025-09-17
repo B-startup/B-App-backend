@@ -1,9 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Project, PrismaClient } from '@prisma/client';
-import * as fs from 'fs';
-import * as path from 'path';
-import { v4 as uuidv4 } from 'uuid';
+import { CloudinaryService } from '../../../core/services/cloudinary.service';
 import { BaseCrudServiceImpl } from '../../../core/common/services/base-crud.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
@@ -15,21 +13,16 @@ export class ProjectService extends BaseCrudServiceImpl<
     UpdateProjectDto
 > {
     protected model = this.prisma.project;
-    private readonly projectFilesDir: string;
     private readonly maxFileSize: number;
     private readonly allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 
     constructor(
         protected override prisma: PrismaClient,
-        private readonly configService: ConfigService
+        private readonly configService: ConfigService,
+        private readonly cloudinaryService: CloudinaryService
     ) {
         super(prisma);
-        this.projectFilesDir = path.join(
-            process.cwd(),
-            this.configService.get<string>('PROJECT_FILES_DIR', 'uploads/ProjectFiles')
-        );
         this.maxFileSize = parseInt(this.configService.get<string>('PROJECT_LOGO_MAX_SIZE', '2097152')); // 2MB
-        this.ensureUploadDirectoryExists();
     }
 
     /**
@@ -460,36 +453,31 @@ export class ProjectService extends BaseCrudServiceImpl<
     }
 
     /**
-     * Override de la méthode remove pour supprimer aussi le logo et le dossier du projet
+     * Override de la méthode remove pour supprimer aussi le logo Cloudinary
      */
     async remove(id: string): Promise<Project> {
         return await this.prisma.$transaction(async (prisma) => {
+            console.log('🗑️  Suppression du projet:', id);
+            
             // Récupérer le projet avec logo et creatorId
             const projectToDelete = await prisma.project.findUniqueOrThrow({
                 where: { id },
                 select: { creatorId: true, logoImage: true }
             });
 
+            console.log('📁 Logo à supprimer:', projectToDelete.logoImage || 'Aucun');
+
             // Supprimer le logo s'il existe
             if (projectToDelete.logoImage) {
                 await this.deleteLogoFile(projectToDelete.logoImage);
-            }
-
-            // Supprimer le dossier complet du projet (avec tous ses fichiers)
-            const projectDir = path.join(this.projectFilesDir, id);
-            if (fs.existsSync(projectDir)) {
-                try {
-                    fs.rmSync(projectDir, { recursive: true, force: true });
-                    console.log(`Project directory removed successfully: ${projectDir}`);
-                } catch (error) {
-                    console.warn(`Could not remove project directory ${projectDir}:`, error);
-                }
             }
 
             // Supprimer le projet
             const deletedProject = await prisma.project.delete({
                 where: { id }
             });
+
+            console.log('✅ Projet supprimé avec succès:', id);
 
             // Décrémenter nbProjects de l'utilisateur
             await prisma.user.update({
@@ -544,56 +532,67 @@ export class ProjectService extends BaseCrudServiceImpl<
     /**
      * Sauvegarder le fichier logo
      */
+    /**
+     * Upload le logo du projet vers Cloudinary
+     */
     private async saveLogoFile(projectId: string, file: Express.Multer.File): Promise<string> {
-        // Créer le dossier du projet
-        const projectDir = path.join(this.projectFilesDir, projectId);
-        const logoDir = path.join(projectDir, 'logo');
-        
-        if (!fs.existsSync(logoDir)) {
-            fs.mkdirSync(logoDir, { recursive: true });
-        }
-
-        // Générer un nom de fichier unique
-        const fileExtension = path.extname(file.originalname);
-        const filename = `logo-${uuidv4()}${fileExtension}`;
-        const fullPath = path.join(logoDir, filename);
-
         try {
-            // Écrire le fichier
-            fs.writeFileSync(fullPath, file.buffer);
-            
-            // Retourner le chemin relatif depuis le dossier uploads
-            return `ProjectFiles/${projectId}/logo/${filename}`;
+            console.log('☁️  Upload du logo du projet vers Cloudinary:', projectId);
+            const cloudinaryResult = await this.cloudinaryService.uploadProjectLogo(file, projectId);
+            console.log('✅ Logo du projet uploadé avec succès:', cloudinaryResult.secure_url);
+            return cloudinaryResult.secure_url;
         } catch (error) {
-            console.error('Failed to save logo file:', error);
-            throw new BadRequestException('Failed to save logo file');
+            console.error('❌ Erreur lors de l\'upload du logo vers Cloudinary:', error);
+            throw new BadRequestException('Erreur lors de l\'upload du logo vers Cloudinary');
         }
     }
 
     /**
-     * Supprimer le fichier logo
+     * Supprimer le logo du projet de Cloudinary
      */
     private async deleteLogoFile(logoPath: string): Promise<void> {
         if (!logoPath) return;
 
         try {
-            // Construire le chemin complet
-            const fullPath = path.join(process.cwd(), 'uploads', logoPath);
-            
-            if (fs.existsSync(fullPath)) {
-                fs.unlinkSync(fullPath);
+            // Vérifier si c'est une URL Cloudinary
+            if (this.isCloudinaryUrl(logoPath)) {
+                console.log('☁️  Suppression du logo Cloudinary:', logoPath);
+                const publicId = this.cloudinaryService.extractPublicIdFromUrl(logoPath);
+                if (publicId) {
+                    await this.cloudinaryService.deleteFile(publicId, 'image');
+                    console.log('✅ Logo Cloudinary supprimé avec succès');
+                }
+            } else {
+                // Ancienne image locale - log uniquement
+                console.warn('⚠️  Logo local détecté mais non supprimé (migration Cloudinary requise):', logoPath);
             }
         } catch (error) {
-            console.warn(`Could not delete logo file ${logoPath}:`, error);
+            console.warn(`❌ Erreur lors de la suppression du logo ${logoPath}:`, error);
         }
     }
 
     /**
-     * S'assurer que le dossier d'upload existe
+     * Vérifie si une URL est une URL Cloudinary
      */
-    private ensureUploadDirectoryExists(): void {
-        if (!fs.existsSync(this.projectFilesDir)) {
-            fs.mkdirSync(this.projectFilesDir, { recursive: true });
+    private isCloudinaryUrl(url: string): boolean {
+        return url && url.includes('cloudinary.com');
+    }
+
+    /**
+     * Construit l'URL complète pour accéder au logo du projet
+     */
+    private buildLogoUrl(logoPath: string): string | null {
+        if (!logoPath) {
+            return null;
         }
+
+        // Si c'est déjà une URL Cloudinary complète, la retourner telle quelle
+        if (this.isCloudinaryUrl(logoPath)) {
+            return logoPath;
+        }
+
+        // Les anciens logos locaux ne sont plus supportés
+        console.warn(`⚠️ Logo local non supporté: ${logoPath}. Migration vers Cloudinary requise.`);
+        return null;
     }
 }

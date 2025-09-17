@@ -1,5 +1,5 @@
-import { IsString, IsEnum, IsNotEmpty } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { IsString, IsEnum, IsNotEmpty, IsOptional } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { FileType } from '@prisma/client';
 
 export class UploadFileDto {
@@ -11,13 +11,14 @@ export class UploadFileDto {
     @IsNotEmpty()
     projectId: string;
 
-    @ApiProperty({
-        description: 'Type of the file',
+    @ApiPropertyOptional({
+        description: 'Type of the file (auto-detected if not provided)',
         enum: FileType,
         example: FileType.PDF
     })
+    @IsOptional()
     @IsEnum(FileType)
-    fileType: FileType;
+    fileType?: FileType;
 
     @ApiProperty({
         description: 'File to upload',

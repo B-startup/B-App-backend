@@ -1,12 +1,10 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { Video } from '@prisma/client';
 import { PrismaService } from '../../../core/services/prisma.service';
+import { CloudinaryService } from '../../../core/services/cloudinary.service';
 import { BaseCrudServiceImpl } from '../../../core/common/services/base-crud.service';
 import { ConfigService } from '@nestjs/config';
 import { CreateVideoDto, UpdateVideoDto, VideoResponseDto } from './dto';
-import * as fs from 'fs';
-import * as path from 'path';
-import { getVideoDurationInSeconds } from 'get-video-duration';
 
 @Injectable()
 export class VideoService extends BaseCrudServiceImpl<
@@ -19,6 +17,7 @@ export class VideoService extends BaseCrudServiceImpl<
     constructor(
         private readonly prismaService: PrismaService,
         private readonly configService: ConfigService,
+        private readonly cloudinaryService: CloudinaryService
     ) {
         super(prismaService);
     }
@@ -28,105 +27,38 @@ export class VideoService extends BaseCrudServiceImpl<
     async remove(id: string): Promise<Video> {
         const video = await this.findOneOrFail(id);
 
-        // Supprimer le fichier physique s'il existe
+        console.log('🗑️  Suppression de la vidéo:', id);
+        console.log('📹 URL de la vidéo:', video.videoUrl || 'Aucune');
+
+        // Supprimer la vidéo de Cloudinary s'il existe
         if (video.videoUrl) {
-            await this.deleteVideoFile(video.videoUrl);
-        }
-
-        return super.remove(id);
-    }
-
-    private async deleteVideoFile(videoUrl: string): Promise<void> {
-        try {
-            console.log(`🗑️ Attempting to delete video file from URL: ${videoUrl}`);
-            
-            const filePath = this.extractFilePath(videoUrl);
-            console.log(`🗃️ Final computed file path: ${filePath}`);
-            
-            await this.removeFileIfExists(filePath);
-        } catch (error) {
-            console.warn(`⚠️ Could not delete video file: ${error.message}`);
-        }
-    }
-
-    private extractFilePath(videoUrl: string): string {
-        const url = new URL(videoUrl);
-        const relativePath = url.pathname;
-        
-        // IMPORTANT: Décoder l'URL pour convertir %20 en espaces, etc.
-        const decodedPath = decodeURIComponent(relativePath);
-        console.log(`🔄 Decoded path: ${decodedPath}`);
-        
-        // Construire le chemin absolu du fichier
-        return path.join(process.cwd(), decodedPath.substring(1)); // Enlever le premier "/"
-    }
-
-    private async removeFileIfExists(filePath: string): Promise<void> {
-        if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
-            console.log(`✅ Video file deleted successfully: ${filePath}`);
-            
-            await this.cleanupEmptyDirectory(filePath);
-        } else {
-            console.warn(`⚠️ Video file not found at path: ${filePath}`);
-            this.debugMissingFile(filePath);
-        }
-    }
-
-    private async cleanupEmptyDirectory(filePath: string): Promise<void> {
-        try {
-            const parentDir = path.dirname(filePath);
-            const files = fs.readdirSync(parentDir);
-            if (files.length === 0) {
-                fs.rmdirSync(parentDir);
-                console.log(`📁 Empty directory deleted: ${parentDir}`);
+            try {
+                if (this.isCloudinaryUrl(video.videoUrl)) {
+                    console.log('☁️  Suppression de la vidéo Cloudinary...');
+                    const publicId = this.cloudinaryService.extractPublicIdFromUrl(video.videoUrl);
+                    if (publicId) {
+                        await this.cloudinaryService.deleteFile(publicId, 'video');
+                        console.log('✅ Vidéo Cloudinary supprimée avec succès');
+                    }
+                } else {
+                    // Ancienne vidéo locale - log uniquement
+                    console.warn('⚠️  Vidéo locale détectée mais non supprimée (migration Cloudinary requise):', video.videoUrl);
+                }
+            } catch (error) {
+                console.warn(`❌ Erreur lors de la suppression de la vidéo: ${video.videoUrl}`, error);
             }
-        } catch (dirError) {
-            console.warn(`⚠️ Could not check/delete parent directory: ${dirError.message}`);
         }
+
+        const deletedVideo = await super.remove(id);
+        console.log('✅ Vidéo supprimée avec succès:', id);
+        return deletedVideo;
     }
 
-    private debugMissingFile(filePath: string): void {
-        try {
-            const parentDir = path.dirname(filePath);
-            if (fs.existsSync(parentDir)) {
-                const files = fs.readdirSync(parentDir);
-                console.log(`📂 Files in directory ${parentDir}:`);
-                files.forEach(file => console.log(`   - ${file}`));
-            } else {
-                console.log(`📂 Directory does not exist: ${parentDir}`);
-            }
-        } catch (debugError) {
-            console.warn(`🔍 Debug listing failed: ${debugError.message}`);
-        }
-    }
+
 
     // ==================== COMPLEX BUSINESS LOGIC METHODS ====================
 
-    /**
-     * Analyser la durée d'une vidéo en utilisant get-video-duration (JavaScript pur)
-     */
-    private async analyzeVideoDuration(filePath: string): Promise<number> {
-        try {
-            console.log(`Analyzing video duration for: ${filePath}`);
-            
-            // Utiliser get-video-duration qui ne nécessite pas FFmpeg
-            const duration = await getVideoDurationInSeconds(filePath);
-            
-            if (duration && typeof duration === 'number' && duration > 0) {
-                const roundedDuration = Math.round(duration);
-                console.log(`Video duration analyzed: ${roundedDuration} seconds`);
-                return roundedDuration;
-            } else {
-                console.warn('No valid duration found in video metadata');
-                return 0; // Durée par défaut si non trouvée
-            }
-        } catch (error) {
-            console.error('Error analyzing video duration:', error);
-            console.warn('Falling back to default duration (0 seconds)');
-            return 0; // Durée par défaut en cas d'erreur
-        }
-    }
+
 
     /**
      * Valider le fichier vidéo
@@ -176,41 +108,26 @@ export class VideoService extends BaseCrudServiceImpl<
         // Valider le fichier vidéo
         this.validateVideoFile(file);
 
-        // Générer le chemin de fichier organisé par projet
-        const uploadDir = path.join(
-            this.configService.get<string>('PROJECT_VIDEOS_DIR', 'uploads/ProjectVideos'),
-            projectId
-        );
-        const fileName = `${Date.now()}-${file.originalname}`;
-        const filePath = path.join(uploadDir, fileName);
-
         try {
-            // Créer le dossier s'il n'existe pas
-            if (!fs.existsSync(uploadDir)) {
-                fs.mkdirSync(uploadDir, { recursive: true });
-            }
+            console.log('☁️  Upload de la vidéo vers Cloudinary...');
+            // Upload vers Cloudinary
+            const cloudinaryResult = await this.cloudinaryService.uploadVideo(
+                file, 
+                projectId, 
+                project.creatorId
+            );
+            
+            console.log('✅ Vidéo uploadée avec succès:', cloudinaryResult.secure_url);
 
-            // Sauvegarder le fichier
-            fs.writeFileSync(filePath, file.buffer);
-
-            // Analyser la durée de la vidéo
-            console.log(`Analyzing video duration for: ${filePath}`);
-            const duration = await this.analyzeVideoDuration(filePath);
-            console.log(`Video duration analyzed: ${duration} seconds`);
-
-            // Créer l'URL complète pour l'accès public
-            const baseUrl = this.configService.get<string>('BASE_URL', 'http://localhost:8050');
-            const videoUrl = `${baseUrl}uploads/ProjectVideos/${projectId}/${fileName}`;
-
-            // Créer l'entrée dans la base de données avec userId et durée analysée
+            // Créer l'entrée dans la base de données
             const video = await this.model.create({
                 data: {
-                    title: title || path.parse(file.originalname).name, // Utiliser nom du fichier si pas de titre
+                    title: title || file.originalname.split('.')[0], // Utiliser nom du fichier si pas de titre
                     description: description || '',
                     projectId,
                     userId, // Stocker l'ID de l'utilisateur depuis le token
-                    duration, // Durée en secondes analysée automatiquement
-                    videoUrl, // URL complète pour accès direct au fichier
+                    duration: cloudinaryResult.duration || 0, // Durée depuis Cloudinary ou 0 par défaut
+                    videoUrl: cloudinaryResult.secure_url, // URL Cloudinary
                     fileSize: file.size,
                     mimeType: file.mimetype,
                     thumbnailUrl: null // Pour l'instant, pas de génération de thumbnail
@@ -225,21 +142,17 @@ export class VideoService extends BaseCrudServiceImpl<
                 }
             });
 
-            console.log(`Video uploaded successfully: ${video.id}, duration: ${duration}s, user: ${userId}`);
+            console.log(`Vidéo uploadée avec succès: ${video.id}, durée: ${cloudinaryResult.duration || 0}s, utilisateur: ${userId}`);
             return this.mapToResponse(video);
 
         } catch (error) {
-            // Nettoyer le fichier en cas d'erreur
-            if (fs.existsSync(filePath)) {
-                fs.unlinkSync(filePath);
-            }
-
+            console.error('❌ Erreur lors de l\'upload vers Cloudinary:', error);
+            
             if (error instanceof BadRequestException || error instanceof NotFoundException) {
                 throw error;
             }
 
-            console.error('Error uploading video:', error);
-            throw new BadRequestException('Failed to upload and process video file');
+            throw new BadRequestException('Erreur lors de l\'upload et du traitement de la vidéo vers Cloudinary');
         }
     }
 
@@ -281,7 +194,7 @@ export class VideoService extends BaseCrudServiceImpl<
     }
 
     /**
-     * Mettre à jour une vidéo avec possibilité de remplacer le fichier
+     * Mettre à jour une vidéo avec possibilité de remplacer le fichier (Cloudinary version)
      */
     async updateWithFileReplacement(
         id: string, 
@@ -301,9 +214,58 @@ export class VideoService extends BaseCrudServiceImpl<
             mimeType: existingVideo.mimeType
         };
 
-        // Si un nouveau fichier est fourni, traiter le remplacement
+        // Si un nouveau fichier est fourni, traiter le remplacement via Cloudinary
         if (newFile) {
-            videoData = await this.processFileReplacement(existingVideo, updateVideoDto.projectId, newFile);
+            try {
+                // Valider le nouveau fichier
+                this.validateVideoFile(newFile);
+
+                const projectId = updateVideoDto.projectId || existingVideo.projectId;
+                
+                // Récupérer les détails du projet pour le creatorId
+                const project = await this.prismaService.project.findUnique({
+                    where: { id: projectId }
+                });
+
+                if (!project) {
+                    throw new NotFoundException(`Project with ID ${projectId} not found`);
+                }
+
+                console.log('☁️  Remplacement de la vidéo via Cloudinary...');
+                
+                // Upload du nouveau fichier vers Cloudinary
+                const cloudinaryResult = await this.cloudinaryService.uploadVideo(
+                    newFile, 
+                    projectId, 
+                    project.creatorId
+                );
+                
+                console.log('✅ Nouvelle vidéo uploadée:', cloudinaryResult.secure_url);
+                
+                // Supprimer l'ancienne vidéo de Cloudinary si elle existe
+                if (existingVideo.videoUrl && this.isCloudinaryUrl(existingVideo.videoUrl)) {
+                    try {
+                        const publicId = this.cloudinaryService.extractPublicIdFromUrl(existingVideo.videoUrl);
+                        if (publicId) {
+                            await this.cloudinaryService.deleteFile(publicId, 'video');
+                            console.log('✅ Ancienne vidéo Cloudinary supprimée');
+                        }
+                    } catch (error) {
+                        console.warn('⚠️ Erreur lors de la suppression de l\'ancienne vidéo:', error);
+                    }
+                }
+
+                videoData = {
+                    videoUrl: cloudinaryResult.secure_url,
+                    duration: cloudinaryResult.duration || 0,
+                    fileSize: newFile.size,
+                    mimeType: newFile.mimetype
+                };
+
+            } catch (error) {
+                console.error('❌ Erreur lors du remplacement de la vidéo:', error);
+                throw new BadRequestException(`Échec du remplacement de la vidéo: ${error.message}`);
+            }
         }
 
         // Mettre à jour les métadonnées dans la base de données
@@ -349,139 +311,10 @@ export class VideoService extends BaseCrudServiceImpl<
     }
 
     /**
-     * Traiter le remplacement du fichier vidéo
+     * Vérifie si une URL est une URL Cloudinary
      */
-    private async processFileReplacement(
-        existingVideo: any,
-        newProjectId: string | undefined,
-        newFile: Express.Multer.File
-    ): Promise<{ videoUrl: string; duration: number; fileSize: number; mimeType: string }> {
-        // Valider le nouveau fichier
-        this.validateVideoFile(newFile);
-
-        const projectId = newProjectId || existingVideo.projectId;
-        const { filePath: newFilePath, videoUrl } = this.generateVideoFilePaths(projectId, newFile.originalname);
-
-        try {
-            // 1. Sauvegarder le nouveau fichier
-            await this.saveNewVideoFile(newFilePath, newFile);
-            console.log(`📹 New video file saved: ${newFilePath}`);
-            
-            // 2. Analyser la durée du nouveau fichier
-            const duration = await this.analyzeVideoDuration(newFilePath);
-            
-            // 3. Supprimer l'ancien fichier APRÈS avoir confirmé que le nouveau est sauvegardé
-            console.log(`🗑️ Deleting old video file for video ID: ${existingVideo.id}`);
-            await this.deleteOldVideoFile(existingVideo.videoUrl);
-
-            console.log(`✅ Video file replaced successfully: ${existingVideo.id}, new duration: ${duration}s`);
-
-            return {
-                videoUrl,
-                duration,
-                fileSize: newFile.size,
-                mimeType: newFile.mimetype
-            };
-
-        } catch (error) {
-            // Nettoyer le nouveau fichier en cas d'erreur
-            if (fs.existsSync(newFilePath)) {
-                fs.unlinkSync(newFilePath);
-                console.log(`🧹 Cleaned up new file due to error: ${newFilePath}`);
-            }
-            throw new BadRequestException(`Failed to replace video file: ${error.message}`);
-        }
-    }
-
-    /**
-     * Générer les chemins pour le nouveau fichier vidéo
-     */
-    private generateVideoFilePaths(projectId: string, originalName: string): { filePath: string; videoUrl: string } {
-        const uploadDir = path.join(
-            this.configService.get<string>('PROJECT_VIDEOS_DIR', 'uploads/ProjectVideos'),
-            projectId
-        );
-        const fileName = `${Date.now()}-${originalName}`;
-        const filePath = path.join(uploadDir, fileName);
-        
-        const baseUrl = this.configService.get<string>('BASE_URL', 'http://localhost:8050');
-        const videoUrl = `${baseUrl}uploads/ProjectVideos/${projectId}/${fileName}`;
-
-        return { filePath, videoUrl };
-    }
-
-    /**
-     * Sauvegarder le nouveau fichier vidéo
-     */
-    private async saveNewVideoFile(filePath: string, file: Express.Multer.File): Promise<void> {
-        const uploadDir = path.dirname(filePath);
-        
-        if (!fs.existsSync(uploadDir)) {
-            fs.mkdirSync(uploadDir, { recursive: true });
-        }
-
-        fs.writeFileSync(filePath, file.buffer);
-    }
-
-    /**
-     * Supprimer l'ancien fichier vidéo
-     */
-    private async deleteOldVideoFile(videoUrl: string): Promise<void> {
-        if (!videoUrl) return;
-
-        try {
-            console.log(`🗑️ Attempting to delete old video file from URL: ${videoUrl}`);
-            
-            // Extraire le chemin depuis l'URL
-            const url = new URL(videoUrl);
-            const relativePath = url.pathname; // Ex: /uploads/ProjectVideos/projectId/filename.mp4
-            
-            // IMPORTANT: Décoder l'URL pour convertir %20 en espaces, etc.
-            const decodedPath = decodeURIComponent(relativePath);
-            console.log(`🔄 Decoded path: ${decodedPath}`);
-            
-            // Construire le chemin absolu du fichier
-            const oldFilePath = path.join(process.cwd(), decodedPath.substring(1)); // Enlever le premier "/"
-            
-            console.log(`🗃️ Final computed file path: ${oldFilePath}`);
-            
-            if (fs.existsSync(oldFilePath)) {
-                fs.unlinkSync(oldFilePath);
-                console.log(`✅ Old video file deleted successfully: ${oldFilePath}`);
-                
-                // Optionnel: Vérifier si le dossier parent est vide et le supprimer
-                const parentDir = path.dirname(oldFilePath);
-                try {
-                    const files = fs.readdirSync(parentDir);
-                    if (files.length === 0) {
-                        fs.rmdirSync(parentDir);
-                        console.log(`📁 Empty directory deleted: ${parentDir}`);
-                    }
-                } catch (dirError) {
-                    console.warn(`⚠️ Could not check/delete parent directory: ${dirError.message}`);
-                }
-            } else {
-                console.warn(`⚠️ Old video file not found at path: ${oldFilePath}`);
-                
-                // Debugging: Lister les fichiers dans le dossier pour voir ce qui existe réellement
-                try {
-                    const parentDir = path.dirname(oldFilePath);
-                    if (fs.existsSync(parentDir)) {
-                        const files = fs.readdirSync(parentDir);
-                        console.log(`📂 Files in directory ${parentDir}:`);
-                        files.forEach(file => console.log(`   - ${file}`));
-                    } else {
-                        console.log(`📂 Directory does not exist: ${parentDir}`);
-                    }
-                } catch (debugError) {
-                    console.warn(`🔍 Debug listing failed: ${debugError.message}`);
-                }
-            }
-        } catch (error) {
-            console.error(`❌ Error deleting old video file from ${videoUrl}:`, error.message);
-            // Ne pas lancer d'erreur critique, juste un avertissement pour continuer le processus
-            console.warn(`⚠️ Continuing despite deletion failure...`);
-        }
+    private isCloudinaryUrl(url: string): boolean {
+        return url?.includes('cloudinary.com') ?? false;
     }
 
     // ==================== HYBRID APPROACH METHODS ====================

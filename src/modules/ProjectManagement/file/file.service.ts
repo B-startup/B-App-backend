@@ -5,13 +5,12 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../../core/services/prisma.service';
+import { CloudinaryService } from '../../../core/services/cloudinary.service';
 import { BaseCrudServiceImpl } from '../../../core/common/services/base-crud.service';
 import { CreateFileDto } from './dto/create-file.dto';
 import { UpdateFileDto } from './dto/update-file.dto';
 import { UploadFileDto } from './dto/upload-file.dto';
 import { File, FileType } from '@prisma/client';
-import * as fs from 'fs';
-import * as path from 'path';
 
 @Injectable()
 export class FileService extends BaseCrudServiceImpl<
@@ -20,12 +19,15 @@ export class FileService extends BaseCrudServiceImpl<
     UpdateFileDto
 > {
     protected model = this.prisma.file;
+    private readonly maxFileSize: number;
 
     constructor(
         protected readonly prisma: PrismaService,
-        private readonly configService: ConfigService
+        private readonly configService: ConfigService,
+        private readonly cloudinaryService: CloudinaryService
     ) {
         super(prisma);
+        this.maxFileSize = parseInt(this.configService.get<string>('FILE_MAX_SIZE', '52428800')); // 50MB
     }
 
     /**
@@ -70,27 +72,30 @@ export class FileService extends BaseCrudServiceImpl<
         // Validate file size
         this.validateFileSize(file);
 
-        // Generate file path
-        const filePath = await this.generateFilePath(
-            uploadFileDto.projectId,
-            file.originalname
-        );
+        try {
+            console.log('☁️  Upload du document vers Cloudinary...');
+            // Upload vers Cloudinary
+            const cloudinaryResult = await this.cloudinaryService.uploadDocument(
+                file, 
+                uploadFileDto.projectId, 
+                project.creatorId
+            );
+            
+            console.log('✅ Document uploadé avec succès:', cloudinaryResult.secure_url);
 
-        // Ensure directory exists
-        await this.ensureDirectoryExists(path.dirname(filePath));
+            // Create file record avec URL Cloudinary
+            const createFileDto: CreateFileDto = {
+                projectId: uploadFileDto.projectId,
+                fileName: file.originalname,
+                fileType: uploadFileDto.fileType,
+                fileUrl: cloudinaryResult.secure_url
+            };
 
-        // Save file to disk
-        await this.saveFileToDisk(file.buffer, filePath);
-
-        // Create file record
-        const createFileDto: CreateFileDto = {
-            projectId: uploadFileDto.projectId,
-            fileName: file.originalname,
-            fileType: uploadFileDto.fileType,
-            fileUrl: filePath
-        };
-
-        return this.create(createFileDto);
+            return this.create(createFileDto);
+        } catch (error) {
+            console.error('❌ Erreur lors de l\'upload vers Cloudinary:', error);
+            throw new BadRequestException('Erreur lors de l\'upload du document vers Cloudinary');
+        }
     }
 
     /**
@@ -135,33 +140,48 @@ export class FileService extends BaseCrudServiceImpl<
     async remove(id: string): Promise<File> {
         const file = await this.findOneOrFail(id);
 
-        // Remove physical file if it exists
-        if (file.fileUrl && fs.existsSync(file.fileUrl)) {
+        console.log('🗑️  Suppression du fichier:', id);
+        console.log('📁 URL du fichier:', file.fileUrl || 'Aucune');
+
+        // Supprimer le fichier de Cloudinary s'il existe
+        if (file.fileUrl) {
             try {
-                fs.unlinkSync(file.fileUrl);
+                if (this.isCloudinaryUrl(file.fileUrl)) {
+                    console.log('☁️  Suppression du fichier Cloudinary...');
+                    const publicId = this.cloudinaryService.extractPublicIdFromUrl(file.fileUrl);
+                    if (publicId) {
+                        // Déterminer le type de ressource basé sur l'URL ou le type de fichier
+                        const resourceType = this.determineResourceType(file.fileUrl, file.fileType);
+                        await this.cloudinaryService.deleteFile(publicId, resourceType);
+                        console.log('✅ Fichier Cloudinary supprimé avec succès');
+                    }
+                } else {
+                    // Ancien fichier local - log uniquement
+                    console.warn('⚠️  Fichier local détecté mais non supprimé (migration Cloudinary requise):', file.fileUrl);
+                }
             } catch (error) {
-                console.warn(
-                    `Failed to delete physical file: ${file.fileUrl}`,
-                    error
-                );
+                console.warn(`❌ Erreur lors de la suppression du fichier: ${file.fileUrl}`, error);
             }
         }
 
-        return super.remove(id);
+        const deletedFile = await super.remove(id);
+        console.log('✅ Fichier supprimé avec succès:', id);
+        return deletedFile;
     }
 
     /**
-     * Download file by ID
+     * Download file by ID (Cloudinary URL)
      */
     async downloadFile(
         id: string
     ): Promise<{ filePath: string; fileName: string }> {
         const file = await this.findOneOrFail(id);
 
-        if (!file.fileUrl || !fs.existsSync(file.fileUrl)) {
-            throw new NotFoundException('File not found on disk');
+        if (!file.fileUrl) {
+            throw new NotFoundException('File URL not found');
         }
 
+        // Pour Cloudinary, on retourne directement l'URL sécurisée
         return {
             filePath: file.fileUrl,
             fileName: file.fileName
@@ -169,7 +189,7 @@ export class FileService extends BaseCrudServiceImpl<
     }
 
     /**
-     * Get file statistics for a project
+     * Get file statistics for a project (Cloudinary version)
      */
     async getProjectFileStats(projectId: string): Promise<{
         totalFiles: number;
@@ -188,25 +208,14 @@ export class FileService extends BaseCrudServiceImpl<
 
         for (const file of files) {
             filesByType[file.fileType]++;
-
-            // Calculate file size if file exists
-            if (file.fileUrl && fs.existsSync(file.fileUrl)) {
-                try {
-                    const stats = fs.statSync(file.fileUrl);
-                    totalSizeBytes += stats.size;
-                } catch (error) {
-                    console.warn(
-                        `Failed to get file size for: ${file.fileUrl}`,
-                        error
-                    );
-                }
-            }
+            // Note: Pour Cloudinary, la taille des fichiers peut être récupérée via l'API Cloudinary si nécessaire
+            // Pour l'instant, on ne calcule pas la taille totale
         }
 
         return {
             totalFiles: files.length,
             filesByType,
-            totalSizeBytes
+            totalSizeBytes // Sera 0 pour Cloudinary, peut être étendu avec l'API Cloudinary
         };
     }
 
@@ -326,7 +335,7 @@ export class FileService extends BaseCrudServiceImpl<
     }
 
     /**
-     * Get file with detailed information (complex case)
+     * Get file with detailed information (Cloudinary version)
      */
     async findOneDetailed(id: string) {
         const file = await this.model.findUnique({
@@ -361,16 +370,9 @@ export class FileService extends BaseCrudServiceImpl<
             throw new NotFoundException('File not found');
         }
 
-        // Add file size information if file exists
-        let fileSize = 0;
-        if (file.fileUrl && fs.existsSync(file.fileUrl)) {
-            try {
-                const stats = fs.statSync(file.fileUrl);
-                fileSize = stats.size;
-            } catch (error) {
-                console.warn(`Failed to get file size for: ${file.fileUrl}`, error);
-            }
-        }
+        // Pour Cloudinary, la taille peut être récupérée via l'API si nécessaire
+        // Pour l'instant, on retourne 0 ou on peut étendre avec l'API Cloudinary
+        const fileSize = 0;
 
         return {
             ...file,
@@ -420,55 +422,25 @@ export class FileService extends BaseCrudServiceImpl<
         }
     }
 
-    /**
-     * Generate file path for storage
-     */
-    private async generateFilePath(
-        projectId: string,
-        originalName: string
-    ): Promise<string> {
-        const baseDir = this.configService.get<string>(
-            'PROJECT_FILES_DIR',
-            'uploads/ProjectFiles'
-        );
-        const timestamp = Date.now();
-        const sanitizedFileName = this.sanitizeFileName(originalName);
-        const fileName = `${timestamp}_${sanitizedFileName}`;
 
-        return path.join(baseDir, `project-${projectId}`, fileName);
+
+    /**
+     * Vérifie si une URL est une URL Cloudinary
+     */
+    private isCloudinaryUrl(url: string): boolean {
+        return url?.includes('cloudinary.com') ?? false;
     }
 
     /**
-     * Sanitize file name
+     * Détermine le type de ressource Cloudinary basé sur l'URL et le type de fichier
      */
-    private sanitizeFileName(fileName: string): string {
-        return fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
-    }
-
-    /**
-     * Ensure directory exists
-     */
-    private async ensureDirectoryExists(dirPath: string): Promise<void> {
-        if (!fs.existsSync(dirPath)) {
-            fs.mkdirSync(dirPath, { recursive: true });
-        }
-    }
-
-    /**
-     * Save file to disk
-     */
-    private async saveFileToDisk(
-        buffer: Buffer,
-        filePath: string
-    ): Promise<void> {
-        return new Promise((resolve, reject) => {
-            fs.writeFile(filePath, buffer, (error) => {
-                if (error) {
-                    reject(error);
-                } else {
-                    resolve();
-                }
-            });
-        });
+    private determineResourceType(fileUrl: string, fileType: FileType): 'image' | 'video' | 'raw' {
+        // Si l'URL contient déjà le type, l'utiliser
+        if (fileUrl.includes('/video/upload/')) return 'video';
+        if (fileUrl.includes('/raw/upload/')) return 'raw'; // Fichiers PPT et anciens raw
+        
+        // Logique basée sur le type de fichier :
+        // PPT doit être 'raw' (obligatoire car ZIP), autres peuvent être 'image'
+        return fileType === FileType.PPT ? 'raw' : 'image';
     }
 }

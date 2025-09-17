@@ -1,10 +1,7 @@
 import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { MailerService } from '@nestjs-modules/mailer';
-import * as fs from 'fs';
-import * as path from 'path';
 import { CloudinaryService } from '../../../core/services/cloudinary.service';
-import { v4 as uuidv4 } from 'uuid';
 import { PrismaService } from '../../../core/services/prisma.service';
 import { BaseCrudServiceImpl } from '../../../core/common/services/base-crud.service';
 import { CreateUserDto, UpdateUserDto, UserResponseDto } from './dto';
@@ -17,7 +14,6 @@ import {
 @Injectable()
 export class UserService extends BaseCrudServiceImpl<User, CreateUserDto, UpdateUserDto> {
     protected model: any;
-    private readonly profileImagesDir: string;
     private readonly maxFileSize: number;
     private readonly allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 
@@ -29,12 +25,7 @@ export class UserService extends BaseCrudServiceImpl<User, CreateUserDto, Update
     ) {
         super(prisma);
         this.model = prisma.user;
-        this.profileImagesDir = path.join(
-            process.cwd(),
-            this.configService.get<string>('PROFILE_IMAGES_DIR', 'uploads/profile-images')
-        );
         this.maxFileSize = parseInt(this.configService.get<string>('PROFILE_IMAGES_MAX_SIZE', '2097152'));
-        this.ensureUploadDirectoryExists();
     }
 
     async create(createDto: CreateUserDto): Promise<User> {
@@ -186,10 +177,8 @@ export class UserService extends BaseCrudServiceImpl<User, CreateUserDto, Update
                         console.log('✅ Image Cloudinary supprimée avec succès');
                     }
                 } else {
-                    // Supprimer le fichier local si c'est une image locale
-                    console.log('🗑️  Suppression de l\'image locale...');
-                    await this.deleteProfileImageFile(user.profilePicture);
-                    console.log('✅ Image locale supprimée avec succès');
+                    // Les images locales ne sont plus supportées - log uniquement
+                    console.warn('⚠️  Image locale détectée mais non supprimée (migration Cloudinary requise):', user.profilePicture);
                 }
             } catch (error) {
                 console.error('❌ Erreur lors de la suppression de l\'image:', error);
@@ -336,9 +325,8 @@ export class UserService extends BaseCrudServiceImpl<User, CreateUserDto, Update
                     await this.cloudinaryService.deleteProfileImage(oldPublicId);
                 }
             } else if (oldImageUrl) {
-                // Si c'était une image locale, la supprimer aussi
-                console.log('🗑️  Suppression de l\'ancienne image locale...');
-                await this.deleteProfileImageFile(oldImageUrl);
+                // Si c'était une image locale - log uniquement (migration Cloudinary)
+                console.warn('⚠️  Ancienne image locale détectée mais non supprimée (migration Cloudinary requise):', oldImageUrl);
             }
 
             // Mettre à jour l'utilisateur avec l'URL Cloudinary
@@ -389,9 +377,8 @@ export class UserService extends BaseCrudServiceImpl<User, CreateUserDto, Update
                     await this.cloudinaryService.deleteProfileImage(publicId);
                 }
             } else {
-                // Supprimer le fichier local si c'est une image locale
-                console.log('🗑️  Suppression de l\'image locale...');
-                await this.deleteProfileImageFile(user.profilePicture);
+                // Les images locales ne sont plus supportées - log uniquement
+                console.warn('⚠️  Image locale détectée mais non supprimée (migration Cloudinary requise):', user.profilePicture);
             }
             
             const updatedUser = await this.model.update({
@@ -464,75 +451,7 @@ export class UserService extends BaseCrudServiceImpl<User, CreateUserDto, Update
         }
     }
 
-    private ensureUploadDirectoryExists(): void {
-        if (!fs.existsSync(this.profileImagesDir)) {
-            fs.mkdirSync(this.profileImagesDir, { recursive: true });
-        }
-    }
 
-    private async deleteProfileImageFile(imagePath: string): Promise<void> {
-        if (!imagePath) {
-            console.warn('Aucun chemin d\'image fourni pour la suppression');
-            return;
-        }
-
-        try {
-            let fullPath: string;
-            
-            // Gérer différents formats de chemin stockés en base
-            if (imagePath.startsWith('uploads/')) {
-                // Si le chemin commence par "uploads/", utiliser tel quel
-                fullPath = path.resolve(process.cwd(), imagePath);
-            } else if (imagePath.startsWith('profile-images/')) {
-                // Si le chemin commence par "profile-images/", ajouter "uploads/"
-                fullPath = path.resolve(process.cwd(), 'uploads', imagePath);
-            } else {
-                // Pour les autres cas, essayer d'abord avec uploads/profile-images/
-                const filename = path.basename(imagePath);
-                fullPath = path.resolve(process.cwd(), 'uploads', 'profile-images', filename);
-            }
-            
-            console.log('🗑️  Tentative de suppression du fichier:', fullPath);
-            
-            // Vérifier si le fichier existe avant de le supprimer
-            if (fs.existsSync(fullPath)) {
-                fs.unlinkSync(fullPath);
-                console.log('✅ Image de profil supprimée avec succès:', imagePath);
-            } else {
-                console.warn('⚠️  Le fichier à supprimer n\'existe pas:', fullPath);
-                
-                // Tentative avec d'autres chemins possibles
-                const alternatives = [
-                    path.resolve(process.cwd(), imagePath), // Chemin direct
-                    path.resolve(process.cwd(), 'uploads', path.basename(imagePath)), // Dans uploads/
-                    path.resolve(process.cwd(), path.basename(imagePath)) // Racine du projet
-                ];
-                
-                let found = false;
-                for (const altPath of alternatives) {
-                    if (fs.existsSync(altPath)) {
-                        console.log('✅ Fichier trouvé avec chemin alternatif:', altPath);
-                        fs.unlinkSync(altPath);
-                        console.log('✅ Image supprimée avec succès');
-                        found = true;
-                        break;
-                    }
-                }
-                
-                if (!found) {
-                    console.warn('⚠️  Impossible de trouver le fichier à supprimer:', imagePath);
-                }
-            }
-        } catch (error) {
-            console.error('❌ Erreur lors de la suppression de l\'image de profil:', {
-                imagePath,
-                error: error.message,
-                stack: error.stack
-            });
-            // On ne lance pas l'erreur pour ne pas bloquer le processus principal
-            // mais on log l'erreur pour le débogage
-        }
-    }
 
     /**
      * Test la connexion à Cloudinary
